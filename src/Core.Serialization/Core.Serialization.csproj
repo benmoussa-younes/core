@@ -1,0 +1,27 @@
+<!-- SPDX-FileCopyrightText: 2026 Younes BENMOUSSA <younes.benmoussa@pm.me> -->
+<!-- SPDX-License-Identifier: LGPL-3.0-or-later -->
+
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>Core.Serialization</RootNamespace>
+    <Description>One canonical data document — typed, ordered, columnar tables with a node escape hatch — read and written in multiple formats (JSON, CSV, INI) with bounded memory. Linux, NativeAOT and trim-safe.</Description>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IsAotCompatible>true</IsAotCompatible>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>10.0-recommended</AnalysisLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <!-- The JSON escaping mode implements JavaScriptEncoder, whose surface is pointer-based. -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" PrivateAssets="all" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Core.Serialization.Tests" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Core/Core.csproj" />
+    <ProjectReference Include="../Core.Platform/Core.Platform.csproj" />
+    <ProjectReference Include="../Core.IO/Core.IO.csproj" />
+  </ItemGroup>
+</Project>

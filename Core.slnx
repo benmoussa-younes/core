@@ -1,0 +1,23 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Core/Core.csproj" />
+    <Project Path="src/Core.Platform/Core.Platform.csproj" />
+    <Project Path="src/Core.Platform.Linux/Core.Platform.Linux.csproj" />
+    <Project Path="src/Core.UI/Core.UI.csproj" />
+    <Project Path="src/Core.Concurrency/Core.Concurrency.csproj" />
+    <Project Path="src/Core.IO/Core.IO.csproj" />
+    <Project Path="src/Core.Mvp/Core.Mvp.csproj" />
+    <Project Path="src/Core.Serialization/Core.Serialization.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Core.UI.Tests/Core.UI.Tests.csproj" />
+    <Project Path="tests/Core.Concurrency.Tests/Core.Concurrency.Tests.csproj" />
+    <Project Path="tests/Core.IO.Tests/Core.IO.Tests.csproj" />
+    <Project Path="tests/Core.Mvp.Tests/Core.Mvp.Tests.csproj" />
+    <Project Path="tests/Core.Pipeline.Tests/Core.Pipeline.Tests.csproj" />
+    <Project Path="tests/Core.Platform.Linux.Tests/Core.Platform.Linux.Tests.csproj" />
+    <Project Path="tests/Core.Records.Tests/Core.Records.Tests.csproj" />
+    <Project Path="tests/Core.Serialization.Tests/Core.Serialization.Tests.csproj" />
+    <Project Path="tests/Core.Tests/Core.Tests.csproj" />
+  </Folder>
+</Solution>

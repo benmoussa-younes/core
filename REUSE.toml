@@ -1,0 +1,30 @@
+version = 1
+
+# The source code, the tests and the build files are LGPL-3.0-or-later.
+[[annotations]]
+path = "**"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 Younes BENMOUSSA <younes.benmoussa@pm.me>"
+SPDX-License-Identifier = "LGPL-3.0-or-later"
+
+# The documentation is CC BY-SA 4.0.
+[[annotations]]
+path = ["README.md", "AGENTS.md", "**/AGENTS.md", "CHANGELOG.md", "SECURITY.md", "CONTRIBUTING.md"]
+precedence = "override"
+SPDX-FileCopyrightText = "2026 Younes BENMOUSSA <younes.benmoussa@pm.me>"
+SPDX-License-Identifier = "CC-BY-SA-4.0"
+
+# The legal notices are part of the LGPL distribution. THIRD-PARTY is also the
+# REUSE anchor for the third-party license texts it references; the permissive
+# licenses allow that notice document to be redistributed under them as well.
+[[annotations]]
+path = "NOTICE"
+precedence = "override"
+SPDX-FileCopyrightText = "2026 Younes BENMOUSSA <younes.benmoussa@pm.me>"
+SPDX-License-Identifier = "LGPL-3.0-or-later"
+
+[[annotations]]
+path = "THIRD-PARTY"
+precedence = "override"
+SPDX-FileCopyrightText = "2026 Younes BENMOUSSA <younes.benmoussa@pm.me>"
+SPDX-License-Identifier = "LGPL-3.0-or-later AND MIT AND OFL-1.1 AND Apache-2.0 AND BSD-3-Clause"

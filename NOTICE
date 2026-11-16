@@ -1,0 +1,59 @@
+Core
+Copyright (C) 2026 Younes BENMOUSSA <younes.benmoussa@pm.me>
+
+This library is free software: you can redistribute it and/or modify it under the terms
+of the GNU Lesser General Public License as published by the Free Software Foundation,
+either version 3 of the License, or (at your option) any later version. It is distributed
+in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser
+General Public License (the `LICENSE` file) for more details.
+
+No support, service level or warranty is provided beyond the licences.
+
+Corresponding source
+====================
+
+Core is source-only: it is consumed by project reference and vendored as source
+by each product that links it. The complete corresponding source is
+
+  - the vendored source at the pinned commit inside each product's source
+    release (its `vendor/` directory), and
+  - the source tarball and its SHA-256 attached to every Core release tag.
+
+There is no package to download and no separate product page.
+
+Vendored source
+===============
+
+The `bcs`/scripts project is vendored by source, not as a binary, under
+GPL-3.0-or-later. Its complete source, licence and notices ship inside the
+vendored tree. It is not linked into the Core libraries.
+
+Third-party components
+======================
+
+Runtime (linked into a built product):
+
+- Avalonia and Avalonia.* (except Angle.Windows.Natives) — MIT (https://avaloniaui.net)
+- The Inter font, embedded by `Avalonia.Fonts.Inter` — SIL Open Font License 1.1
+  (https://github.com/rsms/inter)
+- SkiaSharp and SkiaSharp.NativeAssets.* — MIT; the native Skia library is
+  BSD-3-Clause (https://github.com/mono/SkiaSharp)
+- HarfBuzzSharp and HarfBuzzSharp.NativeAssets.* — MIT; the native HarfBuzz
+  library is MIT (https://github.com/mono/SkiaSharp)
+- Tmds.DBus.Protocol, NWayland, MicroCom.Runtime — MIT
+- Avalonia.Angle.Windows.Natives (win-x64 only) — BSD-3-Clause
+- The .NET runtime libraries — MIT (https://github.com/dotnet/runtime)
+
+Build and test only (not linked into a product):
+
+- xUnit.net (xunit.v3) — Apache-2.0 (https://xunit.net)
+- xunit.runner.visualstudio — Apache-2.0 (https://xunit.net)
+- BenchmarkDotNet — MIT (https://benchmarkdotnet.org)
+- coverlet — MIT (https://github.com/coverlet-coverage/coverlet)
+- Microsoft.CodeAnalysis.PublicApiAnalyzers, Microsoft.Extensions.FileSystemGlobbing,
+  Microsoft.NET.Test.Sdk — MIT
+
+The full texts ship in `LICENSES/` (LGPL-3.0-or-later, MIT, OFL-1.1,
+Apache-2.0, BSD-3-Clause, CC-BY-SA-4.0); the component list is `THIRD-PARTY`.
+The documentation is CC BY-SA 4.0.

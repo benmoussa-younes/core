@@ -1,0 +1,279 @@
+#nullable enable
+Core.Serialization.Storage.DataFileStore.MaxFileBytes.get -> long
+Core.Serialization.Storage.DataFileStore.MaxFileBytes.init -> void
+const Core.Serialization.Storage.DataFileStore.DefaultMaxFileBytes = 268435456 -> long
+const Core.Serialization.Codecs.Csv.CsvDataReader.MaxColumns = 65536 -> int
+Core.Serialization.Codecs.Json.JsonNumberFormat
+Core.Serialization.Codecs.Json.JsonNumberFormat.JsonNumberFormat() -> void
+static Core.Serialization.Codecs.Json.JsonNumberFormat.Default.get -> Core.Serialization.Codecs.Json.JsonNumberFormat
+Core.Serialization.Codecs.Json.JsonNumberFormat.HasCustomRenderer.get -> bool
+static Core.Serialization.Codecs.Json.JsonNumberFormat.From(System.Func<double, string!>! renderer) -> Core.Serialization.Codecs.Json.JsonNumberFormat
+static Core.Serialization.Codecs.Json.JsonDataReader.ReadNode(System.ReadOnlySpan<byte> utf8, int maximumDepth) -> Core.Results.Result<Core.Serialization.Values.DataNode!>
+static Core.Serialization.Codecs.Json.JsonDataWriter.Write(Core.Serialization.Documents.DataDocument! document, System.Buffers.IBufferWriter<byte>! writer, Core.Serialization.Codecs.Json.JsonNumberFormat numberFormat) -> Core.Results.Result<bool>
+static Core.Serialization.Codecs.Json.JsonDataWriter.Write(Core.Serialization.Documents.DataDocument! document, System.Buffers.IBufferWriter<byte>! writer, Core.Serialization.Codecs.Json.JsonNumberFormat numberFormat, System.Text.Encodings.Web.JavaScriptEncoder! escaping) -> Core.Results.Result<bool>
+static Core.Serialization.Codecs.Json.JsonDataWriter.WriteNode(Core.Serialization.Values.DataNode! node, System.Buffers.IBufferWriter<byte>! writer) -> Core.Results.Result<bool>
+static Core.Serialization.Codecs.Json.JsonDataWriter.WriteNode(Core.Serialization.Values.DataNode! node, System.Buffers.IBufferWriter<byte>! writer, Core.Serialization.Codecs.Json.JsonNumberFormat numberFormat) -> Core.Results.Result<bool>
+static Core.Serialization.Codecs.Json.JsonDataWriter.WriteNode(Core.Serialization.Values.DataNode! node, System.Buffers.IBufferWriter<byte>! writer, Core.Serialization.Codecs.Json.JsonNumberFormat numberFormat, System.Text.Encodings.Web.JavaScriptEncoder! escaping) -> Core.Results.Result<bool>
+static Core.Serialization.Codecs.Json.JsonDataWriter.WriteNodeToUtf8Bytes(Core.Serialization.Values.DataNode! node) -> Core.Results.Result<byte[]!>
+static Core.Serialization.Codecs.Json.JsonDataWriter.WriteNodeToUtf8Bytes(Core.Serialization.Values.DataNode! node, Core.Serialization.Codecs.Json.JsonNumberFormat numberFormat) -> Core.Results.Result<byte[]!>
+static Core.Serialization.Codecs.Json.JsonDataWriter.WriteNodeToUtf8Bytes(Core.Serialization.Values.DataNode! node, Core.Serialization.Codecs.Json.JsonNumberFormat numberFormat, System.Text.Encodings.Web.JavaScriptEncoder! escaping) -> Core.Results.Result<byte[]!>
+static Core.Serialization.Codecs.Json.JsonDataWriter.WriteToUtf8Bytes(Core.Serialization.Documents.DataDocument! document, Core.Serialization.Codecs.Json.JsonNumberFormat numberFormat) -> Core.Results.Result<byte[]!>
+static Core.Serialization.Codecs.Json.JsonDataWriter.WriteToUtf8Bytes(Core.Serialization.Documents.DataDocument! document, Core.Serialization.Codecs.Json.JsonNumberFormat numberFormat, System.Text.Encodings.Web.JavaScriptEncoder! escaping) -> Core.Results.Result<byte[]!>
+Core.Serialization.Codecs.Json.JsonEscaping
+static Core.Serialization.Codecs.Json.JsonEscaping.Default.get -> System.Text.Encodings.Web.JavaScriptEncoder!
+static Core.Serialization.Codecs.Json.JsonEscaping.Utf8Raw.get -> System.Text.Encodings.Web.JavaScriptEncoder!
+const Core.Serialization.Codecs.Json.JsonDataReader.MaximumSupportedDepth = 1024 -> int
+Core.Serialization.Tables.SortKey
+Core.Serialization.Tables.SortKey.SortKey() -> void
+Core.Serialization.Tables.SortKey.SortKey(string! Column, bool Descending = false) -> void
+Core.Serialization.Tables.SortKey.Column.get -> string!
+Core.Serialization.Tables.SortKey.Descending.get -> bool
+Core.Serialization.Tables.SortKey.Column.init -> void
+Core.Serialization.Tables.SortKey.Descending.init -> void
+Core.Serialization.Tables.SortKey.Deconstruct(out string! Column, out bool Descending) -> void
+Core.Serialization.Tables.SortKey.Equals(Core.Serialization.Tables.SortKey other) -> bool
+~override Core.Serialization.Tables.SortKey.Equals(object obj) -> bool
+~override Core.Serialization.Tables.SortKey.ToString() -> string
+override Core.Serialization.Tables.SortKey.GetHashCode() -> int
+static Core.Serialization.Tables.SortKey.operator !=(Core.Serialization.Tables.SortKey left, Core.Serialization.Tables.SortKey right) -> bool
+static Core.Serialization.Tables.SortKey.operator ==(Core.Serialization.Tables.SortKey left, Core.Serialization.Tables.SortKey right) -> bool
+Core.Serialization.Tables.DataView
+Core.Serialization.Tables.DataView.DataView(Core.Serialization.Tables.DataTable! table) -> void
+Core.Serialization.Tables.DataView.Table.get -> Core.Serialization.Tables.DataTable!
+Core.Serialization.Tables.DataView.Count.get -> int
+Core.Serialization.Tables.DataView.RowIndexes.get -> System.ReadOnlySpan<int>
+Core.Serialization.Tables.DataView.this[int index].get -> Core.Serialization.Tables.DataRow
+Core.Serialization.Tables.DataView.Sort(params Core.Serialization.Tables.SortKey[]! keys) -> Core.Results.Result<Core.Serialization.Tables.DataView!>
+Core.Serialization.Tables.DataView.Filter(System.Func<Core.Serialization.Tables.DataRow, bool>! predicate) -> Core.Serialization.Tables.DataView!
+Core.Serialization.Tables.DataView.ToTable() -> Core.Serialization.Tables.DataTable!
+Core.Serialization.Tables.DataAggregates
+static Core.Serialization.Tables.DataAggregates.CountNonNull(Core.Serialization.Tables.DataColumn! column) -> int
+static Core.Serialization.Tables.DataAggregates.Sum(Core.Serialization.Tables.DataColumn! column) -> Core.Results.Result<Core.Serialization.Values.DataValue>
+static Core.Serialization.Tables.DataAggregates.Average(Core.Serialization.Tables.DataColumn! column) -> Core.Results.Result<Core.Serialization.Values.DataValue>
+static Core.Serialization.Tables.DataAggregates.Min(Core.Serialization.Tables.DataColumn! column) -> Core.Results.Result<Core.Serialization.Values.DataValue>
+static Core.Serialization.Tables.DataAggregates.Max(Core.Serialization.Tables.DataColumn! column) -> Core.Results.Result<Core.Serialization.Values.DataValue>
+static Core.Serialization.Tables.DataAggregates.First(Core.Serialization.Tables.DataColumn! column) -> Core.Results.Result<Core.Serialization.Values.DataValue>
+static Core.Serialization.Tables.DataAggregates.Last(Core.Serialization.Tables.DataColumn! column) -> Core.Results.Result<Core.Serialization.Values.DataValue>
+Core.Serialization.Tables.JoinKey
+Core.Serialization.Tables.JoinKey.JoinKey() -> void
+Core.Serialization.Tables.JoinKey.JoinKey(string! LeftColumn, string! RightColumn) -> void
+Core.Serialization.Tables.JoinKey.LeftColumn.get -> string!
+Core.Serialization.Tables.JoinKey.RightColumn.get -> string!
+Core.Serialization.Tables.JoinKey.LeftColumn.init -> void
+Core.Serialization.Tables.JoinKey.RightColumn.init -> void
+Core.Serialization.Tables.JoinKey.Deconstruct(out string! LeftColumn, out string! RightColumn) -> void
+Core.Serialization.Tables.JoinKey.Equals(Core.Serialization.Tables.JoinKey other) -> bool
+~override Core.Serialization.Tables.JoinKey.Equals(object obj) -> bool
+~override Core.Serialization.Tables.JoinKey.ToString() -> string
+override Core.Serialization.Tables.JoinKey.GetHashCode() -> int
+static Core.Serialization.Tables.JoinKey.operator !=(Core.Serialization.Tables.JoinKey left, Core.Serialization.Tables.JoinKey right) -> bool
+static Core.Serialization.Tables.JoinKey.operator ==(Core.Serialization.Tables.JoinKey left, Core.Serialization.Tables.JoinKey right) -> bool
+Core.Serialization.Tables.JoinKind
+Core.Serialization.Tables.JoinKind.Inner = 0 -> Core.Serialization.Tables.JoinKind
+Core.Serialization.Tables.JoinKind.Left = 1 -> Core.Serialization.Tables.JoinKind
+Core.Serialization.Tables.DataJoin
+static Core.Serialization.Tables.DataJoin.Join(Core.Serialization.Tables.DataTable! left, Core.Serialization.Tables.DataTable! right, System.Collections.Generic.IReadOnlyList<Core.Serialization.Tables.JoinKey>! keys, Core.Serialization.Tables.JoinKind kind = Core.Serialization.Tables.JoinKind.Inner, string! rightPrefix = "right.") -> Core.Results.Result<Core.Serialization.Tables.DataTable!>
+Core.Serialization.Tables.DataProjection
+static Core.Serialization.Tables.DataProjection.Select(Core.Serialization.Tables.DataTable! table, System.Collections.Generic.IReadOnlyList<string!>! columns) -> Core.Results.Result<Core.Serialization.Tables.DataTable!>
+static Core.Serialization.Tables.DataProjection.Drop(Core.Serialization.Tables.DataTable! table, System.Collections.Generic.IReadOnlyList<string!>! columns) -> Core.Results.Result<Core.Serialization.Tables.DataTable!>
+Core.Serialization.Tables.DataView.FilterRows(System.Func<int, bool>! predicate) -> Core.Serialization.Tables.DataView!
+Core.Serialization.Codecs.Csv.CsvDataReader
+Core.Serialization.Codecs.Csv.CsvDataWriter
+Core.Serialization.Codecs.Csv.CsvDialect
+Core.Serialization.Codecs.Csv.CsvDialect.CsvDialect(char delimiter = ',', char quote = '"', bool hasHeader = true, string! lineEnding = "\n", bool writeBom = false) -> void
+Core.Serialization.Codecs.Csv.CsvDialect.Delimiter.get -> char
+Core.Serialization.Codecs.Csv.CsvDialect.HasHeader.get -> bool
+Core.Serialization.Codecs.Csv.CsvDialect.LineEnding.get -> string!
+Core.Serialization.Codecs.Csv.CsvDialect.Quote.get -> char
+Core.Serialization.Codecs.Csv.CsvDialect.WriteBom.get -> bool
+Core.Serialization.Codecs.Csv.CsvDialectDetector
+Core.Serialization.Codecs.DataFormat
+Core.Serialization.Codecs.DataFormat.Csv = 1 -> Core.Serialization.Codecs.DataFormat
+Core.Serialization.Codecs.DataFormat.Ini = 2 -> Core.Serialization.Codecs.DataFormat
+Core.Serialization.Codecs.DataFormat.Json = 0 -> Core.Serialization.Codecs.DataFormat
+Core.Serialization.Codecs.DataFormat.Toml = 3 -> Core.Serialization.Codecs.DataFormat
+Core.Serialization.Codecs.Ini.IniDataReader
+Core.Serialization.Codecs.Ini.IniDataWriter
+Core.Serialization.Codecs.Json.JsonDataReader
+Core.Serialization.Codecs.Json.JsonDataWriter
+Core.Serialization.Documents.DataDocument
+Core.Serialization.Documents.DataDocument.DataDocument(Core.Serialization.Tables.DataTable! root, System.Collections.Generic.IReadOnlyList<Core.Serialization.Tables.DataTable!>? sections = null) -> void
+Core.Serialization.Documents.DataDocument.Root.get -> Core.Serialization.Tables.DataTable!
+Core.Serialization.Documents.DataDocument.Sections.get -> System.Collections.Generic.IReadOnlyList<Core.Serialization.Tables.DataTable!>!
+Core.Serialization.Documents.DataDocument.TryGetSection(string! name, out Core.Serialization.Tables.DataTable? section) -> bool
+Core.Serialization.Mapping.DataDocumentMapper
+Core.Serialization.Mapping.KeyValueTable
+Core.Serialization.Storage.DataFileStore
+Core.Serialization.Storage.DataFileStore.DataFileStore(string! directory, Core.Platform.IAtomicFileWriterFactory! atomicFiles, Core.Platform.IFileSystem! fileSystem) -> void
+Core.Serialization.Storage.DataFileStore.Directory.get -> string!
+Core.Serialization.Storage.DataFileStore.LoadAsync(string! name, Core.Serialization.Codecs.DataFormat? format = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Core.Results.Result<Core.Serialization.Documents.DataDocument!>>
+Core.Serialization.Storage.DataFileStore.LoadValueAsync<T>(string! name, System.Text.Json.Serialization.Metadata.JsonTypeInfo<T>! typeInfo, Core.Serialization.Codecs.DataFormat? format = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Core.Results.Result<T>>
+Core.Serialization.Storage.DataFileStore.SaveAsync(string! name, Core.Serialization.Documents.DataDocument! document, Core.Serialization.Codecs.DataFormat? format = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Core.Results.Result<bool>>
+Core.Serialization.Storage.DataFileStore.SaveValueAsync<T>(string! name, T value, System.Text.Json.Serialization.Metadata.JsonTypeInfo<T>! typeInfo, Core.Serialization.Codecs.DataFormat? format = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Core.Results.Result<bool>>
+Core.Serialization.Tables.DataColumn
+Core.Serialization.Tables.DataColumn.Booleans.get -> System.ReadOnlySpan<bool>
+Core.Serialization.Tables.DataColumn.Count.get -> int
+Core.Serialization.Tables.DataColumn.Dates.get -> System.ReadOnlySpan<System.DateOnly>
+Core.Serialization.Tables.DataColumn.Decimals.get -> System.ReadOnlySpan<decimal>
+Core.Serialization.Tables.DataColumn.Get(int index) -> Core.Serialization.Values.DataValue
+Core.Serialization.Tables.DataColumn.Insert(int index, Core.Serialization.Values.DataValue value) -> void
+Core.Serialization.Tables.DataColumn.Integers.get -> System.ReadOnlySpan<long>
+Core.Serialization.Tables.DataColumn.Kind.get -> Core.Serialization.Values.DataKind
+Core.Serialization.Tables.DataColumn.Name.get -> string!
+Core.Serialization.Tables.DataColumn.Numbers.get -> System.ReadOnlySpan<double>
+Core.Serialization.Tables.DataColumn.RemoveAt(int index) -> void
+Core.Serialization.Tables.DataColumn.Set(int index, Core.Serialization.Values.DataValue value) -> void
+Core.Serialization.Tables.DataColumn.Texts.get -> System.ReadOnlySpan<string?>
+Core.Serialization.Tables.DataColumn.Times.get -> System.ReadOnlySpan<System.TimeOnly>
+Core.Serialization.Tables.DataColumn.Timestamps.get -> System.ReadOnlySpan<System.DateTime>
+Core.Serialization.Tables.DataField
+Core.Serialization.Tables.DataField.DataField() -> void
+Core.Serialization.Tables.DataField.DataField(string! name, Core.Serialization.Values.DataKind kind) -> void
+Core.Serialization.Tables.DataField.Equals(Core.Serialization.Tables.DataField other) -> bool
+Core.Serialization.Tables.DataField.Kind.get -> Core.Serialization.Values.DataKind
+Core.Serialization.Tables.DataField.Name.get -> string!
+Core.Serialization.Tables.DataRow
+Core.Serialization.Tables.DataRow.Count.get -> int
+Core.Serialization.Tables.DataRow.DataRow() -> void
+Core.Serialization.Tables.DataRow.DataRow(Core.Serialization.Tables.DataTable! table, int index) -> void
+Core.Serialization.Tables.DataRow.Index.get -> int
+Core.Serialization.Tables.DataRow.Table.get -> Core.Serialization.Tables.DataTable!
+Core.Serialization.Tables.DataRow.TryGetValue(string! name, out Core.Serialization.Values.DataValue value) -> bool
+Core.Serialization.Tables.DataRow.this[int column].get -> Core.Serialization.Values.DataValue
+Core.Serialization.Tables.DataSchema
+Core.Serialization.Tables.DataSchema.Count.get -> int
+Core.Serialization.Tables.DataSchema.DataSchema(System.Collections.Generic.IEnumerable<Core.Serialization.Tables.DataField>! fields) -> void
+Core.Serialization.Tables.DataSchema.Fields.get -> System.Collections.Generic.IReadOnlyList<Core.Serialization.Tables.DataField>!
+Core.Serialization.Tables.DataSchema.KindOf(int index) -> Core.Serialization.Values.DataKind
+Core.Serialization.Tables.DataSchema.TryGetIndex(string! name, out int index) -> bool
+Core.Serialization.Tables.DataSchema.this[int index].get -> Core.Serialization.Tables.DataField
+Core.Serialization.Tables.DataTable
+Core.Serialization.Tables.DataTable.AddColumn(Core.Serialization.Tables.DataField field) -> void
+Core.Serialization.Tables.DataTable.AddRow(System.ReadOnlySpan<Core.Serialization.Values.DataValue> values) -> void
+Core.Serialization.Tables.DataTable.Column(int index) -> Core.Serialization.Tables.DataColumn!
+Core.Serialization.Tables.DataTable.ColumnCount.get -> int
+Core.Serialization.Tables.DataTable.DataTable(string! name, Core.Serialization.Tables.DataSchema! schema) -> void
+Core.Serialization.Tables.DataTable.GetRow(int index) -> Core.Serialization.Tables.DataRow
+Core.Serialization.Tables.DataTable.InsertColumn(int index, Core.Serialization.Tables.DataField field) -> void
+Core.Serialization.Tables.DataTable.InsertRow(int index, System.ReadOnlySpan<Core.Serialization.Values.DataValue> values) -> void
+Core.Serialization.Tables.DataTable.MoveColumn(int from, int to) -> void
+Core.Serialization.Tables.DataTable.Name.get -> string!
+Core.Serialization.Tables.DataTable.RemoveColumnAt(int index) -> void
+Core.Serialization.Tables.DataTable.RemoveRow(int index) -> void
+Core.Serialization.Tables.DataTable.RenameColumn(int index, string! name) -> void
+Core.Serialization.Tables.DataTable.ReplaceColumnAt(int index, Core.Serialization.Tables.DataField field, System.ReadOnlySpan<Core.Serialization.Values.DataValue> values) -> void
+Core.Serialization.Tables.DataTable.RowCount.get -> int
+Core.Serialization.Tables.DataTable.Schema.get -> Core.Serialization.Tables.DataSchema!
+Core.Serialization.Tables.DataTable.SetCell(int row, int column, Core.Serialization.Values.DataValue value) -> void
+Core.Serialization.Tables.DataTable.TryGetColumn(string! name, out Core.Serialization.Tables.DataColumn? column) -> bool
+Core.Serialization.Tables.DataTable.TryGetColumnIndex(string! name, out int index) -> bool
+Core.Serialization.Tables.DataTable.this[int row, int column].get -> Core.Serialization.Values.DataValue
+Core.Serialization.Tables.DataTableBuilder
+Core.Serialization.Tables.DataTableBuilder.Build() -> Core.Serialization.Tables.DataTable!
+Core.Serialization.Tables.DataTableBuilder.Column(string! name, Core.Serialization.Values.DataKind kind) -> Core.Serialization.Tables.DataTableBuilder!
+Core.Serialization.Tables.DataTableBuilder.Row(params Core.Serialization.Values.DataValue[]! values) -> Core.Serialization.Tables.DataTableBuilder!
+Core.Serialization.Values.DataKind
+Core.Serialization.Values.DataKind.Boolean = 1 -> Core.Serialization.Values.DataKind
+Core.Serialization.Values.DataKind.Date = 6 -> Core.Serialization.Values.DataKind
+Core.Serialization.Values.DataKind.Decimal = 4 -> Core.Serialization.Values.DataKind
+Core.Serialization.Values.DataKind.Integer = 2 -> Core.Serialization.Values.DataKind
+Core.Serialization.Values.DataKind.Node = 9 -> Core.Serialization.Values.DataKind
+Core.Serialization.Values.DataKind.Null = 0 -> Core.Serialization.Values.DataKind
+Core.Serialization.Values.DataKind.Number = 3 -> Core.Serialization.Values.DataKind
+Core.Serialization.Values.DataKind.Text = 5 -> Core.Serialization.Values.DataKind
+Core.Serialization.Values.DataKind.Time = 7 -> Core.Serialization.Values.DataKind
+Core.Serialization.Values.DataKind.Timestamp = 8 -> Core.Serialization.Values.DataKind
+Core.Serialization.Values.DataNode
+Core.Serialization.Values.DataNode.Items.get -> System.Collections.Generic.IReadOnlyList<Core.Serialization.Values.DataNode!>!
+Core.Serialization.Values.DataNode.Kind.get -> Core.Serialization.Values.DataNodeKind
+Core.Serialization.Values.DataNode.Properties.get -> System.Collections.Generic.IReadOnlyList<Core.Serialization.Values.DataProperty>!
+Core.Serialization.Values.DataNode.TryGetProperty(string! name, out Core.Serialization.Values.DataNode? value) -> bool
+Core.Serialization.Values.DataNode.Value.get -> Core.Serialization.Values.DataValue
+Core.Serialization.Values.DataNodeKind
+Core.Serialization.Values.DataNodeKind.List = 1 -> Core.Serialization.Values.DataNodeKind
+Core.Serialization.Values.DataNodeKind.Map = 0 -> Core.Serialization.Values.DataNodeKind
+Core.Serialization.Values.DataNodeKind.Scalar = 2 -> Core.Serialization.Values.DataNodeKind
+Core.Serialization.Values.DataProperty
+Core.Serialization.Values.DataProperty.DataProperty() -> void
+Core.Serialization.Values.DataProperty.DataProperty(string! name, Core.Serialization.Values.DataNode! value) -> void
+Core.Serialization.Values.DataProperty.Equals(Core.Serialization.Values.DataProperty other) -> bool
+Core.Serialization.Values.DataProperty.Name.get -> string!
+Core.Serialization.Values.DataProperty.Value.get -> Core.Serialization.Values.DataNode!
+Core.Serialization.Values.DataValue
+Core.Serialization.Values.DataValue.DataValue() -> void
+Core.Serialization.Values.DataValue.Equals(Core.Serialization.Values.DataValue other) -> bool
+Core.Serialization.Values.DataValue.IsNull.get -> bool
+Core.Serialization.Values.DataValue.Kind.get -> Core.Serialization.Values.DataKind
+Core.Serialization.Values.DataValue.ToInvariantText() -> string!
+Core.Serialization.Values.DataValue.TryGetBoolean(out bool value) -> bool
+Core.Serialization.Values.DataValue.TryGetDate(out System.DateOnly value) -> bool
+Core.Serialization.Values.DataValue.TryGetDecimal(out decimal value) -> bool
+Core.Serialization.Values.DataValue.TryGetInteger(out long value) -> bool
+Core.Serialization.Values.DataValue.TryGetNode(out Core.Serialization.Values.DataNode? value) -> bool
+Core.Serialization.Values.DataValue.TryGetNumber(out double value) -> bool
+Core.Serialization.Values.DataValue.TryGetText(out string? value) -> bool
+Core.Serialization.Values.DataValue.TryGetTime(out System.TimeOnly value) -> bool
+Core.Serialization.Values.DataValue.TryGetTimestamp(out System.DateTime value) -> bool
+const Core.Serialization.Codecs.Csv.CsvDialectDetector.MaximumSampleLength = 65536 -> int
+const Core.Serialization.Mapping.KeyValueTable.KeyColumnName = "key" -> string!
+const Core.Serialization.Mapping.KeyValueTable.ValueColumnName = "value" -> string!
+override Core.Serialization.Tables.DataField.Equals(object? obj) -> bool
+override Core.Serialization.Tables.DataField.GetHashCode() -> int
+override Core.Serialization.Tables.DataField.ToString() -> string!
+override Core.Serialization.Values.DataNode.ToString() -> string!
+override Core.Serialization.Values.DataProperty.Equals(object? obj) -> bool
+override Core.Serialization.Values.DataProperty.GetHashCode() -> int
+override Core.Serialization.Values.DataProperty.ToString() -> string!
+override Core.Serialization.Values.DataValue.Equals(object? obj) -> bool
+override Core.Serialization.Values.DataValue.GetHashCode() -> int
+override Core.Serialization.Values.DataValue.ToString() -> string!
+static Core.Serialization.Codecs.Csv.CsvDataReader.Read(Core.IO.Mapped.MappedFile! file) -> Core.Results.Result<Core.Serialization.Documents.DataDocument!>
+static Core.Serialization.Codecs.Csv.CsvDataReader.Read(Core.IO.Mapped.MappedFile! file, Core.Serialization.Codecs.Csv.CsvDialect! dialect) -> Core.Results.Result<Core.Serialization.Documents.DataDocument!>
+static Core.Serialization.Codecs.Csv.CsvDataReader.Read(System.ReadOnlySpan<byte> utf8) -> Core.Results.Result<Core.Serialization.Documents.DataDocument!>
+static Core.Serialization.Codecs.Csv.CsvDataReader.Read(System.ReadOnlySpan<byte> utf8, Core.Serialization.Codecs.Csv.CsvDialect! dialect) -> Core.Results.Result<Core.Serialization.Documents.DataDocument!>
+static Core.Serialization.Codecs.Csv.CsvDataWriter.Write(Core.Serialization.Documents.DataDocument! document, System.Buffers.IBufferWriter<byte>! writer) -> Core.Results.Result<bool>
+static Core.Serialization.Codecs.Csv.CsvDataWriter.Write(Core.Serialization.Documents.DataDocument! document, System.Buffers.IBufferWriter<byte>! writer, Core.Serialization.Codecs.Csv.CsvDialect! dialect) -> Core.Results.Result<bool>
+static Core.Serialization.Codecs.Csv.CsvDataWriter.WriteToUtf8Bytes(Core.Serialization.Documents.DataDocument! document) -> Core.Results.Result<byte[]!>
+static Core.Serialization.Codecs.Csv.CsvDataWriter.WriteToUtf8Bytes(Core.Serialization.Documents.DataDocument! document, Core.Serialization.Codecs.Csv.CsvDialect! dialect) -> Core.Results.Result<byte[]!>
+static Core.Serialization.Codecs.Csv.CsvDialect.Default.get -> Core.Serialization.Codecs.Csv.CsvDialect!
+static Core.Serialization.Codecs.Csv.CsvDialectDetector.Detect(System.ReadOnlySpan<byte> utf8) -> Core.Serialization.Codecs.Csv.CsvDialect!
+static Core.Serialization.Codecs.Ini.IniDataReader.Read(System.ReadOnlySpan<byte> utf8) -> Core.Results.Result<Core.Serialization.Documents.DataDocument!>
+static Core.Serialization.Codecs.Ini.IniDataWriter.Write(Core.Serialization.Documents.DataDocument! document, System.Buffers.IBufferWriter<byte>! writer) -> Core.Results.Result<bool>
+static Core.Serialization.Codecs.Ini.IniDataWriter.WriteToUtf8Bytes(Core.Serialization.Documents.DataDocument! document) -> Core.Results.Result<byte[]!>
+static Core.Serialization.Codecs.Json.JsonDataReader.Read(System.ReadOnlySpan<byte> utf8) -> Core.Results.Result<Core.Serialization.Documents.DataDocument!>
+static Core.Serialization.Codecs.Json.JsonDataWriter.Write(Core.Serialization.Documents.DataDocument! document, System.Buffers.IBufferWriter<byte>! writer) -> Core.Results.Result<bool>
+static Core.Serialization.Codecs.Json.JsonDataWriter.WriteToUtf8Bytes(Core.Serialization.Documents.DataDocument! document) -> Core.Results.Result<byte[]!>
+static Core.Serialization.Documents.DataDocument.FromTable(Core.Serialization.Tables.DataTable! table) -> Core.Serialization.Documents.DataDocument!
+static Core.Serialization.Mapping.DataDocumentMapper.FromDocument<T>(Core.Serialization.Documents.DataDocument! document, System.Text.Json.Serialization.Metadata.JsonTypeInfo<T>! typeInfo) -> Core.Results.Result<T>
+static Core.Serialization.Mapping.DataDocumentMapper.ToDocument<T>(T value, System.Text.Json.Serialization.Metadata.JsonTypeInfo<T>! typeInfo) -> Core.Results.Result<Core.Serialization.Documents.DataDocument!>
+static Core.Serialization.Mapping.KeyValueTable.Create(string! name) -> Core.Serialization.Tables.DataTable!
+static Core.Serialization.Mapping.KeyValueTable.GetValues(Core.Serialization.Tables.DataTable! table, string! key) -> System.Collections.Generic.IReadOnlyList<string!>!
+static Core.Serialization.Mapping.KeyValueTable.TryGetValue(Core.Serialization.Tables.DataTable! table, string! key, out string! value) -> bool
+static Core.Serialization.Storage.DataFileStore.ExtensionOf(Core.Serialization.Codecs.DataFormat format) -> string!
+static Core.Serialization.Storage.DataFileStore.FormatOf(string! name) -> Core.Serialization.Codecs.DataFormat?
+static Core.Serialization.Tables.DataField.operator !=(Core.Serialization.Tables.DataField left, Core.Serialization.Tables.DataField right) -> bool
+static Core.Serialization.Tables.DataField.operator ==(Core.Serialization.Tables.DataField left, Core.Serialization.Tables.DataField right) -> bool
+static Core.Serialization.Tables.DataSchema.Empty.get -> Core.Serialization.Tables.DataSchema!
+static Core.Serialization.Tables.DataTableBuilder.Create(string! name) -> Core.Serialization.Tables.DataTableBuilder!
+static Core.Serialization.Values.DataNode.List(System.Collections.Generic.IEnumerable<Core.Serialization.Values.DataNode!>! items) -> Core.Serialization.Values.DataNode!
+static Core.Serialization.Values.DataNode.Map(System.Collections.Generic.IEnumerable<Core.Serialization.Values.DataProperty>! properties) -> Core.Serialization.Values.DataNode!
+static Core.Serialization.Values.DataNode.Scalar(Core.Serialization.Values.DataValue value) -> Core.Serialization.Values.DataNode!
+static Core.Serialization.Values.DataProperty.operator !=(Core.Serialization.Values.DataProperty left, Core.Serialization.Values.DataProperty right) -> bool
+static Core.Serialization.Values.DataProperty.operator ==(Core.Serialization.Values.DataProperty left, Core.Serialization.Values.DataProperty right) -> bool
+static Core.Serialization.Values.DataValue.From(System.DateOnly value) -> Core.Serialization.Values.DataValue
+static Core.Serialization.Values.DataValue.From(System.DateTime value) -> Core.Serialization.Values.DataValue
+static Core.Serialization.Values.DataValue.From(System.TimeOnly value) -> Core.Serialization.Values.DataValue
+static Core.Serialization.Values.DataValue.From(bool value) -> Core.Serialization.Values.DataValue
+static Core.Serialization.Values.DataValue.From(decimal value) -> Core.Serialization.Values.DataValue
+static Core.Serialization.Values.DataValue.From(double value) -> Core.Serialization.Values.DataValue
+static Core.Serialization.Values.DataValue.From(long value) -> Core.Serialization.Values.DataValue
+static Core.Serialization.Values.DataValue.From(string! value) -> Core.Serialization.Values.DataValue
+static Core.Serialization.Values.DataValue.FromNode(Core.Serialization.Values.DataNode! value) -> Core.Serialization.Values.DataValue
+static Core.Serialization.Values.DataValue.Null.get -> Core.Serialization.Values.DataValue
+static Core.Serialization.Values.DataValue.operator !=(Core.Serialization.Values.DataValue left, Core.Serialization.Values.DataValue right) -> bool
+static Core.Serialization.Values.DataValue.operator ==(Core.Serialization.Values.DataValue left, Core.Serialization.Values.DataValue right) -> bool
+const Core.Serialization.Codecs.Json.JsonDataReader.MaxColumns = 65536 -> int
+const Core.Serialization.Codecs.Json.JsonDataReader.MaxCells = 4000000 -> int
+const Core.Serialization.Codecs.Csv.CsvDataReader.MaxCells = 4000000 -> int
+const Core.Serialization.Codecs.Ini.IniDataReader.MaxBytes = 16777216 -> int
+const Core.Serialization.Codecs.Ini.IniDataReader.MaxLines = 1000000 -> int

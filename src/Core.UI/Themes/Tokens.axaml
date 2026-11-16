@@ -1,0 +1,113 @@
+<!-- SPDX-FileCopyrightText: 2026 Younes BENMOUSSA <younes.benmoussa@pm.me> -->
+<!-- SPDX-License-Identifier: LGPL-3.0-or-later -->
+
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!--
+        The shared Core design tokens. This is the only place a colour literal
+        is allowed; every control names a semantic brush. The semantic keys resolve
+        the same under Light and Dark, so a view names one key and follows the
+        active theme.
+
+        Palette "Forest": the accent is the studio emerald (#10B981), the neutrals
+        are lifted off pure black and white because the extreme pair halates and
+        strains the eye. Contrast was measured with the WCAG formula against each
+        surface; the ratios live next to each value.
+
+        Light: text #1F2422 on #FFFFFF is 15.8:1, muted 6.5:1, accent text
+        #065F46 7.7:1 (the emerald itself is only 2.5:1 on white, so it is a fill,
+        never text), grid line 1.5:1 (visible, not harsh).
+
+        Dark: text #E6E9E7 on #131616 is 14.9:1, muted 8.0:1, accent text
+        #34D399 9.5:1, grid line 1.6:1. The emerald stays the fill with the
+        brand's deep green #052E16 on it (5.9:1).
+    -->
+    <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Light">
+            <SolidColorBrush x:Key="BackgroundBrush" Color="#F4F6F5" />
+            <SolidColorBrush x:Key="SurfaceBrush" Color="#FBFCFB" />
+            <SolidColorBrush x:Key="SurfaceRaisedBrush" Color="#EFF1F0" />
+            <SolidColorBrush x:Key="ForegroundBrush" Color="#1F2422" />
+            <SolidColorBrush x:Key="MutedForegroundBrush" Color="#59605D" />
+            <SolidColorBrush x:Key="BorderBrush" Color="#DCE2E0" />
+
+            <!-- The data surface and its grid. No pure white: a full-brightness
+                 surface is the harshest thing on a dark desktop. -->
+            <SolidColorBrush x:Key="ViewBrush" Color="#FCFDFC" />
+            <SolidColorBrush x:Key="GridHeaderBrush" Color="#F0F2F1" />
+            <SolidColorBrush x:Key="RowNumberBrush" Color="#EAECEB" />
+            <SolidColorBrush x:Key="GridLineBrush" Color="#D2DAD6" />
+
+            <!-- Accent (studio emerald). The fill carries the deep green. -->
+            <SolidColorBrush x:Key="PrimaryBrush" Color="#10B981" />
+            <SolidColorBrush x:Key="PrimaryForegroundBrush" Color="#052E16" />
+            <SolidColorBrush x:Key="AccentTextBrush" Color="#065F46" />
+            <SolidColorBrush x:Key="HighlightBrush" Color="#DCF3E7" />
+
+            <!-- Interaction: hover is a faint emerald wash, selection is stronger.
+                 Both stay low-chroma so a screen of controls never shouts. -->
+            <SolidColorBrush x:Key="HoverBrush" Color="#E9F5EE" />
+            <SolidColorBrush x:Key="SelectedBrush" Color="#DCF3E7" />
+
+            <SolidColorBrush x:Key="ErrorBrush" Color="#B3261E" />
+            <SolidColorBrush x:Key="DestructiveBrush" Color="#B3261E" />
+            <SolidColorBrush x:Key="SuccessBrush" Color="#0F7A4F" />
+            <SolidColorBrush x:Key="WarningBrush" Color="#9A6A00" />
+            <SolidColorBrush x:Key="ScrimBrush" Color="#B31F2422" />
+            <SolidColorBrush x:Key="ScrimForegroundBrush" Color="#FFFFFF" />
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="Dark">
+            <SolidColorBrush x:Key="BackgroundBrush" Color="#16191A" />
+            <SolidColorBrush x:Key="SurfaceBrush" Color="#1E2223" />
+            <SolidColorBrush x:Key="SurfaceRaisedBrush" Color="#262B2B" />
+            <SolidColorBrush x:Key="ForegroundBrush" Color="#E6E9E7" />
+            <SolidColorBrush x:Key="MutedForegroundBrush" Color="#A6ADAA" />
+            <SolidColorBrush x:Key="BorderBrush" Color="#343B39" />
+
+            <!-- The data surface and its grid. -->
+            <SolidColorBrush x:Key="ViewBrush" Color="#131616" />
+            <SolidColorBrush x:Key="GridHeaderBrush" Color="#212526" />
+            <SolidColorBrush x:Key="RowNumberBrush" Color="#191D1D" />
+            <SolidColorBrush x:Key="GridLineBrush" Color="#343B39" />
+
+            <!-- Accent (studio emerald). -->
+            <SolidColorBrush x:Key="PrimaryBrush" Color="#10B981" />
+            <SolidColorBrush x:Key="PrimaryForegroundBrush" Color="#052E16" />
+            <SolidColorBrush x:Key="AccentTextBrush" Color="#34D399" />
+            <SolidColorBrush x:Key="HighlightBrush" Color="#1E3B31" />
+
+            <!-- Interaction: hover is a faint emerald wash, selection is stronger. -->
+            <SolidColorBrush x:Key="HoverBrush" Color="#1B2621" />
+            <SolidColorBrush x:Key="SelectedBrush" Color="#1E3B31" />
+
+            <SolidColorBrush x:Key="ErrorBrush" Color="#F2A29B" />
+            <SolidColorBrush x:Key="DestructiveBrush" Color="#F2A29B" />
+            <SolidColorBrush x:Key="SuccessBrush" Color="#34D399" />
+            <SolidColorBrush x:Key="WarningBrush" Color="#F5C211" />
+            <SolidColorBrush x:Key="ScrimBrush" Color="#B3131616" />
+            <SolidColorBrush x:Key="ScrimForegroundBrush" Color="#E6E9E7" />
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
+
+    <!--
+        Typography. The UI font is the system stack; the monospace font is the code
+        and macro font: Fira Code where it is installed, DejaVu Sans Mono otherwise.
+        Avalonia treats the commas as fallbacks, so the chain resolves either way.
+    -->
+    <FontFamily x:Key="FontFamily">Cantarell,Adwaita Sans,Noto Sans,DejaVu Sans,sans-serif</FontFamily>
+    <FontFamily x:Key="MonospaceFont">Fira Code,DejaVu Sans Mono,monospace</FontFamily>
+
+    <!-- One size for the whole interface: it is set on the Window and inherited, so
+         a control never invents its own. Emphasis comes from weight and colour. -->
+    <x:Double x:Key="FontSize">13</x:Double>
+
+    <!-- The glyph box: the 16 px authoring grid every icon is drawn on. -->
+    <x:Double x:Key="IconSize">16</x:Double>
+
+    <x:Double x:Key="SpacingSmall">8</x:Double>
+    <x:Double x:Key="SpacingMedium">12</x:Double>
+    <x:Double x:Key="SpacingLarge">16</x:Double>
+
+    <CornerRadius x:Key="ControlCornerRadius">6</CornerRadius>
+    <CornerRadius x:Key="SurfaceCornerRadius">10</CornerRadius>
+</ResourceDictionary>

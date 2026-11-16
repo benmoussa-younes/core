@@ -1,0 +1,20 @@
+<!-- SPDX-FileCopyrightText: 2026 Younes BENMOUSSA <younes.benmoussa@pm.me> -->
+<!-- SPDX-License-Identifier: LGPL-3.0-or-later -->
+
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!--
+        The studio accent palette a Preferences page offers. This is the one place
+        an accent literal lives: the shared Tokens.axaml owns the neutrals and the
+        default (Forest/emerald) accent, and this file adds the alternatives the
+        operator applies through CoreApplication.ApplyAccent(key). Merge it
+        into Application.Resources to use the palette; every other product file
+        names a token.
+    -->
+    <Color x:Key="AccentEmerald">#10B981</Color>
+    <Color x:Key="AccentBlue">#3B82F6</Color>
+    <Color x:Key="AccentViolet">#8B5CF6</Color>
+    <Color x:Key="AccentAmber">#F59E0B</Color>
+    <Color x:Key="AccentRose">#F43F5E</Color>
+    <Color x:Key="AccentCyan">#06B6D4</Color>
+</ResourceDictionary>

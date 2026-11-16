@@ -1,0 +1,78 @@
+# Core
+
+Foundation libraries for desktop tools: primitives, platform ports, IO,
+concurrency, serialization, MVP contracts and a shared Avalonia shell. Linux is
+the first adapter; .NET 10, NativeAOT-compatible and trim-safe.
+
+## Assemblies
+
+| Assembly | Contents |
+|---|---|
+| `Core` | `Result` / `Result<T>`, `CoreError`, `ByteSize`, `PathPattern`, `ICapability`, `ApplicationPaths`, the diagnostics contracts and the units of measure (energy, power, frequency, temperature) |
+| `Core.Platform` | the OS ports and composition: `IFileSystem`, `IAtomicFileWriter`, `IMemoryMapping`, `IPathResolver`, `ISingleInstance`, `ICoreHostServices` and `CorePlatform` |
+| `Core.Platform.Linux` | the Linux adapters: `LinuxFileSystem`, the directory reader, raw `mmap`, the atomic writer, owner-only rotated logs, the Unix-domain single-instance lock, `SystemProcessRunner`, `RawFileWalker` and `LinuxPlatform` |
+| `Core.IO` | portable algorithms: descriptor-pinned directory walk, safe file reads, `MappedFile`, the parallel record scan/index, and the generic block pipeline; it contains no Linux type |
+| `Core.Serialization` | one canonical data document (`DataDocument`: typed, ordered, columnar `DataTable`s with a `DataNode` escape hatch) read and written in multiple formats: the JSON, CSV and INI codecs, the atomic `DataFileStore` (document or typed via source-generated `JsonTypeInfo<T>`), and the `DataDocumentMapper`/`DataTableBuilder`/`KeyValueTable` helpers |
+| `Core.Concurrency` | the bounded worker pool, the cooperative abort model, the block pipeline's parallelism primitives and the CPU-topology probe |
+| `Core.Mvp` | passive-view MVP contracts and base classes: `IService`, `IModel`, `IView`, `IPresenter<TView>` and `PresenterBase<TView>` |
+| `Core.UI` | the shared Avalonia shell: bootstrap and backend selection (native Wayland, X11 fallback, Avalonia platform detection elsewhere), the theme/accent tokens and controls (`Themes/`, `Controls/`), a GNOME header bar and Adwaita window, the content-dialog/About/Preferences suite, notifications, the tray, and the file-picker/clipboard adapters. `CoreHost` receives a `CorePlatform`; no Linux type is part of its public API |
+
+## Requirements
+
+- .NET SDK 10 (`global.json`)
+- Linux
+
+## Build and test
+
+```sh
+dotnet build -c Release
+dotnet test -c Release
+reuse lint
+tools/scripts/binaries/gate          # fast gate: build, tests, architecture
+tools/scripts/binaries/gate --perf   # manual/nightly AOT budgets (hyperfine, jq)
+```
+
+The gate needs a Git checkout (it uses `git ls-files`), the root `AGENTS.md`
+and `bcs`; it is not a source-tarball tool. `bcs` is not vendored as a binary:
+the scripts project is vendored **by source** with its own GPL licence when it
+lands. Until then, a local `bcs` 0.5.0 on `PATH` is accepted.
+
+## Release
+
+A `v*` tag runs `.github/workflows/release.yml`: it builds, tests, checks the
+licence metadata, verifies that the tag matches `VersionPrefix`, and attaches a
+source tarball plus its SHA-256 to the GitHub release. Core 0.1.0 is source-only:
+no NuGet package is published.
+
+## Reference
+
+Core is source-only: it is consumed by `ProjectReference` (no NuGet package is
+produced). In a product project file:
+
+```xml
+<ItemGroup>
+  <ProjectReference Include="../../core/src/Core/Core.csproj" />
+  <ProjectReference Include="../../core/src/Core.UI/Core.UI.csproj" />
+  <ProjectReference Include="../../core/src/Core.Platform.Linux/Core.Platform.Linux.csproj" />
+  <ProjectReference Include="../../core/src/Core.Serialization/Core.Serialization.csproj" />
+  <ProjectReference Include="../../core/src/Core.IO/Core.IO.csproj" />
+  <ProjectReference Include="../../core/src/Core.Mvp/Core.Mvp.csproj" />
+</ItemGroup>
+```
+
+## Licence
+
+LGPL-3.0-or-later. See [`LICENSE`](LICENSE); the other licence texts that cover
+the assets (MIT, OFL-1.1, Apache-2.0, BSD-3-Clause, CC-BY-SA-4.0) live in [`LICENSES/`](LICENSES/), and the
+third-party components are listed in [`THIRD-PARTY`](THIRD-PARTY). The
+documentation is CC BY-SA 4.0. The `bcs`/scripts project is vendored by source
+under GPL-3.0-or-later; its complete source and licence ship in the vendored
+tree.
+
+## Contributing and security
+
+External contributions are **not accepted at this time**; unsolicited pull
+requests or patches may be closed without review. No support, service level or
+warranty is provided beyond the licences. See [`CONTRIBUTING.md`](CONTRIBUTING.md)
+for the maintainer workflow and [`SECURITY.md`](SECURITY.md) for the private
+vulnerability report.

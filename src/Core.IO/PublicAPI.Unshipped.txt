@@ -1,0 +1,102 @@
+#nullable enable
+const Core.IO.Records.Index.MappedFileIndex.MaxOffsets = 67108864 -> long
+Core.IO.Files.ByteSpanSink
+Core.IO.Files.FileContent
+Core.IO.Files.FileIdentity
+Core.IO.Files.FileIdentity.Deconstruct(out ulong Device, out ulong Inode) -> void
+Core.IO.Files.FileIdentity.Device.get -> ulong
+Core.IO.Files.FileIdentity.Device.init -> void
+Core.IO.Files.FileIdentity.Equals(Core.IO.Files.FileIdentity other) -> bool
+Core.IO.Files.FileIdentity.FileIdentity() -> void
+Core.IO.Files.FileIdentity.FileIdentity(ulong Device, ulong Inode) -> void
+Core.IO.Files.FileIdentity.Inode.get -> ulong
+Core.IO.Files.FileIdentity.Inode.init -> void
+Core.IO.Files.FileIdentity.IsKnown.get -> bool
+Core.IO.Files.FileMetadata
+Core.IO.Files.FileMetadata.Device.get -> ulong
+Core.IO.Files.FileMetadata.FileMetadata() -> void
+Core.IO.Files.FileMetadata.FileMetadata(long size, long mtimeNanoseconds, ulong device, ulong inode, Core.Platform.FileType type) -> void
+Core.IO.Files.FileMetadata.Inode.get -> ulong
+Core.IO.Files.FileMetadata.MtimeNanoseconds.get -> long
+Core.IO.Files.FileMetadata.Size.get -> long
+Core.IO.Files.FileMetadata.Type.get -> Core.Platform.FileType
+Core.IO.Files.FileReader
+Core.IO.Files.FileReader.Dispose() -> void
+Core.IO.Files.FileReader.Handle.get -> Microsoft.Win32.SafeHandles.SafeFileHandle!
+Core.IO.Files.FileReader.Metadata.get -> Core.IO.Files.FileMetadata
+Core.IO.Mapped.MappedFile
+Core.IO.Mapped.MappedFile.Dispose() -> void
+Core.IO.Mapped.MappedFile.Length.get -> long
+Core.IO.Mapped.MappedFile.Slice(long offset, int length) -> System.ReadOnlySpan<byte>
+Core.IO.Pipeline.BlockPipeline
+Core.IO.Pipeline.BlockPipelineOptions
+Core.IO.Pipeline.BlockPipelineOptions.BlockPipelineOptions() -> void
+Core.IO.Pipeline.BlockPipelineOptions.InFlightBlocksPerThread.get -> int
+Core.IO.Pipeline.BlockPipelineOptions.InFlightBlocksPerThread.init -> void
+Core.IO.Pipeline.BlockPipelineOptions.InitialBlockSize.get -> int
+Core.IO.Pipeline.BlockPipelineOptions.InitialBlockSize.init -> void
+Core.IO.Pipeline.BlockPipelineOptions.MaximumBlockSize.get -> int
+Core.IO.Pipeline.BlockPipelineOptions.MaximumBlockSize.init -> void
+Core.IO.Records.Index.MappedFileIndex
+Core.IO.Records.Index.RecordSet
+Core.IO.Records.Index.RecordSet.Count.get -> long
+Core.IO.Records.Index.RecordSet.Delimiter.get -> byte
+Core.IO.Records.Index.RecordSet.End(long index) -> long
+Core.IO.Records.Index.RecordSet.Record(long index) -> System.ReadOnlySpan<byte>
+Core.IO.Records.Index.RecordSet.Start(long index) -> long
+Core.IO.Records.Scan.MappedFileScan
+Core.IO.Walking.DirectoryWalker
+Core.IO.Walking.DirectoryWalker.Walk(string! root) -> System.Collections.Generic.IEnumerable<Core.IO.Walking.WalkEntry>!
+Core.IO.Walking.WalkEntry
+Core.IO.Walking.WalkEntry.FullPath.get -> string!
+Core.IO.Walking.WalkEntry.Identity.get -> Core.IO.Files.FileIdentity
+Core.IO.Walking.WalkEntry.IsFile.get -> bool
+Core.IO.Walking.WalkEntry.Kind.get -> Core.IO.Walking.WalkEntryKind
+Core.IO.Walking.WalkEntry.RelativePath.get -> string!
+Core.IO.Walking.WalkEntry.SkipReason.get -> Core.IO.Walking.WalkSkipReason?
+Core.IO.Walking.WalkEntry.WalkEntry() -> void
+Core.IO.Walking.WalkEntry.WalkEntry(string! relativePath, string! fullPath, Core.IO.Walking.WalkEntryKind kind, Core.IO.Walking.WalkSkipReason? skipReason) -> void
+Core.IO.Walking.WalkEntry.WalkEntry(string! relativePath, string! fullPath, Core.IO.Walking.WalkEntryKind kind, Core.IO.Walking.WalkSkipReason? skipReason, Core.IO.Files.FileIdentity identity) -> void
+Core.IO.Walking.WalkEntryKind
+Core.IO.Walking.WalkEntryKind.File = 0 -> Core.IO.Walking.WalkEntryKind
+Core.IO.Walking.WalkEntryKind.Skipped = 1 -> Core.IO.Walking.WalkEntryKind
+Core.IO.Walking.WalkOptions
+Core.IO.Walking.WalkOptions.Excludes.get -> System.Collections.Generic.IReadOnlyList<Core.Primitives.PathPattern!>!
+Core.IO.Walking.WalkOptions.FollowSymbolicLinks.get -> bool
+Core.IO.Walking.WalkOptions.IncludePseudoFilesystems.get -> bool
+Core.IO.Walking.WalkOptions.Includes.get -> System.Collections.Generic.IReadOnlyList<Core.Primitives.PathPattern!>!
+Core.IO.Walking.WalkOptions.MaximumDepth.get -> int
+Core.IO.Walking.WalkOptions.WalkOptions() -> void
+Core.IO.Walking.WalkOptions.WalkOptions(System.Collections.Generic.IReadOnlyList<Core.Primitives.PathPattern!>! includes, System.Collections.Generic.IReadOnlyList<Core.Primitives.PathPattern!>! excludes, int maximumDepth, bool followSymbolicLinks) -> void
+Core.IO.Walking.WalkOptions.WalkOptions(System.Collections.Generic.IReadOnlyList<Core.Primitives.PathPattern!>! includes, System.Collections.Generic.IReadOnlyList<Core.Primitives.PathPattern!>! excludes, int maximumDepth, bool followSymbolicLinks, bool includePseudoFilesystems) -> void
+Core.IO.Walking.WalkSkipReason
+Core.IO.Walking.WalkSkipReason.Cycle = 1 -> Core.IO.Walking.WalkSkipReason
+Core.IO.Walking.WalkSkipReason.NonUtf8 = 2 -> Core.IO.Walking.WalkSkipReason
+Core.IO.Walking.WalkSkipReason.PseudoFilesystem = 4 -> Core.IO.Walking.WalkSkipReason
+Core.IO.Walking.WalkSkipReason.SymbolicLink = 0 -> Core.IO.Walking.WalkSkipReason
+Core.IO.Walking.WalkSkipReason.Unreadable = 3 -> Core.IO.Walking.WalkSkipReason
+Core.IO.Walking.WalkSkipReasonNames
+const Core.IO.Pipeline.BlockPipelineOptions.MaximumThreads = 1024 -> int
+const Core.IO.Records.Scan.MappedFileScan.DefaultWindowSize = 1048576 -> int
+override Core.IO.Files.FileIdentity.GetHashCode() -> int
+static Core.IO.Files.FileIdentity.Unknown.get -> Core.IO.Files.FileIdentity
+static Core.IO.Files.FileIdentity.operator !=(Core.IO.Files.FileIdentity left, Core.IO.Files.FileIdentity right) -> bool
+static Core.IO.Files.FileIdentity.operator ==(Core.IO.Files.FileIdentity left, Core.IO.Files.FileIdentity right) -> bool
+static Core.IO.Mapped.MappedFile.Open(string! path) -> Core.Results.Result<Core.IO.Mapped.MappedFile!>
+static Core.IO.Pipeline.BlockPipeline.RunAsync<TInput, TOutput, TWorkerState>(System.Collections.Generic.IEnumerable<TInput>! source, int threads, Core.IO.Pipeline.BlockPipelineOptions options, System.Func<TWorkerState!>! createWorkerState, System.Action<TWorkerState!>? disposeWorkerState, System.Func<TInput, TWorkerState!, TOutput>! process, System.Action<TOutput>! emit, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+static Core.IO.Pipeline.BlockPipelineOptions.Default.get -> Core.IO.Pipeline.BlockPipelineOptions
+static Core.IO.Records.Index.MappedFileIndex.BuildAsync(Core.IO.Mapped.MappedFile! file, byte delimiter, int threads, int windowSize = 1048576, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<long[]!>
+static Core.IO.Records.Index.RecordSet.OpenAsync(Core.IO.Mapped.MappedFile! file, byte delimiter, int threads, int windowSize = 1048576, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Core.IO.Records.Index.RecordSet!>
+static Core.IO.Records.Scan.MappedFileScan.CountAsync(Core.IO.Mapped.MappedFile! file, byte value, int threads, int windowSize = 1048576, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<long>
+static Core.IO.Records.Scan.MappedFileScan.CountSequential(Core.IO.Mapped.MappedFile! file, byte value, int windowSize = 1048576) -> long
+static Core.IO.Walking.WalkSkipReasonNames.ToName(Core.IO.Walking.WalkSkipReason reason) -> string!
+virtual Core.IO.Files.ByteSpanSink.Invoke(System.ReadOnlySpan<byte> bytes) -> void
+~override Core.IO.Files.FileIdentity.Equals(object obj) -> bool
+~override Core.IO.Files.FileIdentity.ToString() -> string
+static Core.IO.Mapped.MappedFile.Open(string! path, Core.Platform.IMemoryMappingFactory! factory) -> Core.Results.Result<Core.IO.Mapped.MappedFile!>
+static Core.IO.Files.FileReader.Open(Core.Platform.IFileSystem! fileSystem, string! path) -> Core.Results.Result<Core.IO.Files.FileReader!>
+static Core.IO.Files.FileReader.Open(Core.Platform.IFileSystem! fileSystem, string! path, in Core.IO.Files.FileIdentity expected) -> Core.Results.Result<Core.IO.Files.FileReader!>
+static Core.IO.Files.FileReader.OpenNoFollow(Core.Platform.IFileSystem! fileSystem, string! path) -> Core.Results.Result<Core.IO.Files.FileReader!>
+static Core.IO.Files.FileContent.Read(Core.Platform.IFileSystem! fileSystem, string! path, byte[]! readBuffer, Core.IO.Files.ByteSpanSink! sink) -> Core.Results.Result<Core.IO.Files.FileMetadata>
+static Core.IO.Files.FileContent.Read(Core.Platform.IFileSystem! fileSystem, string! path, byte[]! readBuffer, Core.IO.Files.ByteSpanSink! sink, in Core.IO.Files.FileIdentity expected) -> Core.Results.Result<Core.IO.Files.FileMetadata>
+Core.IO.Walking.DirectoryWalker.DirectoryWalker(Core.IO.Walking.WalkOptions options, Core.Platform.IFileSystem! fileSystem) -> void

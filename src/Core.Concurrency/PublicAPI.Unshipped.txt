@@ -1,0 +1,116 @@
+#nullable enable
+Core.Concurrency.AbortMode
+Core.Concurrency.AbortMode.Drain = 0 -> Core.Concurrency.AbortMode
+Core.Concurrency.AbortMode.Front = 1 -> Core.Concurrency.AbortMode
+Core.Concurrency.BoundedQueue<T>
+Core.Concurrency.BoundedQueue<T>.BoundedQueue(int capacity) -> void
+Core.Concurrency.BoundedQueue<T>.Capacity.get -> int
+Core.Concurrency.BoundedQueue<T>.Close() -> void
+Core.Concurrency.BoundedQueue<T>.Count.get -> int
+Core.Concurrency.BoundedQueue<T>.Dispose() -> void
+Core.Concurrency.BoundedQueue<T>.IsClosed.get -> bool
+Core.Concurrency.BoundedQueue<T>.Pop(out T item) -> bool
+Core.Concurrency.BoundedQueue<T>.Push(T item) -> bool
+Core.Concurrency.Buffer<T>
+Core.Concurrency.Buffer<T>.Capacity.get -> int
+Core.Concurrency.Buffer<T>.Ensure(int length) -> System.Span<T>
+Core.Concurrency.Buffer<T>.Memory.get -> System.Memory<T>
+Core.Concurrency.Buffer<T>.Span.get -> System.Span<T>
+Core.Concurrency.ConcurrencyConfiguration
+Core.Concurrency.ConcurrencyConfiguration.AllowOversubscribe.get -> bool
+Core.Concurrency.ConcurrencyConfiguration.AllowOversubscribe.init -> void
+Core.Concurrency.ConcurrencyConfiguration.<Clone>$() -> Core.Concurrency.ConcurrencyConfiguration!
+Core.Concurrency.ConcurrencyConfiguration.Equals(Core.Concurrency.ConcurrencyConfiguration? other) -> bool
+Core.Concurrency.ConcurrencyConfiguration.MaximumPoolSize.get -> int?
+Core.Concurrency.ConcurrencyConfiguration.MaximumPoolSize.init -> void
+Core.Concurrency.ConcurrencyConfiguration.ConcurrencyConfiguration() -> void
+Core.Concurrency.ConcurrencyConfiguration.PinToCpu.get -> bool
+Core.Concurrency.ConcurrencyConfiguration.PinToCpu.init -> void
+Core.Concurrency.ConcurrencyConfiguration.WorkerCount.get -> int?
+Core.Concurrency.ConcurrencyConfiguration.WorkerCount.init -> void
+Core.Concurrency.ConcurrencyConfiguration.WorkerStackBytes.get -> int
+Core.Concurrency.ConcurrencyConfiguration.WorkerStackBytes.init -> void
+Core.Concurrency.ConcurrencyConfiguration.Workload.get -> Core.Concurrency.WorkloadKind
+Core.Concurrency.ConcurrencyConfiguration.Workload.init -> void
+Core.Concurrency.ConcurrencyContext
+Core.Concurrency.ConcurrencyContext.Config.get -> Core.Concurrency.ConcurrencyConfiguration!
+Core.Concurrency.ConcurrencyContext.DispatchAndWait() -> Core.Concurrency.ConcurrencyResult!
+Core.Concurrency.ConcurrencyContext.Dispose() -> void
+Core.Concurrency.ConcurrencyContext.For(long start, long end, long step, System.Action<long>! body, Core.Concurrency.ConcurrencyOptions! options) -> Core.Concurrency.ConcurrencyResult!
+Core.Concurrency.ConcurrencyContext.For(long start, long end, long step, System.Action<long>! body) -> Core.Concurrency.ConcurrencyResult!
+Core.Concurrency.ConcurrencyContext.For<TState>(long start, long end, long step, TState state, System.Action<long, TState>! body, Core.Concurrency.ConcurrencyOptions! options) -> Core.Concurrency.ConcurrencyResult!
+Core.Concurrency.ConcurrencyContext.For<TState>(long start, long end, long step, TState state, System.Action<long, TState>! body) -> Core.Concurrency.ConcurrencyResult!
+Core.Concurrency.ConcurrencyContext.RegisterBufferPool<T>(int initialCapacity = 0) -> Core.Concurrency.WorkerBufferPool<T>!
+Core.Concurrency.ConcurrencyContext.RegisterSlot<T>(System.Func<int, T>! create, System.Action<T>? destroy = null) -> Core.Concurrency.SlotRegistration!
+Core.Concurrency.ConcurrencyContext.Run(System.Action! task, Core.Concurrency.ConcurrencyOptions! options) -> Core.Concurrency.ConcurrencyResult!
+Core.Concurrency.ConcurrencyContext.Run(System.Action! task) -> Core.Concurrency.ConcurrencyResult!
+Core.Concurrency.ConcurrencyContext.SubmitBatch(System.ReadOnlySpan<System.Action!> tasks) -> void
+Core.Concurrency.ConcurrencyContext.Submit(System.Action! task) -> void
+Core.Concurrency.ConcurrencyContext.WorkerBuffer<T>(Core.Concurrency.WorkerBufferPool<T>! pool) -> Core.Concurrency.Buffer<T>!
+Core.Concurrency.ConcurrencyContext.WorkerCount.get -> int
+Core.Concurrency.ConcurrencyContext.WorkerIndex.get -> long
+Core.Concurrency.ConcurrencyContext.WorkerSlot<T>(Core.Concurrency.SlotRegistration! slot) -> T
+Core.Concurrency.ConcurrencyOptions
+Core.Concurrency.ConcurrencyOptions.AbortAction.get -> System.Action<System.Exception!>?
+Core.Concurrency.ConcurrencyOptions.AbortAction.init -> void
+Core.Concurrency.ConcurrencyOptions.AbortMode.get -> Core.Concurrency.AbortMode
+Core.Concurrency.ConcurrencyOptions.AbortMode.init -> void
+Core.Concurrency.ConcurrencyOptions.<Clone>$() -> Core.Concurrency.ConcurrencyOptions!
+Core.Concurrency.ConcurrencyOptions.ClaimChunkSize.get -> int
+Core.Concurrency.ConcurrencyOptions.ClaimChunkSize.init -> void
+Core.Concurrency.ConcurrencyOptions.CollectAllFailures.get -> bool
+Core.Concurrency.ConcurrencyOptions.CollectAllFailures.init -> void
+Core.Concurrency.ConcurrencyOptions.Equals(Core.Concurrency.ConcurrencyOptions? other) -> bool
+Core.Concurrency.ConcurrencyOptions.ConcurrencyOptions() -> void
+Core.Concurrency.ConcurrencyOptions.Partition.get -> Core.Concurrency.WorkPartition
+Core.Concurrency.ConcurrencyOptions.Partition.init -> void
+Core.Concurrency.ConcurrencyOptions.WorkerCount.get -> int?
+Core.Concurrency.ConcurrencyOptions.WorkerCount.init -> void
+Core.Concurrency.ConcurrencyResult
+Core.Concurrency.ConcurrencyResult.Failures.get -> System.Collections.Generic.IReadOnlyList<System.Exception!>!
+Core.Concurrency.ConcurrencyResult.FirstFailure.get -> System.Exception?
+Core.Concurrency.ConcurrencyResult.IsCompleted.get -> bool
+Core.Concurrency.ConcurrencyResult.ConcurrencyResult(Core.Concurrency.ConcurrencyStatus status, System.Collections.Generic.IReadOnlyList<System.Exception!>? failures = null) -> void
+Core.Concurrency.ConcurrencyResult.Status.get -> Core.Concurrency.ConcurrencyStatus
+Core.Concurrency.ConcurrencyResult.ThrowIfFailed() -> void
+Core.Concurrency.ConcurrencyStatus
+Core.Concurrency.ConcurrencyStatus.Aborted = 1 -> Core.Concurrency.ConcurrencyStatus
+Core.Concurrency.ConcurrencyStatus.Completed = 0 -> Core.Concurrency.ConcurrencyStatus
+Core.Concurrency.ConcurrencyStatus.Faulted = 2 -> Core.Concurrency.ConcurrencyStatus
+Core.Concurrency.SlotRegistration
+Core.Concurrency.SlotRegistration.Name.get -> string!
+Core.Concurrency.ThreadCount
+Core.Concurrency.WorkerBufferPool<T>
+Core.Concurrency.WorkerBufferPool<T>.Dispose() -> void
+Core.Concurrency.WorkerBufferPool<T>.InitialCapacity.get -> int
+Core.Concurrency.WorkerBufferPool<T>.WorkerCount.get -> int
+Core.Concurrency.WorkloadKind
+Core.Concurrency.WorkloadKind.CpuBound = 1 -> Core.Concurrency.WorkloadKind
+Core.Concurrency.WorkloadKind.IoBound = 2 -> Core.Concurrency.WorkloadKind
+Core.Concurrency.WorkloadKind.Unknown = 0 -> Core.Concurrency.WorkloadKind
+Core.Concurrency.WorkPartition
+Core.Concurrency.WorkPartition.ClaimChunk = 2 -> Core.Concurrency.WorkPartition
+Core.Concurrency.WorkPartition.ClaimOne = 1 -> Core.Concurrency.WorkPartition
+Core.Concurrency.WorkPartition.StaticChunks = 0 -> Core.Concurrency.WorkPartition
+const Core.Concurrency.BoundedQueue<T>.MaximumCapacity = 2146435071 -> int
+const Core.Concurrency.ConcurrencyConfiguration.DefaultWorkerStackBytes = 33554432 -> int
+const Core.Concurrency.ConcurrencyConfiguration.MaximumWorkerCount = 256 -> int
+const Core.Concurrency.ConcurrencyConfiguration.MinimumWorkerCount = 1 -> int
+const Core.Concurrency.ConcurrencyOptions.DefaultClaimChunkSize = 64 -> int
+override Core.Concurrency.ConcurrencyConfiguration.Equals(object? obj) -> bool
+override Core.Concurrency.ConcurrencyConfiguration.GetHashCode() -> int
+override Core.Concurrency.ConcurrencyConfiguration.ToString() -> string!
+override Core.Concurrency.ConcurrencyOptions.Equals(object? obj) -> bool
+override Core.Concurrency.ConcurrencyOptions.GetHashCode() -> int
+override Core.Concurrency.ConcurrencyOptions.ToString() -> string!
+static Core.Concurrency.ConcurrencyConfiguration.Default.get -> Core.Concurrency.ConcurrencyConfiguration!
+static Core.Concurrency.ConcurrencyConfiguration.operator !=(Core.Concurrency.ConcurrencyConfiguration? left, Core.Concurrency.ConcurrencyConfiguration? right) -> bool
+static Core.Concurrency.ConcurrencyConfiguration.operator ==(Core.Concurrency.ConcurrencyConfiguration? left, Core.Concurrency.ConcurrencyConfiguration? right) -> bool
+static Core.Concurrency.ConcurrencyContext.Create(Core.Concurrency.ConcurrencyConfiguration? config = null) -> Core.Concurrency.ConcurrencyContext!
+static Core.Concurrency.ConcurrencyOptions.Default.get -> Core.Concurrency.ConcurrencyOptions!
+static Core.Concurrency.ConcurrencyOptions.operator !=(Core.Concurrency.ConcurrencyOptions? left, Core.Concurrency.ConcurrencyOptions? right) -> bool
+static Core.Concurrency.ConcurrencyOptions.operator ==(Core.Concurrency.ConcurrencyOptions? left, Core.Concurrency.ConcurrencyOptions? right) -> bool
+static Core.Concurrency.ConcurrencyResult.Aborted(System.Exception! failure) -> Core.Concurrency.ConcurrencyResult!
+static Core.Concurrency.ConcurrencyResult.Collected(System.Collections.Generic.IReadOnlyList<System.Exception!>! failures) -> Core.Concurrency.ConcurrencyResult!
+static Core.Concurrency.ConcurrencyResult.Completed() -> Core.Concurrency.ConcurrencyResult!
+static Core.Concurrency.ThreadCount.Resolve(Core.Concurrency.ConcurrencyConfiguration! config) -> int

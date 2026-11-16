@@ -1,0 +1,55 @@
+# Third-party components
+
+Core is free software under **LGPL-3.0-or-later** (`LICENSE`); the
+documentation is **CC BY-SA 4.0** (`LICENSES/CC-BY-SA-4.0.txt`). This file lists
+the third-party components and their licences; the full texts ship in
+`LICENSES/`.
+
+## Linked into a built product
+
+| Component | Licence |
+|---|---|
+| Avalonia and Avalonia.* (except Angle.Windows.Natives) | MIT |
+| The Inter font, embedded by `Avalonia.Fonts.Inter` | SIL Open Font License 1.1 |
+| SkiaSharp and SkiaSharp.NativeAssets.* | MIT; the native Skia library is BSD-3-Clause |
+| HarfBuzzSharp and HarfBuzzSharp.NativeAssets.* | MIT; the native HarfBuzz library is MIT |
+| Tmds.DBus.Protocol | MIT |
+| NWayland | MIT |
+| MicroCom.Runtime | MIT |
+| Avalonia.Angle.Windows.Natives (win-x64 only) | BSD-3-Clause |
+| The .NET runtime libraries | MIT |
+
+The native Skia/HarfBuzz packages ship their own `THIRD-PARTY-NOTICES.txt`;
+a product that redistributes the native assets must ship that notice too.
+The copyright notices of the MIT-licensed components are those of their
+upstream projects and ship in each package's `LICENSE`; the MIT text itself is
+`LICENSES/MIT.txt`.
+
+## Build and test only
+
+| Component | Licence |
+|---|---|
+| xUnit.net (xunit.v3) | Apache-2.0 |
+| xunit.runner.visualstudio | Apache-2.0 |
+| BenchmarkDotNet | MIT |
+| coverlet | MIT |
+| Microsoft.CodeAnalysis.PublicApiAnalyzers | MIT |
+| Microsoft.Extensions.FileSystemGlobbing | MIT |
+| Microsoft.NET.Test.Sdk | MIT |
+| Microsoft.CodeCoverage, Microsoft.TestPlatform.* | MIT |
+| Microsoft.Bcl.AsyncInterfaces, Microsoft.Win32.Registry, System.Security.AccessControl | MIT |
+| Newtonsoft.Json | MIT |
+| Microsoft.NET.ILLink.Tasks | MIT |
+
+## Vendored source (not linked into the Core libraries)
+
+| Component | Licence |
+|---|---|
+| `bcs` / bitcrafts-scripts | GPL-3.0-or-later |
+
+The `bcs` project is vendored by source, not as a binary. Its complete source,
+GPL-3.0-or-later licence and notices ship inside the vendored tree.
+
+The MIT text is `LICENSES/MIT.txt`; the OFL-1.1 text is
+`LICENSES/OFL-1.1.txt`; the Apache-2.0 text is `LICENSES/Apache-2.0.txt`;
+the BSD-3-Clause text is `LICENSES/BSD-3-Clause.txt`.

@@ -1,0 +1,320 @@
+<!-- SPDX-FileCopyrightText: 2026 Younes BENMOUSSA <younes.benmoussa@pm.me> -->
+<!-- SPDX-License-Identifier: LGPL-3.0-or-later -->
+
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!--
+        The interaction language: a hover is a faint emerald wash, a selected item a
+        stronger one, and a glyph turns accent on hover or when checked. Hover and
+        selection therefore read as Core green, not as an anonymous grey.
+        Sources: GNOME HIG "Header Bars" and libadwaita's AdwHeaderBar, with the
+        studio palette applied.
+    -->
+    <!--
+        One type size for the whole window, inherited by every control; emphasis is
+        weight and colour, never a different size. A popup (tooltip, menu) does not
+        inherit from the window, so its size is set explicitly from the same token.
+    -->
+    <Style Selector="Window">
+        <Setter Property="FontFamily" Value="{DynamicResource FontFamily}" />
+        <Setter Property="FontSize" Value="{DynamicResource FontSize}" />
+    </Style>
+
+    <!-- Flat chrome buttons: no background or border until hovered. -->
+    <Style Selector="Button.flat">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="10,4" />
+        <Setter Property="CornerRadius" Value="6" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="MinHeight" Value="30" />
+    </Style>
+    <Style Selector="Button.flat:pointerover">
+        <Setter Property="Background" Value="{DynamicResource HoverBrush}" />
+    </Style>
+
+    <!-- Window caption buttons: the glyph is a vector, so the box is square and the
+         glyph is centred by the button. The close button turns destructive. -->
+    <Style Selector="Button.caption">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="MinWidth" Value="34" />
+        <Setter Property="MinHeight" Value="34" />
+        <Setter Property="CornerRadius" Value="0" />
+        <Setter Property="Foreground" Value="{DynamicResource MutedForegroundBrush}" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Button.caption:pointerover">
+        <Setter Property="Background" Value="{DynamicResource HoverBrush}" />
+    </Style>
+    <Style Selector="Button.caption#CloseButton:pointerover">
+        <Setter Property="Background" Value="{DynamicResource DestructiveBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource BackgroundBrush}" />
+    </Style>
+
+    <!-- The toolbar's icon buttons: flat, square, one symbolic glyph each. A command
+         without an icon falls back to a text label. The toggle shares the look and
+         adds a checked state. -->
+    <Style Selector="Button.tool, ToggleButton.tool">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Width" Value="34" />
+        <Setter Property="Height" Value="30" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="CornerRadius" Value="6" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <!-- A text-only tool button carries padding and a natural width instead. -->
+    <Style Selector="Button.tool.text">
+        <Setter Property="Width" Value="NaN" />
+        <Setter Property="Padding" Value="10,4" />
+    </Style>
+    <Style Selector="Button.tool:pointerover, ToggleButton.tool:pointerover">
+        <Setter Property="Background" Value="{DynamicResource HoverBrush}" />
+    </Style>
+    <Style Selector="Button.tool.active, ToggleButton.tool:checked">
+        <Setter Property="Background" Value="{DynamicResource SelectedBrush}" />
+    </Style>
+
+    <!--
+        Symbolic icon style: monochrome and stroked. The box is the authoring grid
+        (every glyph is drawn on a 16 px grid and is symmetric about its centre) and
+        the path is drawn 1:1 inside it. Stretch is deliberately NOT used: it scales
+        the path to fit the box but anchors it top-left, so a wide, short glyph keeps
+        slack at the bottom and sits high. Centring the box and a scale about the box
+        centre grows the whole set together and keeps every glyph centred.
+    -->
+    <Style Selector="Path.icon">
+        <Setter Property="Stroke" Value="{DynamicResource ForegroundBrush}" />
+        <Setter Property="StrokeThickness" Value="1.5" />
+        <Setter Property="StrokeLineCap" Value="Round" />
+        <Setter Property="StrokeJoin" Value="Round" />
+        <Setter Property="Fill" Value="Transparent" />
+        <Setter Property="Stretch" Value="None" />
+        <Setter Property="Width" Value="{DynamicResource IconSize}" />
+        <Setter Property="Height" Value="{DynamicResource IconSize}" />
+        <Setter Property="HorizontalAlignment" Value="Center" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="RenderTransformOrigin" Value="50%,50%" />
+        <Setter Property="RenderTransform">
+            <ScaleTransform ScaleX="1.15" ScaleY="1.15" />
+        </Setter>
+    </Style>
+    <Style Selector="Button.tool:pointerover Path.icon, ToggleButton.tool:pointerover Path.icon, Button.tool.active Path.icon, ToggleButton.tool:checked Path.icon">
+        <Setter Property="Stroke" Value="{DynamicResource AccentTextBrush}" />
+    </Style>
+
+    <!-- Groups inside the toolbar, separated by a hairline rather than a gap. -->
+    <Style Selector="Border.toolSeparator">
+        <Setter Property="Width" Value="1" />
+        <Setter Property="Background" Value="{DynamicResource BorderBrush}" />
+        <Setter Property="Margin" Value="6,5" />
+    </Style>
+
+    <!-- A suggested/primary action: filled with the accent, contrasted text. -->
+    <Style Selector="Button.primary">
+        <Setter Property="Background" Value="{DynamicResource PrimaryBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryForegroundBrush}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="12,5" />
+        <Setter Property="CornerRadius" Value="6" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Button.primary:pointerover">
+        <Setter Property="Background" Value="{DynamicResource PrimaryBrush}" />
+        <Setter Property="Opacity" Value="0.9" />
+    </Style>
+
+    <!-- A destructive action, such as Delete or an irreversible confirmation. -->
+    <Style Selector="Button.destructive">
+        <Setter Property="Background" Value="{DynamicResource DestructiveBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource BackgroundBrush}" />
+        <Setter Property="BorderThickness" Value="0" />
+    </Style>
+
+    <!-- Header typography. -->
+    <Style Selector="TextBlock.heading">
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}" />
+    </Style>
+    <Style Selector="TextBlock.subtitle">
+        <Setter Property="Foreground" Value="{DynamicResource MutedForegroundBrush}" />
+    </Style>
+    <Style Selector="TextBlock.muted">
+        <Setter Property="Foreground" Value="{DynamicResource MutedForegroundBrush}" />
+    </Style>
+    <Style Selector="TextBlock.error">
+        <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}" />
+    </Style>
+
+    <!-- Document tabs: a flat label; the active one carries the accent bar and the
+         selected wash. The tab surface is the item border, so the close button sits
+         inside it. -->
+    <Style Selector="Border.tabitem">
+        <Setter Property="CornerRadius" Value="0" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+    </Style>
+    <Style Selector="Border.tabitem.active">
+        <Setter Property="Background" Value="{DynamicResource SelectedBrush}" />
+        <Setter Property="BorderThickness" Value="0,2,0,0" />
+        <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
+    </Style>
+    <Style Selector="Button.tab">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="10,4" />
+        <Setter Property="MinHeight" Value="30" />
+        <Setter Property="CornerRadius" Value="0" />
+        <Setter Property="Foreground" Value="{DynamicResource MutedForegroundBrush}" />
+    </Style>
+    <Style Selector="Button.tab:pointerover">
+        <Setter Property="Background" Value="{DynamicResource HoverBrush}" />
+    </Style>
+    <Style Selector="Border.tabitem.active Button.tab">
+        <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="Button.tabclose">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="4" />
+        <Setter Property="MinWidth" Value="24" />
+        <Setter Property="MinHeight" Value="24" />
+        <Setter Property="CornerRadius" Value="0" />
+        <Setter Property="Foreground" Value="{DynamicResource MutedForegroundBrush}" />
+    </Style>
+    <Style Selector="Button.tabclose:pointerover">
+        <Setter Property="Background" Value="{DynamicResource HoverBrush}" />
+    </Style>
+
+    <!-- A status bar: the persistent strip a document view can fill (row/column
+         counts, selection statistics). -->
+    <Style Selector="Border.statusbar">
+        <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+        <Setter Property="BorderThickness" Value="0,1,0,0" />
+        <Setter Property="Padding" Value="8,5" />
+    </Style>
+
+    <!-- The busy overlay's indicator follows the accent, so an accent switch or a
+         theme switch repaints it. -->
+    <Style Selector="Border.busy ProgressBar">
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryBrush}" />
+        <Setter Property="Background" Value="{DynamicResource SurfaceRaisedBrush}" />
+    </Style>
+
+    <!-- Tooltips carry the same surface, hairline and small type as the rest. -->
+    <Style Selector="ToolTip">
+        <Setter Property="Background" Value="{DynamicResource SurfaceRaisedBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="6" />
+        <Setter Property="Padding" Value="8,4" />
+        <Setter Property="FontSize" Value="{DynamicResource FontSize}" />
+    </Style>
+
+    <!--
+        Text fields sit on a raised surface with a visible hairline, so they read as
+        inputs rather than holes. Fluent repaints the template border on hover and
+        focus, so those states are overridden too; keeping the override here, once,
+        removes the Fluent template internals from every product.
+    -->
+    <Style Selector="TextBox">
+        <Setter Property="Background" Value="{DynamicResource SurfaceRaisedBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CaretBrush" Value="{DynamicResource ForegroundBrush}" />
+        <Setter Property="CornerRadius" Value="{DynamicResource ControlCornerRadius}" />
+        <Setter Property="MinHeight" Value="34" />
+        <Setter Property="Padding" Value="8,4" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <!-- A multi-line field keeps its text at the top; only single-line fields centre. -->
+    <Style Selector="TextBox[AcceptsReturn=True]">
+        <Setter Property="VerticalContentAlignment" Value="Top" />
+    </Style>
+    <Style Selector="TextBox /template/ Border#PART_BorderElement">
+        <Setter Property="Background" Value="{DynamicResource SurfaceRaisedBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+    </Style>
+    <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
+        <Setter Property="Background" Value="{DynamicResource SurfaceRaisedBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+    </Style>
+    <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
+        <Setter Property="Background" Value="{DynamicResource SurfaceRaisedBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
+    </Style>
+    <Style Selector="TextBox /template/ TextBlock#PART_Watermark">
+        <Setter Property="Foreground" Value="{DynamicResource MutedForegroundBrush}" />
+    </Style>
+    <!-- A field the presenter marked invalid: error border, thicker stroke. -->
+    <Style Selector="TextBox.invalid /template/ Border#PART_BorderElement">
+        <Setter Property="BorderBrush" Value="{DynamicResource ErrorBrush}" />
+        <Setter Property="BorderThickness" Value="2" />
+    </Style>
+    <!--
+        A borderless editor: it paints the surface colour on the template border in
+        every state, so it blends with the surrounding panel (a document editor or a
+        preview pane) instead of reading as a boxed field.
+    -->
+    <Style Selector="TextBox.editor">
+        <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="CornerRadius" Value="0" />
+        <Setter Property="MinHeight" Value="0" />
+    </Style>
+    <Style Selector="TextBox.editor /template/ Border#PART_BorderElement">
+        <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+        <Setter Property="BorderThickness" Value="0" />
+    </Style>
+    <Style Selector="TextBox.editor:pointerover /template/ Border#PART_BorderElement">
+        <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+    </Style>
+    <Style Selector="TextBox.editor:focus /template/ Border#PART_BorderElement">
+        <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+    </Style>
+
+    <!--
+        A boxed list: flat items with a hairline separator and a subtle selection,
+        so a list reads as a GNOME boxed list rather than floating pills.
+    -->
+    <Style Selector="ListBox">
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="ListBoxItem">
+        <Setter Property="Padding" Value="8,8" />
+        <Setter Property="Margin" Value="0" />
+        <Setter Property="CornerRadius" Value="0" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+        <Setter Property="BorderThickness" Value="0,0,0,1" />
+    </Style>
+    <Style Selector="ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource SelectedBrush}" />
+    </Style>
+    <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource HoverBrush}" />
+    </Style>
+
+    <!-- A raised content card: the surface a form or a detail block sits on. -->
+    <Style Selector="Border.card">
+        <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="{DynamicResource SurfaceCornerRadius}" />
+        <Setter Property="Padding" Value="16" />
+    </Style>
+</Styles>

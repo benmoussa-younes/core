@@ -1,0 +1,404 @@
+#nullable enable
+const Core.Results.CoreErrorCodes.SerializationDepthExceeded = "serialization.depth_exceeded" -> string!
+const Core.Results.CoreErrorCodes.SerializationTooLarge = "serialization.too_large" -> string!
+const Core.Results.CoreErrorCodes.SerializationTooManyColumns = "serialization.too_many_columns" -> string!
+Core.Primitives.PathComponent
+const Core.Primitives.PathComponent.MaxBytes = 255 -> int
+static Core.Primitives.PathComponent.Validate(string? value) -> Core.Results.Result<string!>
+static Core.Primitives.PathComponent.IsValid(string? value) -> bool
+Core.Diagnostics.IApplicationLogger
+Core.Diagnostics.IApplicationLogger.Log(Core.Diagnostics.LogLevel level, string! message) -> void
+Core.Diagnostics.LogLevel
+Core.Diagnostics.LogLevel.Debug = 0 -> Core.Diagnostics.LogLevel
+Core.Diagnostics.LogLevel.Information = 1 -> Core.Diagnostics.LogLevel
+Core.Diagnostics.LogLevel.Warning = 2 -> Core.Diagnostics.LogLevel
+Core.Diagnostics.LogLevel.Error = 3 -> Core.Diagnostics.LogLevel
+Core.Diagnostics.NullApplicationLogger
+static Core.Diagnostics.NullApplicationLogger.Instance.get -> Core.Diagnostics.NullApplicationLogger!
+Core.Diagnostics.NullApplicationLogger.Log(Core.Diagnostics.LogLevel level, string! message) -> void
+Core.Diagnostics.LogRedaction
+const Core.Diagnostics.LogRedaction.DefaultMaximumLength = 4096 -> int
+static Core.Diagnostics.LogRedaction.SingleLine(string? value, int maximumLength = 4096) -> string!
+Core.Execution.IProcessRunner
+Core.Execution.IProcessRunner.RunAsync(Core.Execution.ProcessRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Core.Results.Result<Core.Execution.ProcessResult!>>!
+Core.Execution.ProcessRequest
+Core.Execution.ProcessRequest.ProcessRequest(string! FileName, System.Collections.Generic.IReadOnlyList<string!>! Arguments, string? StandardInput = null, System.Collections.Generic.IReadOnlyDictionary<string!, string!>? Environment = null, System.TimeSpan? Timeout = null, int MaxOutputBytes = 1048576) -> void
+Core.Execution.ProcessRequest.FileName.get -> string!
+Core.Execution.ProcessRequest.Arguments.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Core.Execution.ProcessRequest.StandardInput.get -> string?
+Core.Execution.ProcessRequest.Environment.get -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>?
+Core.Execution.ProcessRequest.Timeout.get -> System.TimeSpan?
+Core.Execution.ProcessRequest.MaxOutputBytes.get -> int
+Core.Execution.ProcessResult
+Core.Execution.ProcessResult.ProcessResult(int ExitCode, string! StandardOutput, string! StandardError, bool TimedOut = false, bool OutputTruncated = false) -> void
+Core.Execution.ProcessResult.ExitCode.get -> int
+Core.Execution.ProcessResult.StandardOutput.get -> string!
+Core.Execution.ProcessResult.StandardError.get -> string!
+Core.Execution.ProcessResult.TimedOut.get -> bool
+Core.Execution.ProcessResult.OutputTruncated.get -> bool
+Core.Execution.ProcessRequest.<Clone>$() -> Core.Execution.ProcessRequest!
+Core.Execution.ProcessRequest.Deconstruct(out string! FileName, out System.Collections.Generic.IReadOnlyList<string!>! Arguments, out string? StandardInput, out System.Collections.Generic.IReadOnlyDictionary<string!, string!>? Environment, out System.TimeSpan? Timeout, out int MaxOutputBytes) -> void
+Core.Execution.ProcessRequest.Equals(Core.Execution.ProcessRequest? other) -> bool
+Core.Execution.ProcessRequest.FileName.init -> void
+Core.Execution.ProcessRequest.Arguments.init -> void
+Core.Execution.ProcessRequest.StandardInput.init -> void
+Core.Execution.ProcessRequest.Environment.init -> void
+Core.Execution.ProcessRequest.Timeout.init -> void
+Core.Execution.ProcessRequest.MaxOutputBytes.init -> void
+override Core.Execution.ProcessRequest.Equals(object? obj) -> bool
+override Core.Execution.ProcessRequest.GetHashCode() -> int
+override Core.Execution.ProcessRequest.ToString() -> string!
+static Core.Execution.ProcessRequest.operator !=(Core.Execution.ProcessRequest? left, Core.Execution.ProcessRequest? right) -> bool
+static Core.Execution.ProcessRequest.operator ==(Core.Execution.ProcessRequest? left, Core.Execution.ProcessRequest? right) -> bool
+Core.Execution.ProcessResult.<Clone>$() -> Core.Execution.ProcessResult!
+Core.Execution.ProcessResult.Deconstruct(out int ExitCode, out string! StandardOutput, out string! StandardError, out bool TimedOut, out bool OutputTruncated) -> void
+Core.Execution.ProcessResult.Equals(Core.Execution.ProcessResult? other) -> bool
+Core.Execution.ProcessResult.ExitCode.init -> void
+Core.Execution.ProcessResult.StandardOutput.init -> void
+Core.Execution.ProcessResult.StandardError.init -> void
+Core.Execution.ProcessResult.TimedOut.init -> void
+Core.Execution.ProcessResult.OutputTruncated.init -> void
+override Core.Execution.ProcessResult.Equals(object? obj) -> bool
+override Core.Execution.ProcessResult.GetHashCode() -> int
+override Core.Execution.ProcessResult.ToString() -> string!
+static Core.Execution.ProcessResult.operator !=(Core.Execution.ProcessResult? left, Core.Execution.ProcessResult? right) -> bool
+static Core.Execution.ProcessResult.operator ==(Core.Execution.ProcessResult? left, Core.Execution.ProcessResult? right) -> bool
+Core.Text.LineEnding
+Core.Text.LineEnding.LineFeed = 0 -> Core.Text.LineEnding
+Core.Text.LineEnding.CarriageReturnLineFeed = 1 -> Core.Text.LineEnding
+Core.Text.LineEnding.CarriageReturn = 2 -> Core.Text.LineEnding
+Core.Text.LineEndingDetector
+static Core.Text.LineEndingDetector.Detect(string! text) -> Core.Text.LineEnding
+Core.Text.LineEndingConverter
+static Core.Text.LineEndingConverter.ToLineFeed(string! text) -> string!
+static Core.Text.LineEndingConverter.FromLineFeed(string! text, Core.Text.LineEnding lineEnding) -> string!
+Core.Text.TextDocument
+Core.Text.TextDocument.TextDocument(string! Text, Core.Text.LineEnding LineEnding, bool HasBom) -> void
+Core.Text.TextDocument.<Clone>$() -> Core.Text.TextDocument!
+Core.Text.TextDocument.Deconstruct(out string! Text, out Core.Text.LineEnding LineEnding, out bool HasBom) -> void
+Core.Text.TextDocument.Equals(Core.Text.TextDocument? other) -> bool
+Core.Text.TextDocument.Text.get -> string!
+Core.Text.TextDocument.LineEnding.get -> Core.Text.LineEnding
+Core.Text.TextDocument.HasBom.get -> bool
+Core.Text.TextDocument.Text.init -> void
+Core.Text.TextDocument.LineEnding.init -> void
+Core.Text.TextDocument.HasBom.init -> void
+static Core.Text.TextDocument.Empty.get -> Core.Text.TextDocument!
+override Core.Text.TextDocument.Equals(object? obj) -> bool
+override Core.Text.TextDocument.GetHashCode() -> int
+override Core.Text.TextDocument.ToString() -> string!
+static Core.Text.TextDocument.operator !=(Core.Text.TextDocument? left, Core.Text.TextDocument? right) -> bool
+static Core.Text.TextDocument.operator ==(Core.Text.TextDocument? left, Core.Text.TextDocument? right) -> bool
+Core.Text.UndoRedoHistory<T>
+Core.Text.UndoRedoHistory<T>.UndoRedoHistory(int capacity = 200) -> void
+Core.Text.UndoRedoHistory<T>.CanUndo.get -> bool
+Core.Text.UndoRedoHistory<T>.CanRedo.get -> bool
+Core.Text.UndoRedoHistory<T>.UndoCount.get -> int
+Core.Text.UndoRedoHistory<T>.RedoCount.get -> int
+Core.Text.UndoRedoHistory<T>.Record(T! before, bool coalesce = false) -> void
+Core.Text.UndoRedoHistory<T>.Undo(T! current) -> T?
+Core.Text.UndoRedoHistory<T>.Redo(T! current) -> T?
+Core.Text.UndoRedoHistory<T>.Clear() -> void
+Core.Text.SearchOptions
+Core.Text.SearchOptions.SearchOptions() -> void
+Core.Text.SearchOptions.<Clone>$() -> Core.Text.SearchOptions!
+Core.Text.SearchOptions.Equals(Core.Text.SearchOptions? other) -> bool
+Core.Text.SearchOptions.MatchCase.get -> bool
+Core.Text.SearchOptions.WholeWord.get -> bool
+Core.Text.SearchOptions.UseRegex.get -> bool
+Core.Text.SearchOptions.MatchCase.init -> void
+Core.Text.SearchOptions.WholeWord.init -> void
+Core.Text.SearchOptions.UseRegex.init -> void
+static Core.Text.SearchOptions.Default.get -> Core.Text.SearchOptions!
+override Core.Text.SearchOptions.Equals(object? obj) -> bool
+override Core.Text.SearchOptions.GetHashCode() -> int
+override Core.Text.SearchOptions.ToString() -> string!
+static Core.Text.SearchOptions.operator !=(Core.Text.SearchOptions? left, Core.Text.SearchOptions? right) -> bool
+static Core.Text.SearchOptions.operator ==(Core.Text.SearchOptions? left, Core.Text.SearchOptions? right) -> bool
+Core.Text.TextMatch
+Core.Text.TextMatch.TextMatch() -> void
+Core.Text.TextMatch.TextMatch(int Start, int Length) -> void
+Core.Text.TextMatch.Start.get -> int
+Core.Text.TextMatch.Length.get -> int
+Core.Text.TextMatch.Start.init -> void
+Core.Text.TextMatch.Length.init -> void
+Core.Text.TextMatch.End.get -> int
+Core.Text.TextMatch.Deconstruct(out int Start, out int Length) -> void
+Core.Text.TextMatch.Equals(Core.Text.TextMatch other) -> bool
+~override Core.Text.TextMatch.Equals(object obj) -> bool
+~override Core.Text.TextMatch.ToString() -> string
+override Core.Text.TextMatch.GetHashCode() -> int
+static Core.Text.TextMatch.operator !=(Core.Text.TextMatch left, Core.Text.TextMatch right) -> bool
+static Core.Text.TextMatch.operator ==(Core.Text.TextMatch left, Core.Text.TextMatch right) -> bool
+Core.Text.TextReplacement
+Core.Text.TextReplacement.TextReplacement() -> void
+Core.Text.TextReplacement.TextReplacement(string! Text, int SelectionStart, int SelectionLength) -> void
+Core.Text.TextReplacement.Text.get -> string!
+Core.Text.TextReplacement.SelectionStart.get -> int
+Core.Text.TextReplacement.SelectionLength.get -> int
+Core.Text.TextReplacement.Text.init -> void
+Core.Text.TextReplacement.SelectionStart.init -> void
+Core.Text.TextReplacement.SelectionLength.init -> void
+Core.Text.TextReplacement.Deconstruct(out string! Text, out int SelectionStart, out int SelectionLength) -> void
+Core.Text.TextReplacement.Equals(Core.Text.TextReplacement other) -> bool
+~override Core.Text.TextReplacement.Equals(object obj) -> bool
+~override Core.Text.TextReplacement.ToString() -> string
+override Core.Text.TextReplacement.GetHashCode() -> int
+static Core.Text.TextReplacement.operator !=(Core.Text.TextReplacement left, Core.Text.TextReplacement right) -> bool
+static Core.Text.TextReplacement.operator ==(Core.Text.TextReplacement left, Core.Text.TextReplacement right) -> bool
+Core.Text.TextSearch
+static Core.Text.TextSearch.Validate(string! query, Core.Text.SearchOptions! options) -> string?
+static Core.Text.TextSearch.FindAll(string! text, string! query, Core.Text.SearchOptions! options) -> System.Collections.Generic.IReadOnlyList<Core.Text.TextMatch>!
+static Core.Text.TextSearch.FindFrom(string! text, string! query, Core.Text.SearchOptions! options, int from) -> Core.Text.TextMatch?
+static Core.Text.TextSearch.ReplaceAll(string! text, string! query, string! replacement, Core.Text.SearchOptions! options) -> Core.Text.TextReplacement
+static Core.Text.TextSearch.ReplaceOne(string! text, string! query, string! replacement, Core.Text.SearchOptions! options, int from) -> Core.Text.TextReplacement?
+const Core.Results.CoreErrorCodes.TextInvalidUtf8 = "text.invalid_utf8" -> string!
+const Core.Results.CoreErrorCodes.TextTooLarge = "text.too_large" -> string!
+const Core.Results.CoreErrorCodes.TextUnwritable = "text.unwritable" -> string!
+const Core.Results.CoreErrorCodes.DataEmpty = "data.empty" -> string!
+const Core.Results.CoreErrorCodes.DataNotNumeric = "data.not_numeric" -> string!
+const Core.Results.CoreErrorCodes.DataOverflow = "data.overflow" -> string!
+const Core.Results.CoreErrorCodes.DataInvalidJoin = "data.invalid_join" -> string!
+const Core.Results.CoreErrorCodes.DataInvalidProjection = "data.invalid_projection" -> string!
+const Core.Results.CoreErrorCodes.DataInvalidSort = "data.invalid_sort" -> string!
+const Core.Results.CoreErrorCodes.HostStateUnwritable = "host.state_unwritable" -> string!
+const Core.Results.CoreErrorCodes.HostSocketPathInvalid = "host.socket_path_invalid" -> string!
+const Core.Results.CoreErrorCodes.HostRuntimeDirectoryUnset = "host.runtime_dir_unset" -> string!
+const Core.Results.CoreErrorCodes.HostInvalidOptions = "host.invalid_options" -> string!
+const Core.Results.CoreErrorCodes.HostPlatformRequired = "host.platform_required" -> string!
+const Core.Results.CoreErrorCodes.ExecutionNotFound = "execution.not_found" -> string!
+const Core.Results.CoreErrorCodes.ExecutionStartFailed = "execution.start_failed" -> string!
+const Core.Results.CoreErrorCodes.LinkInvalid = "link.invalid" -> string!
+const Core.Results.CoreErrorCodes.LinkLaunchFailed = "link.launch_failed" -> string!
+Core.Platform.ISystemLinkLauncher
+Core.Platform.ISystemLinkLauncher.OpenAsync(string! url, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Core.Results.Result<bool>>
+Core.Notifications.ISystemNotifier
+Core.Notifications.ISystemNotifier.NotifyAsync(string! title, string! body, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Core.Security.SecretText
+static Core.Security.SecretText.Empty.get -> Core.Security.SecretText!
+static Core.Security.SecretText.From(string? value) -> Core.Security.SecretText!
+Core.Security.SecretText.IsEmpty.get -> bool
+Core.Security.SecretText.Reveal() -> string!
+Core.Security.SecretText.Equals(Core.Security.SecretText? other) -> bool
+override Core.Security.SecretText.Equals(object? obj) -> bool
+override Core.Security.SecretText.GetHashCode() -> int
+override Core.Security.SecretText.ToString() -> string!
+const Core.Results.CoreErrorCodes.ValidationRequired = "validation.required" -> string!
+const Core.Results.CoreErrorCodes.ValidationTooLong = "validation.too_long" -> string!
+const Core.Results.CoreErrorCodes.ValidationPort = "validation.port" -> string!
+Core.Validation.Validators
+static Core.Validation.Validators.NotBlank(string? value, string! field) -> Core.Results.Result<string!>
+static Core.Validation.Validators.MaxLength(string? value, int maximumLength, string! field) -> Core.Results.Result<string!>
+static Core.Validation.Validators.Port(int value) -> Core.Results.Result<int>
+Core.Diagnostics.IOperationJournal
+Core.Diagnostics.IOperationJournal.Record(string! operation, string! message) -> void
+Core.Primitives.PathRedaction
+static Core.Primitives.PathRedaction.ForMessage(string? path) -> string!
+static Core.Primitives.PathRedaction.ForMessage(string? path, string! home) -> string!
+Core.Capabilities.ICapability<TRequest, TResponse>
+Core.Capabilities.ICapability<TRequest, TResponse>.InvokeAsync(TRequest request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Core.Results.Result<TResponse>>
+Core.Paths.ApplicationPaths
+Core.Paths.ApplicationPaths.CacheDirectory.get -> string!
+Core.Paths.ApplicationPaths.CacheFile(string! name) -> string!
+Core.Paths.ApplicationPaths.ConfigDirectory.get -> string!
+Core.Paths.ApplicationPaths.ConfigFile(string! name) -> string!
+Core.Paths.ApplicationPaths.DataDirectory.get -> string!
+Core.Paths.ApplicationPaths.DataFile(string! name) -> string!
+Core.Paths.ApplicationPaths.StateDirectory.get -> string!
+Core.Paths.ApplicationPaths.StateFile(string! name) -> string!
+Core.Primitives.ByteSize
+Core.Primitives.ByteSize.ByteSize() -> void
+Core.Primitives.ByteSize.ByteSize(long bytes) -> void
+Core.Primitives.ByteSize.Bytes.get -> long
+Core.Primitives.ByteSize.CompareTo(Core.Primitives.ByteSize other) -> int
+Core.Primitives.ByteSize.Equals(Core.Primitives.ByteSize other) -> bool
+Core.Primitives.ByteSize.ToHumanString() -> string!
+Core.Primitives.PathPattern
+Core.Primitives.PathPattern.IgnoreCase.get -> bool
+Core.Primitives.PathPattern.IsMatch(System.ReadOnlySpan<char> path) -> bool
+Core.Primitives.PathPattern.Pattern.get -> string!
+Core.Results.CoreError
+Core.Results.CoreError.<Clone>$() -> Core.Results.CoreError!
+Core.Results.CoreError.Code.get -> string!
+Core.Results.CoreError.CoreError(string! code, string! message) -> void
+Core.Results.CoreError.Equals(Core.Results.CoreError? other) -> bool
+Core.Results.CoreError.Message.get -> string!
+Core.Results.CoreErrorCodes
+Core.Results.Result<T>
+Core.Results.Result<T>.Bind<TResult>(System.Func<T, Core.Results.Result<TResult>>! bind) -> Core.Results.Result<TResult>
+Core.Results.Result<T>.Error.get -> Core.Results.CoreError!
+Core.Results.Result<T>.IsFailure.get -> bool
+Core.Results.Result<T>.IsSuccess.get -> bool
+Core.Results.Result<T>.Map<TResult>(System.Func<T, TResult>! map) -> Core.Results.Result<TResult>
+Core.Results.Result<T>.Match<TResult>(System.Func<T, TResult>! onSuccess, System.Func<Core.Results.CoreError!, TResult>! onFailure) -> TResult
+Core.Results.Result<T>.Result() -> void
+Core.Results.Result<T>.TryGetError(out Core.Results.CoreError? error) -> bool
+Core.Results.Result<T>.TryGetValue(out T value) -> bool
+Core.Results.Result<T>.Value.get -> T
+Core.Results.Result<T>.ValueOr(System.Func<Core.Results.CoreError!, T>! fallback) -> T
+Core.Results.Result<T>.ValueOr(T fallback) -> T
+Core.Units.Energy
+Core.Units.Energy.CompareTo(Core.Units.Energy other) -> int
+Core.Units.Energy.Energy() -> void
+Core.Units.Energy.Energy(long microjoules) -> void
+Core.Units.Energy.Equals(Core.Units.Energy other) -> bool
+Core.Units.Energy.Microjoules.get -> long
+Core.Units.Energy.ToHumanString() -> string!
+Core.Units.Frequency
+Core.Units.Frequency.CompareTo(Core.Units.Frequency other) -> int
+Core.Units.Frequency.Equals(Core.Units.Frequency other) -> bool
+Core.Units.Frequency.Frequency() -> void
+Core.Units.Frequency.Frequency(long hertz) -> void
+Core.Units.Frequency.Hertz.get -> long
+Core.Units.Frequency.ToHumanString() -> string!
+Core.Units.Power
+Core.Units.Power.CompareTo(Core.Units.Power other) -> int
+Core.Units.Power.Equals(Core.Units.Power other) -> bool
+Core.Units.Power.Microwatts.get -> long
+Core.Units.Power.Power() -> void
+Core.Units.Power.Power(long microwatts) -> void
+Core.Units.Power.ToHumanString() -> string!
+Core.Units.Temperature
+Core.Units.Temperature.CompareTo(Core.Units.Temperature other) -> int
+Core.Units.Temperature.Equals(Core.Units.Temperature other) -> bool
+Core.Units.Temperature.MillidegreesCelsius.get -> long
+Core.Units.Temperature.Temperature() -> void
+Core.Units.Temperature.Temperature(long millidegreesCelsius) -> void
+Core.Units.Temperature.ToHumanString() -> string!
+const Core.Results.CoreErrorCodes.ByteSizeInvalid = "bytesize.invalid" -> string!
+const Core.Results.CoreErrorCodes.IoCommitFailed = "io.commit_failed" -> string!
+const Core.Results.CoreErrorCodes.IoSymbolicLinkTarget = "io.symbolic_link_target" -> string!
+const Core.Results.CoreErrorCodes.IoUnreadable = "io.unreadable" -> string!
+const Core.Results.CoreErrorCodes.PathPatternInvalid = "pathpattern.invalid" -> string!
+const Core.Results.CoreErrorCodes.PathsInvalidComponent = "paths.invalid_component" -> string!
+const Core.Results.CoreErrorCodes.PlatformDirectoryOpenFailed = "platform.directory_open_failed" -> string!
+const Core.Results.CoreErrorCodes.SerializationInvalidDocument = "serialization.invalid_document" -> string!
+const Core.Results.CoreErrorCodes.SerializationMissing = "serialization.missing" -> string!
+const Core.Results.CoreErrorCodes.SerializationSyntax = "serialization.syntax" -> string!
+const Core.Results.CoreErrorCodes.SerializationUnevenRow = "serialization.uneven_row" -> string!
+const Core.Results.CoreErrorCodes.SerializationUnreadable = "serialization.unreadable" -> string!
+const Core.Results.CoreErrorCodes.SerializationUnsupportedFormat = "serialization.unsupported_format" -> string!
+const Core.Results.CoreErrorCodes.SerializationUnwritable = "serialization.unwritable" -> string!
+const Core.Results.CoreErrorCodes.UnitsInvalid = "units.invalid" -> string!
+const Core.Results.CoreErrorCodes.XdgHomeUnset = "xdg.home_unset" -> string!
+override Core.Primitives.ByteSize.Equals(object? obj) -> bool
+override Core.Primitives.ByteSize.GetHashCode() -> int
+override Core.Primitives.ByteSize.ToString() -> string!
+override Core.Primitives.PathPattern.ToString() -> string!
+override Core.Results.CoreError.Equals(object? obj) -> bool
+override Core.Results.CoreError.GetHashCode() -> int
+override Core.Results.CoreError.ToString() -> string!
+override Core.Units.Energy.Equals(object? obj) -> bool
+override Core.Units.Energy.GetHashCode() -> int
+override Core.Units.Energy.ToString() -> string!
+override Core.Units.Frequency.Equals(object? obj) -> bool
+override Core.Units.Frequency.GetHashCode() -> int
+override Core.Units.Frequency.ToString() -> string!
+override Core.Units.Power.Equals(object? obj) -> bool
+override Core.Units.Power.GetHashCode() -> int
+override Core.Units.Power.ToString() -> string!
+override Core.Units.Temperature.Equals(object? obj) -> bool
+override Core.Units.Temperature.GetHashCode() -> int
+override Core.Units.Temperature.ToString() -> string!
+static Core.Paths.ApplicationPaths.Create(Core.Paths.PathSet! directories, string! vendor, string! application) -> Core.Results.Result<Core.Paths.ApplicationPaths!>
+static Core.Primitives.ByteSize.FromBytes(long bytes) -> Core.Primitives.ByteSize
+static Core.Primitives.ByteSize.FromGibibytes(long gibibytes) -> Core.Primitives.ByteSize
+static Core.Primitives.ByteSize.FromKibibytes(long kibibytes) -> Core.Primitives.ByteSize
+static Core.Primitives.ByteSize.FromMebibytes(long mebibytes) -> Core.Primitives.ByteSize
+static Core.Primitives.ByteSize.Parse(System.ReadOnlySpan<char> text) -> Core.Results.Result<Core.Primitives.ByteSize>
+static Core.Primitives.ByteSize.TryParse(System.ReadOnlySpan<char> text, out Core.Primitives.ByteSize size) -> bool
+static Core.Primitives.ByteSize.operator !=(Core.Primitives.ByteSize left, Core.Primitives.ByteSize right) -> bool
+static Core.Primitives.ByteSize.operator <(Core.Primitives.ByteSize left, Core.Primitives.ByteSize right) -> bool
+static Core.Primitives.ByteSize.operator <=(Core.Primitives.ByteSize left, Core.Primitives.ByteSize right) -> bool
+static Core.Primitives.ByteSize.operator ==(Core.Primitives.ByteSize left, Core.Primitives.ByteSize right) -> bool
+static Core.Primitives.ByteSize.operator >(Core.Primitives.ByteSize left, Core.Primitives.ByteSize right) -> bool
+static Core.Primitives.ByteSize.operator >=(Core.Primitives.ByteSize left, Core.Primitives.ByteSize right) -> bool
+static Core.Primitives.PathPattern.Create(string! pattern) -> Core.Results.Result<Core.Primitives.PathPattern!>
+static Core.Primitives.PathPattern.Create(string! pattern, bool ignoreCase) -> Core.Results.Result<Core.Primitives.PathPattern!>
+static Core.Results.CoreError.operator !=(Core.Results.CoreError? left, Core.Results.CoreError? right) -> bool
+static Core.Results.CoreError.operator ==(Core.Results.CoreError? left, Core.Results.CoreError? right) -> bool
+static Core.Results.Result<T>.Failure(Core.Results.CoreError! error) -> Core.Results.Result<T>
+static Core.Results.Result<T>.Success(T value) -> Core.Results.Result<T>
+static Core.Units.Energy.FromGigajoules(long gigajoules) -> Core.Units.Energy
+static Core.Units.Energy.FromJoules(long joules) -> Core.Units.Energy
+static Core.Units.Energy.FromKilojoules(long kilojoules) -> Core.Units.Energy
+static Core.Units.Energy.FromMegajoules(long megajoules) -> Core.Units.Energy
+static Core.Units.Energy.FromMicrojoules(long microjoules) -> Core.Units.Energy
+static Core.Units.Energy.FromMillijoules(long millijoules) -> Core.Units.Energy
+static Core.Units.Energy.FromTerajoules(long terajoules) -> Core.Units.Energy
+static Core.Units.Energy.Parse(System.ReadOnlySpan<char> text) -> Core.Results.Result<Core.Units.Energy>
+static Core.Units.Energy.TryParse(System.ReadOnlySpan<char> text, out Core.Units.Energy energy) -> bool
+static Core.Units.Energy.operator !=(Core.Units.Energy left, Core.Units.Energy right) -> bool
+static Core.Units.Energy.operator +(Core.Units.Energy left, Core.Units.Energy right) -> Core.Units.Energy
+static Core.Units.Energy.operator -(Core.Units.Energy left, Core.Units.Energy right) -> Core.Units.Energy
+static Core.Units.Energy.operator -(Core.Units.Energy value) -> Core.Units.Energy
+static Core.Units.Energy.operator <(Core.Units.Energy left, Core.Units.Energy right) -> bool
+static Core.Units.Energy.operator <=(Core.Units.Energy left, Core.Units.Energy right) -> bool
+static Core.Units.Energy.operator ==(Core.Units.Energy left, Core.Units.Energy right) -> bool
+static Core.Units.Energy.operator >(Core.Units.Energy left, Core.Units.Energy right) -> bool
+static Core.Units.Energy.operator >=(Core.Units.Energy left, Core.Units.Energy right) -> bool
+static Core.Units.Frequency.FromExahertz(long exahertz) -> Core.Units.Frequency
+static Core.Units.Frequency.FromGigahertz(long gigahertz) -> Core.Units.Frequency
+static Core.Units.Frequency.FromHertz(long hertz) -> Core.Units.Frequency
+static Core.Units.Frequency.FromKilohertz(long kilohertz) -> Core.Units.Frequency
+static Core.Units.Frequency.FromMegahertz(long megahertz) -> Core.Units.Frequency
+static Core.Units.Frequency.FromPetahertz(long petahertz) -> Core.Units.Frequency
+static Core.Units.Frequency.FromTerahertz(long terahertz) -> Core.Units.Frequency
+static Core.Units.Frequency.Parse(System.ReadOnlySpan<char> text) -> Core.Results.Result<Core.Units.Frequency>
+static Core.Units.Frequency.TryParse(System.ReadOnlySpan<char> text, out Core.Units.Frequency frequency) -> bool
+static Core.Units.Frequency.operator !=(Core.Units.Frequency left, Core.Units.Frequency right) -> bool
+static Core.Units.Frequency.operator +(Core.Units.Frequency left, Core.Units.Frequency right) -> Core.Units.Frequency
+static Core.Units.Frequency.operator -(Core.Units.Frequency left, Core.Units.Frequency right) -> Core.Units.Frequency
+static Core.Units.Frequency.operator -(Core.Units.Frequency value) -> Core.Units.Frequency
+static Core.Units.Frequency.operator <(Core.Units.Frequency left, Core.Units.Frequency right) -> bool
+static Core.Units.Frequency.operator <=(Core.Units.Frequency left, Core.Units.Frequency right) -> bool
+static Core.Units.Frequency.operator ==(Core.Units.Frequency left, Core.Units.Frequency right) -> bool
+static Core.Units.Frequency.operator >(Core.Units.Frequency left, Core.Units.Frequency right) -> bool
+static Core.Units.Frequency.operator >=(Core.Units.Frequency left, Core.Units.Frequency right) -> bool
+static Core.Units.Power.FromGigawatts(long gigawatts) -> Core.Units.Power
+static Core.Units.Power.FromKilowatts(long kilowatts) -> Core.Units.Power
+static Core.Units.Power.FromMegawatts(long megawatts) -> Core.Units.Power
+static Core.Units.Power.FromMicrowatts(long microwatts) -> Core.Units.Power
+static Core.Units.Power.FromMilliwatts(long milliwatts) -> Core.Units.Power
+static Core.Units.Power.FromTerawatts(long terawatts) -> Core.Units.Power
+static Core.Units.Power.FromWatts(long watts) -> Core.Units.Power
+static Core.Units.Power.Parse(System.ReadOnlySpan<char> text) -> Core.Results.Result<Core.Units.Power>
+static Core.Units.Power.TryParse(System.ReadOnlySpan<char> text, out Core.Units.Power power) -> bool
+static Core.Units.Power.operator !=(Core.Units.Power left, Core.Units.Power right) -> bool
+static Core.Units.Power.operator +(Core.Units.Power left, Core.Units.Power right) -> Core.Units.Power
+static Core.Units.Power.operator -(Core.Units.Power left, Core.Units.Power right) -> Core.Units.Power
+static Core.Units.Power.operator -(Core.Units.Power value) -> Core.Units.Power
+static Core.Units.Power.operator <(Core.Units.Power left, Core.Units.Power right) -> bool
+static Core.Units.Power.operator <=(Core.Units.Power left, Core.Units.Power right) -> bool
+static Core.Units.Power.operator ==(Core.Units.Power left, Core.Units.Power right) -> bool
+static Core.Units.Power.operator >(Core.Units.Power left, Core.Units.Power right) -> bool
+static Core.Units.Power.operator >=(Core.Units.Power left, Core.Units.Power right) -> bool
+static Core.Units.Temperature.FromDegreesCelsius(long degreesCelsius) -> Core.Units.Temperature
+static Core.Units.Temperature.FromKelvin(long kelvin) -> Core.Units.Temperature
+static Core.Units.Temperature.FromMillidegreesCelsius(long millidegreesCelsius) -> Core.Units.Temperature
+static Core.Units.Temperature.Parse(System.ReadOnlySpan<char> text) -> Core.Results.Result<Core.Units.Temperature>
+static Core.Units.Temperature.TryParse(System.ReadOnlySpan<char> text, out Core.Units.Temperature temperature) -> bool
+static Core.Units.Temperature.operator !=(Core.Units.Temperature left, Core.Units.Temperature right) -> bool
+static Core.Units.Temperature.operator +(Core.Units.Temperature left, Core.Units.Temperature right) -> Core.Units.Temperature
+static Core.Units.Temperature.operator -(Core.Units.Temperature left, Core.Units.Temperature right) -> Core.Units.Temperature
+static Core.Units.Temperature.operator -(Core.Units.Temperature value) -> Core.Units.Temperature
+static Core.Units.Temperature.operator <(Core.Units.Temperature left, Core.Units.Temperature right) -> bool
+static Core.Units.Temperature.operator <=(Core.Units.Temperature left, Core.Units.Temperature right) -> bool
+static Core.Units.Temperature.operator ==(Core.Units.Temperature left, Core.Units.Temperature right) -> bool
+static Core.Units.Temperature.operator >(Core.Units.Temperature left, Core.Units.Temperature right) -> bool
+static Core.Units.Temperature.operator >=(Core.Units.Temperature left, Core.Units.Temperature right) -> bool
+Core.Paths.PathSet
+Core.Paths.PathSet.CacheHome.get -> string!
+Core.Paths.PathSet.ConfigDirectories.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Core.Paths.PathSet.ConfigHome.get -> string!
+Core.Paths.PathSet.DataDirectories.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Core.Paths.PathSet.DataHome.get -> string!
+Core.Paths.PathSet.PathSet(string! configHome, string! stateHome, string! dataHome, string! cacheHome, string? runtimeDirectory, System.Collections.Generic.IReadOnlyList<string!>! configDirectories, System.Collections.Generic.IReadOnlyList<string!>! dataDirectories) -> void
+Core.Paths.PathSet.RuntimeDirectory.get -> string?
+Core.Paths.PathSet.StateHome.get -> string!
+Core.Diagnostics.ICrashLog
+Core.Diagnostics.ICrashLog.Path.get -> string!
+Core.Diagnostics.ICrashLog.Write(System.Exception! exception, string? context = null) -> void
+Core.Diagnostics.NullApplicationLogger.Dispose() -> void
+Core.Security.SecretRedaction
+static Core.Security.SecretRedaction.Scrub(string? value) -> string!

@@ -1,0 +1,81 @@
+#nullable enable
+Core.Platform.CorePlatform
+Core.Platform.CorePlatform.Paths.get -> Core.Platform.IPathResolver!
+Core.Platform.IMemoryMapping
+Core.Platform.IMemoryMapping.Length.get -> long
+Core.Platform.IMemoryMapping.Slice(long offset, int length) -> System.ReadOnlySpan<byte>
+Core.Platform.IMemoryMappingFactory
+Core.Platform.IMemoryMappingFactory.Open(string! path) -> Core.Results.Result<Core.Platform.IMemoryMapping!>
+Core.Platform.IPathResolver
+Core.Platform.IPathResolver.Resolve() -> Core.Results.Result<Core.Paths.PathSet!>
+Core.Platform.AtomicFileOptions
+Core.Platform.AtomicFileOptions.AtomicFileOptions() -> void
+Core.Platform.AtomicFileOptions.OwnerOnly.get -> bool
+Core.Platform.AtomicFileOptions.OwnerOnly.init -> void
+Core.Platform.IAtomicFileWriter
+Core.Platform.IAtomicFileWriter.Abort() -> void
+Core.Platform.IAtomicFileWriter.Commit() -> Core.Results.Result<bool>
+Core.Platform.IAtomicFileWriter.Stream.get -> System.IO.Stream!
+Core.Platform.IAtomicFileWriterFactory
+Core.Platform.IAtomicFileWriterFactory.Create(string! targetPath, Core.Platform.AtomicFileOptions! options) -> Core.Results.Result<Core.Platform.IAtomicFileWriter!>
+Core.Platform.IAtomicFileWriterFactory.EnsureDirectory(string! path, bool ownerOnly) -> void
+Core.Platform.FileAccessMode
+Core.Platform.FileAccessMode.Exists = 0 -> Core.Platform.FileAccessMode
+Core.Platform.FileAccessMode.Execute = 1 -> Core.Platform.FileAccessMode
+Core.Platform.FileAccessMode.Read = 4 -> Core.Platform.FileAccessMode
+Core.Platform.FileAccessMode.Write = 2 -> Core.Platform.FileAccessMode
+Core.Platform.FileStatus
+Core.Platform.FileStatus.FileStatus() -> void
+Core.Platform.FileStatus.Device.get -> ulong
+Core.Platform.FileStatus.FileStatus(Core.Platform.FileType type, long size, long mtimeNanoseconds, ulong device, ulong inode, uint mode, uint ownerUserId, uint ownerGroupId) -> void
+Core.Platform.FileStatus.Inode.get -> ulong
+Core.Platform.FileStatus.Mode.get -> uint
+Core.Platform.FileStatus.MtimeNanoseconds.get -> long
+Core.Platform.FileStatus.OwnerGroupId.get -> uint
+Core.Platform.FileStatus.OwnerUserId.get -> uint
+Core.Platform.FileStatus.Size.get -> long
+Core.Platform.FileStatus.Type.get -> Core.Platform.FileType
+Core.Platform.FileType
+Core.Platform.FileType.BlockDevice = 6 -> Core.Platform.FileType
+Core.Platform.FileType.CharacterDevice = 2 -> Core.Platform.FileType
+Core.Platform.FileType.Directory = 4 -> Core.Platform.FileType
+Core.Platform.FileType.Fifo = 1 -> Core.Platform.FileType
+Core.Platform.FileType.RegularFile = 8 -> Core.Platform.FileType
+Core.Platform.FileType.Socket = 12 -> Core.Platform.FileType
+Core.Platform.FileType.SymbolicLink = 10 -> Core.Platform.FileType
+Core.Platform.FileType.Unknown = 0 -> Core.Platform.FileType
+Core.Platform.IFileSystem
+Core.Platform.IFileSystem.TryAccess(string! path, Core.Platform.FileAccessMode mode) -> bool
+Core.Platform.IFileSystem.TryOpenRead(string! path, bool noFollow, out Microsoft.Win32.SafeHandles.SafeFileHandle? handle) -> bool
+Core.Platform.IFileSystem.TryStat(string! path, out Core.Platform.FileStatus status) -> bool
+Core.Platform.IFileSystem.TryStatDescriptor(Microsoft.Win32.SafeHandles.SafeFileHandle! handle, out Core.Platform.FileStatus status) -> bool
+Core.Platform.IFileSystem.TrySyncDirectory(string! path) -> bool
+Core.Platform.DirectoryEntry
+Core.Platform.DirectoryEntry.DirectoryEntry() -> void
+Core.Platform.DirectoryEntry.DirectoryEntry(string! name, Core.Platform.FileType type, bool isNameValidUtf8, ulong inode) -> void
+Core.Platform.DirectoryEntry.Inode.get -> ulong
+Core.Platform.DirectoryEntry.IsNameValidUtf8.get -> bool
+Core.Platform.DirectoryEntry.Name.get -> string!
+Core.Platform.DirectoryEntry.Type.get -> Core.Platform.FileType
+Core.Platform.IDirectoryHandle
+Core.Platform.IDirectoryHandle.Enumerate() -> Core.Platform.IDirectoryReader!
+Core.Platform.IDirectoryHandle.TryGetStatus(out Core.Platform.FileStatus status) -> bool
+Core.Platform.IDirectoryHandle.TryOpenDirectory(System.ReadOnlySpan<byte> name, bool followSymbolicLinks, out Core.Platform.IDirectoryHandle? handle) -> bool
+Core.Platform.IDirectoryHandle.TryStatAt(System.ReadOnlySpan<byte> name, bool followSymbolicLinks, out Core.Platform.FileStatus status) -> bool
+Core.Platform.IDirectoryReader
+Core.Platform.IDirectoryReader.TryRead(out Core.Platform.DirectoryEntry entry) -> bool
+Core.Platform.IFileSystem.TryOpenDirectory(string! path, out Core.Platform.IDirectoryHandle? handle) -> bool
+Core.Platform.CorePlatform.CorePlatform(Core.Platform.IPathResolver! paths, Core.Platform.ICoreHostServices? hostServices = null) -> void
+Core.Platform.CorePlatform.HostServices.get -> Core.Platform.ICoreHostServices?
+Core.Platform.ICoreHostServices
+Core.Platform.ICoreHostServices.Processes.get -> Core.Execution.IProcessRunner!
+Core.Platform.ICoreHostServices.Links.get -> Core.Platform.ISystemLinkLauncher!
+Core.Platform.ICoreHostServices.CreateLogger(string! path, long maxBytes, int retainedFiles) -> Core.Diagnostics.IApplicationLogger!
+Core.Platform.ICoreHostServices.CreateJournal(string! path, long maxBytes, int retainedFiles) -> Core.Diagnostics.IOperationJournal!
+Core.Platform.ICoreHostServices.CreateCrashLog(string! path, long maxBytes, int retainedFiles, int maximumLines) -> Core.Diagnostics.ICrashLog!
+Core.Platform.ICoreHostServices.CreateSingleInstance(string! socketPath) -> Core.Platform.ISingleInstance!
+Core.Platform.ICoreHostServices.CreateNotifier(string! application) -> Core.Notifications.ISystemNotifier!
+Core.Platform.ICoreHostServices.PrepareStateDirectory(string! path) -> void
+Core.Platform.ISingleInstance
+Core.Platform.ISingleInstance.Activated -> System.Action<System.ReadOnlyMemory<byte>>?
+Core.Platform.ISingleInstance.TryAcquire() -> bool

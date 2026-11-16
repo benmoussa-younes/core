@@ -1,0 +1,310 @@
+#!/usr/bin/bcs run
+import "../modules/verdict.bcs" as verdict
+import "../modules/repo.bcs" as repo
+# gate — read-only verification of the Core repository.
+#
+#   tools/scripts/binaries/gate
+# It checks the published tree (no docs, the markdown allowlist, one root
+# AGENTS.md, short nested AGENTS.md allowed, no agent or editor files, no
+# internal host or personal path, the
+# version, an empty PublicAPI.Shipped, the LGPL files) and runs the build, the
+# tests and `reuse lint`. It writes nothing and needs bcs 0.5.0 on PATH.
+
+function read_text(base: string, relative: string) -> string {
+    match filesystem.read_file("{base}/{relative}".to_path()) {
+        ok(content) => {
+            return content
+        }
+        error(_) => {
+            return ""
+        }
+    }
+}
+
+function report(name: string, passed: boolean, detail: string) -> boolean {
+    if passed {
+        io.write_standard_output_line("PASS {name}")
+    } else {
+        io.write_standard_error_line("FAIL {name}: {detail}")
+    }
+    return passed
+}
+
+# F20: the manual/nightly performance gate publishes the AOT shell and runs one
+# bounded workload per hot path. The budget is a wall-clock ceiling, generous
+# enough for a loaded machine but tight enough to catch a catastrophic regression.
+# It needs hyperfine and jq; the fast gate does not.
+function run_perf(name: string, flag: string, count: string, budget_seconds: float) -> boolean {
+    let binary = "/tmp/opencode/core-gate-perf/Core.UI.Shell"
+    let timing = "/tmp/opencode/core-gate-perf-{name}.json"
+    let command = "{binary} {flag} {count}"
+    match process.run(process.request("hyperfine", ["--warmup", "1", "--runs", "3", "--export-json", timing, command])) {
+        ok(completed) => {
+            if completed.exit_code != 0 {
+                io.write_standard_error_line("FAIL perf {name}: hyperfine exit {completed.exit_code} {completed.standard_error.trim_whitespace()}")
+                return false
+            }
+        }
+        error(failure) => {
+            io.write_standard_error_line("FAIL perf {name}: hyperfine {failure.kind}")
+            return false
+        }
+    }
+
+    match process.run(process.request("jq", ["-r", ".results[0].mean", timing])) {
+        ok(completed) => {
+            if completed.exit_code != 0 {
+                io.write_standard_error_line("FAIL perf {name}: jq exit {completed.exit_code} {completed.standard_error.trim_whitespace()}")
+                return false
+            }
+            match completed.standard_output.trim_whitespace().parse_float() {
+                ok(seconds) => {
+                    if seconds <= budget_seconds {
+                        io.write_standard_output_line("PASS perf {name}: {seconds}s <= {budget_seconds}s")
+                        return true
+                    }
+                    io.write_standard_error_line("FAIL perf {name}: {seconds}s > {budget_seconds}s")
+                    return false
+                }
+                error(failure) => {
+                    io.write_standard_error_line("FAIL perf {name}: mean {failure.kind}")
+                    return false
+                }
+            }
+        }
+        error(failure) => {
+            io.write_standard_error_line("FAIL perf {name}: jq {failure.kind}")
+            return false
+        }
+    }
+}
+
+let root: path = repo.root_path_from(process.script_path())
+let base: string = root.to_string()
+let mutable success = true
+let mutable perf_mode = false
+for argument in process.arguments() {
+    if argument == "--perf" {
+        perf_mode = true
+    }
+}
+
+let mutable files: list<string> = []
+match process.run(process.request("git", ["ls-files", "--cached", "--others", "--exclude-standard"]).with_working_directory(root)) {
+    ok(completed) => {
+        if completed.exit_code == 0 {
+            files = completed.standard_output.lines()
+        } else {
+            io.write_standard_error_line("FAIL file list: git exit {completed.exit_code} {completed.standard_error.trim_whitespace()}")
+            success = false
+        }
+    }
+    error(failure) => {
+        io.write_standard_error_line("FAIL file list: {failure.kind}")
+        success = false
+    }
+}
+
+let mutable docs_files: list<string> = []
+let mutable markdown: list<string> = []
+let mutable nested_agents: list<string> = []
+let mutable agent_entries: list<string> = []
+let mutable root_agents = 0
+for entry in files {
+    let name = entry.trim_whitespace()
+    if name != "" {
+        if name.starts_with("docs/") {
+            docs_files.append(name)
+        }
+        if name.ends_with(".md") {
+            markdown.append(name)
+        }
+        if name == "AGENTS.md" {
+            root_agents = root_agents + 1
+        }
+        if name.ends_with("/AGENTS.md") {
+            nested_agents.append(name)
+        }
+        if name.starts_with(".opencode/") or name == "opencode.json" or name.starts_with(".vscode/") or name.starts_with(".agents/") {
+            agent_entries.append(name)
+        }
+    }
+}
+
+let mutable unexpected_markdown: list<string> = []
+for name in markdown {
+    if name != "README.md" and name != "AGENTS.md" and name != "CHANGELOG.md" and name != "SECURITY.md" and name != "CONTRIBUTING.md" and not name.ends_with("/AGENTS.md") {
+        unexpected_markdown.append(name)
+    }
+}
+
+if not report("no docs tracked", docs_files.length() == 0, docs_files.join(", ")) {
+    success = false
+}
+if not report("markdown allowlist", unexpected_markdown.length() == 0, unexpected_markdown.join(", ")) {
+    success = false
+}
+if not report("one root AGENTS.md", root_agents == 1, "{root_agents} found") {
+    success = false
+}
+if not report("nested AGENTS.md", true, nested_agents.join(", ")) {
+    success = false
+}
+if not report("no agent or editor files", agent_entries.length() == 0, agent_entries.join(", ")) {
+    success = false
+}
+
+let props = read_text(base, "Directory.Build.props")
+if not report("version 0.1.0", props.contains(">0.1.0</VersionPrefix>"), "Directory.Build.props") {
+    success = false
+}
+
+let projects: list<string> = ["Core", "Core.Platform", "Core.Platform.Linux", "Core.UI", "Core.Concurrency", "Core.IO", "Core.Mvp", "Core.Serialization"]
+let mutable shipped_defects: list<string> = []
+for project in projects {
+    let content = read_text(base, "src/{project}/PublicAPI.Shipped.txt")
+    if content.trim_whitespace() != "#nullable enable" {
+        shipped_defects.append(project)
+    }
+}
+if not report("empty PublicAPI.Shipped", shipped_defects.length() == 0, shipped_defects.join(", ")) {
+    success = false
+}
+
+# F19: the portable layers must not call a platform API directly; the adapters
+# live in Core.Platform.Linux. A mutation that adds DllImport/UnixFileMode or an
+# OperatingSystem.Is* branch to one of these projects turns this check red.
+let portable_projects: list<string> = ["Core", "Core.IO", "Core.Serialization", "Core.Mvp", "Core.Concurrency", "Core.Platform"]
+let mutable portable_leaks: list<string> = []
+for project in portable_projects {
+    match process.run(process.request("grep", ["-rInE", "DllImport|UnixFileMode|OperatingSystem[.]Is", "src/{project}", "--include=*.cs"]).with_working_directory(root)) {
+        ok(completed) => {
+            if completed.exit_code == 0 {
+                portable_leaks.append("{project}: {completed.standard_output.trim_whitespace()}")
+            } else if completed.exit_code != 1 {
+                io.write_standard_error_line("FAIL portable layers have no Linux API: grep exit {completed.exit_code} in {project}")
+                success = false
+            }
+        }
+        error(failure) => {
+            io.write_standard_error_line("FAIL portable layers have no Linux API: {failure.kind}")
+            success = false
+        }
+    }
+}
+if not report("portable layers have no Linux API", portable_leaks.length() == 0, portable_leaks.join(" | ")) {
+    success = false
+}
+
+let licence = read_text(base, "LICENSE")
+let lgpl = read_text(base, "LICENSES/LGPL-3.0-or-later.txt")
+let licence_ok = licence.contains("GNU Lesser General Public License") and lgpl.contains("GNU LESSER GENERAL PUBLIC LICENSE")
+if not report("LGPL-3.0-or-later", licence_ok, "LICENSE or LICENSES/LGPL-3.0-or-later.txt") {
+    success = false
+}
+
+# The fragments keep the gate's own source out of the match.
+let host = "bit-crafts"
+let domain = ".com"
+let workspace_root = "/srv/"
+let workspace_leaf = "workspace"
+let user_name = "younes"
+let user_leaf = "-benmoussa"
+let forbidden = "{host}{domain}|{workspace_root}{workspace_leaf}|/home/{user_name}{user_leaf}"
+match process.run(process.request("grep", ["-rInE", "--exclude-dir=.git", "--exclude-dir=bin", "--exclude-dir=obj", "--exclude-dir=artifacts", "--exclude-dir=docs", forbidden, "."]).with_working_directory(root)) {
+    ok(completed) => {
+        if completed.exit_code == 1 {
+            io.write_standard_output_line("PASS no internal host or personal path")
+        } else if completed.exit_code == 0 {
+            io.write_standard_error_line("FAIL no internal host or personal path: {completed.standard_output.trim_whitespace()}")
+            success = false
+        } else {
+            io.write_standard_error_line("FAIL no internal host or personal path: grep exit {completed.exit_code}")
+            success = false
+        }
+    }
+    error(failure) => {
+        io.write_standard_error_line("FAIL no internal host or personal path: {failure.kind}")
+        success = false
+    }
+}
+
+match process.run(process.request("dotnet", ["build", "-c", "Release"]).with_working_directory(root)) {
+    ok(completed) => {
+        if completed.exit_code == 0 {
+            io.write_standard_output_line("PASS build")
+        } else {
+            io.write_standard_error_line("FAIL build: exit {completed.exit_code} {completed.standard_error.trim_whitespace()}")
+            success = false
+        }
+    }
+    error(failure) => {
+        io.write_standard_error_line("FAIL build: {failure.kind}")
+        success = false
+    }
+}
+
+match process.run(process.request("dotnet", ["test", "-c", "Release", "--no-build"]).with_working_directory(root)) {
+    ok(completed) => {
+        if completed.exit_code == 0 {
+            io.write_standard_output_line("PASS tests")
+        } else {
+            io.write_standard_error_line("FAIL tests: exit {completed.exit_code} {completed.standard_error.trim_whitespace()}")
+            success = false
+        }
+    }
+    error(failure) => {
+        io.write_standard_error_line("FAIL tests: {failure.kind}")
+        success = false
+    }
+}
+
+match process.run(process.request("reuse", ["lint"]).with_working_directory(root)) {
+    ok(completed) => {
+        if completed.exit_code == 0 {
+            io.write_standard_output_line("PASS reuse lint")
+        } else {
+            io.write_standard_error_line("FAIL reuse lint: exit {completed.exit_code} {completed.standard_error.trim_whitespace()}")
+            success = false
+        }
+    }
+    error(failure) => {
+        io.write_standard_error_line("FAIL reuse lint: {failure.kind}")
+        success = false
+    }
+}
+
+if perf_mode {
+    match process.run(process.request("dotnet", ["publish", "experiments/Core.UI.Shell/Core.UI.Shell.csproj", "-c", "Release", "-r", "linux-x64", "-p:PublishAot=true", "-p:StripSymbols=false", "-o", "/tmp/opencode/core-gate-perf"]).with_working_directory(root)) {
+        ok(completed) => {
+            if completed.exit_code == 0 {
+                io.write_standard_output_line("PASS perf publish")
+            } else {
+                io.write_standard_error_line("FAIL perf publish: exit {completed.exit_code} {completed.standard_error.trim_whitespace()}")
+                success = false
+            }
+        }
+        error(failure) => {
+            io.write_standard_error_line("FAIL perf publish: {failure.kind}")
+            success = false
+        }
+    }
+
+    if success {
+        if not run_perf("walk", "--walk", "20", 0.25) {
+            success = false
+        }
+        if not run_perf("csv", "--csv", "20", 0.10) {
+            success = false
+        }
+        if not run_perf("data-model", "--data-model", "20", 0.10) {
+            success = false
+        }
+        if not run_perf("records", "--records", "20", 0.20) {
+            success = false
+        }
+    }
+}
+
+io.write_standard_output_line(verdict.line(success))
+process.exit_with_code(verdict.code(success))

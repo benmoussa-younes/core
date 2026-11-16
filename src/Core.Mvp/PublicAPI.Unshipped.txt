@@ -1,0 +1,344 @@
+#nullable enable
+Core.Mvp.Presenters.IViewPresenter
+Core.Mvp.Presenters.IViewPresenter.View.get -> Core.Mvp.Views.IView!
+Core.Mvp.Presenters.PresenterBase<TView>.IsInitialized.get -> bool
+Core.Mvp.Presenters.PresenterBase<TView>.IsActive.get -> bool
+Core.Mvp.Composition.INavigationHost.OpenTab(string! id, string! title, Core.Mvp.Presenters.IViewPresenter! presenter) -> void
+Core.Mvp.Composition.INavigationHost.Push(string! title, string! subtitle, Core.Mvp.Presenters.IViewPresenter! presenter) -> void
+Core.Mvp.Presentation.ShellSnapshot.IsDirty.get -> bool
+Core.Mvp.Presentation.ShellSnapshot.IsDirty.init -> void
+Core.Mvp.Services.FolderPickerOptions
+Core.Mvp.Services.FolderPickerOptions.FolderPickerOptions(string! Title) -> void
+Core.Mvp.Services.FolderPickerOptions.Title.get -> string!
+Core.Mvp.Services.IFolderPicker
+Core.Mvp.Services.IFolderPicker.PickFolderAsync(Core.Mvp.Services.FolderPickerOptions! options, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<string?>
+Core.Mvp.Composition.IViewHost.Folders.get -> Core.Mvp.Services.IFolderPicker!
+Core.Mvp.Composition.IViewHost.SetSnapshot(Core.Mvp.Presenters.IViewPresenter! presenter, Core.Mvp.Presentation.ShellSnapshot! snapshot) -> void
+Core.Mvp.Composition.IApplicationHost.ShutdownAsync() -> System.Threading.Tasks.ValueTask
+Core.Mvp.Services.FolderPickerOptions.<Clone>$() -> Core.Mvp.Services.FolderPickerOptions!
+Core.Mvp.Services.FolderPickerOptions.Deconstruct(out string! Title) -> void
+Core.Mvp.Services.FolderPickerOptions.Equals(Core.Mvp.Services.FolderPickerOptions? other) -> bool
+Core.Mvp.Services.FolderPickerOptions.Title.init -> void
+override Core.Mvp.Services.FolderPickerOptions.Equals(object? obj) -> bool
+override Core.Mvp.Services.FolderPickerOptions.GetHashCode() -> int
+override Core.Mvp.Services.FolderPickerOptions.ToString() -> string!
+static Core.Mvp.Services.FolderPickerOptions.operator !=(Core.Mvp.Services.FolderPickerOptions? left, Core.Mvp.Services.FolderPickerOptions? right) -> bool
+static Core.Mvp.Services.FolderPickerOptions.operator ==(Core.Mvp.Services.FolderPickerOptions? left, Core.Mvp.Services.FolderPickerOptions? right) -> bool
+Core.Mvp.Presentation.ShellSnapshot.Progress.get -> double?
+Core.Mvp.Presentation.ShellSnapshot.Progress.init -> void
+Core.Mvp.Services.PromptRequest
+Core.Mvp.Services.PromptRequest.PromptRequest(string! Title, string! Label, string! Value = "", string! ConfirmLabel = "OK", string! CancelLabel = "Cancel", bool IsPassword = false) -> void
+Core.Mvp.Services.PromptRequest.<Clone>$() -> Core.Mvp.Services.PromptRequest!
+Core.Mvp.Services.PromptRequest.Deconstruct(out string! Title, out string! Label, out string! Value, out string! ConfirmLabel, out string! CancelLabel, out bool IsPassword) -> void
+Core.Mvp.Services.PromptRequest.Equals(Core.Mvp.Services.PromptRequest? other) -> bool
+Core.Mvp.Services.PromptRequest.Title.get -> string!
+Core.Mvp.Services.PromptRequest.Label.get -> string!
+Core.Mvp.Services.PromptRequest.Value.get -> string!
+Core.Mvp.Services.PromptRequest.ConfirmLabel.get -> string!
+Core.Mvp.Services.PromptRequest.CancelLabel.get -> string!
+Core.Mvp.Services.PromptRequest.IsPassword.get -> bool
+Core.Mvp.Services.PromptRequest.Title.init -> void
+Core.Mvp.Services.PromptRequest.Label.init -> void
+Core.Mvp.Services.PromptRequest.Value.init -> void
+Core.Mvp.Services.PromptRequest.ConfirmLabel.init -> void
+Core.Mvp.Services.PromptRequest.CancelLabel.init -> void
+Core.Mvp.Services.PromptRequest.IsPassword.init -> void
+override Core.Mvp.Services.PromptRequest.Equals(object? obj) -> bool
+override Core.Mvp.Services.PromptRequest.GetHashCode() -> int
+override Core.Mvp.Services.PromptRequest.ToString() -> string!
+static Core.Mvp.Services.PromptRequest.operator !=(Core.Mvp.Services.PromptRequest? left, Core.Mvp.Services.PromptRequest? right) -> bool
+static Core.Mvp.Services.PromptRequest.operator ==(Core.Mvp.Services.PromptRequest? left, Core.Mvp.Services.PromptRequest? right) -> bool
+Core.Mvp.Services.IPromptService
+Core.Mvp.Services.IPromptService.PromptAsync(Core.Mvp.Services.PromptRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<string?>
+Core.Mvp.Composition.IViewHost.Prompts.get -> Core.Mvp.Services.IPromptService!
+Core.Mvp.Composition.IApplicationHost
+Core.Mvp.Composition.IApplicationHost.Activated -> System.Action?
+Core.Mvp.Composition.IApplicationHost.CloseBehavior.get -> Core.Mvp.Services.CloseBehavior
+Core.Mvp.Composition.IApplicationHost.CloseBehavior.set -> void
+Core.Mvp.Composition.IApplicationHost.HideWindow() -> void
+Core.Mvp.Composition.IApplicationHost.Navigation.get -> Core.Mvp.Composition.INavigationHost!
+Core.Mvp.Composition.IApplicationHost.Quit() -> void
+Core.Mvp.Composition.IApplicationHost.SetApplicationMenu(Core.Mvp.Presentation.CommandSet! menu) -> void
+Core.Mvp.Composition.IApplicationHost.ShowWindow() -> void
+Core.Mvp.Composition.IApplicationHost.Tray.get -> Core.Mvp.Services.ITrayService!
+Core.Mvp.Composition.INavigationHost
+Core.Mvp.Composition.INavigationHost.Active.get -> Core.Mvp.Views.IView?
+Core.Mvp.Composition.INavigationHost.CloseTab(string! id) -> void
+Core.Mvp.Composition.INavigationHost.OpenTab(string! id, string! title, Core.Mvp.Views.IView! view) -> void
+Core.Mvp.Composition.INavigationHost.Pop() -> void
+Core.Mvp.Composition.INavigationHost.Push(string! title, string! subtitle, Core.Mvp.Views.IView! view) -> void
+Core.Mvp.Composition.IViewHost
+Core.Mvp.Composition.IViewHost.Clipboard.get -> Core.Mvp.Services.IClipboardService!
+Core.Mvp.Composition.IViewHost.CommandInvoked -> System.Action<Core.Mvp.Views.IView!, string!>!
+Core.Mvp.Composition.IViewHost.Dialogs.get -> Core.Mvp.Services.IDialogService!
+Core.Mvp.Composition.IViewHost.Files.get -> Core.Mvp.Services.IFilePicker!
+Core.Mvp.Composition.IViewHost.Notifications.get -> Core.Mvp.Services.INotificationService!
+Core.Mvp.Composition.IViewHost.SetSnapshot(Core.Mvp.Presentation.ShellSnapshot! snapshot) -> void
+Core.Mvp.Models.IModel
+Core.Mvp.Models.Unit
+Core.Mvp.Models.Unit.Unit() -> void
+Core.Mvp.Models.WindowPlacement
+Core.Mvp.Models.WindowPlacement.<Clone>$() -> Core.Mvp.Models.WindowPlacement!
+Core.Mvp.Models.WindowPlacement.Deconstruct(out double X, out double Y, out double Width, out double Height, out bool Maximized) -> void
+Core.Mvp.Models.WindowPlacement.Equals(Core.Mvp.Models.WindowPlacement? other) -> bool
+Core.Mvp.Models.WindowPlacement.Height.get -> double
+Core.Mvp.Models.WindowPlacement.Height.init -> void
+Core.Mvp.Models.WindowPlacement.Maximized.get -> bool
+Core.Mvp.Models.WindowPlacement.Maximized.init -> void
+Core.Mvp.Models.WindowPlacement.Width.get -> double
+Core.Mvp.Models.WindowPlacement.Width.init -> void
+Core.Mvp.Models.WindowPlacement.WindowPlacement(double X, double Y, double Width, double Height, bool Maximized = false) -> void
+Core.Mvp.Models.WindowPlacement.X.get -> double
+Core.Mvp.Models.WindowPlacement.X.init -> void
+Core.Mvp.Models.WindowPlacement.Y.get -> double
+Core.Mvp.Models.WindowPlacement.Y.init -> void
+Core.Mvp.Presentation.AppCommand
+Core.Mvp.Presentation.AppCommand.<Clone>$() -> Core.Mvp.Presentation.AppCommand!
+Core.Mvp.Presentation.AppCommand.AppCommand(string! Id, string! Label, string? IconKey = null, string? ToolTip = null, string? Shortcut = null, bool IsEnabled = true, bool IsChecked = false, string! Group = "") -> void
+Core.Mvp.Presentation.AppCommand.Deconstruct(out string! Id, out string! Label, out string? IconKey, out string? ToolTip, out string? Shortcut, out bool IsEnabled, out bool IsChecked, out string! Group) -> void
+Core.Mvp.Presentation.AppCommand.Equals(Core.Mvp.Presentation.AppCommand? other) -> bool
+Core.Mvp.Presentation.AppCommand.Group.get -> string!
+Core.Mvp.Presentation.AppCommand.Group.init -> void
+Core.Mvp.Presentation.AppCommand.IconKey.get -> string?
+Core.Mvp.Presentation.AppCommand.IconKey.init -> void
+Core.Mvp.Presentation.AppCommand.Id.get -> string!
+Core.Mvp.Presentation.AppCommand.Id.init -> void
+Core.Mvp.Presentation.AppCommand.IsChecked.get -> bool
+Core.Mvp.Presentation.AppCommand.IsChecked.init -> void
+Core.Mvp.Presentation.AppCommand.IsEnabled.get -> bool
+Core.Mvp.Presentation.AppCommand.IsEnabled.init -> void
+Core.Mvp.Presentation.AppCommand.Label.get -> string!
+Core.Mvp.Presentation.AppCommand.Label.init -> void
+Core.Mvp.Presentation.AppCommand.Shortcut.get -> string?
+Core.Mvp.Presentation.AppCommand.Shortcut.init -> void
+Core.Mvp.Presentation.AppCommand.ToolTip.get -> string?
+Core.Mvp.Presentation.AppCommand.ToolTip.init -> void
+Core.Mvp.Presentation.CommandSet
+Core.Mvp.Presentation.CommandSet.<Clone>$() -> Core.Mvp.Presentation.CommandSet!
+Core.Mvp.Presentation.CommandSet.CommandSet(System.Collections.Generic.IReadOnlyList<Core.Mvp.Presentation.AppCommand!>! Commands) -> void
+Core.Mvp.Presentation.CommandSet.Commands.get -> System.Collections.Generic.IReadOnlyList<Core.Mvp.Presentation.AppCommand!>!
+Core.Mvp.Presentation.CommandSet.Commands.init -> void
+Core.Mvp.Presentation.CommandSet.Deconstruct(out System.Collections.Generic.IReadOnlyList<Core.Mvp.Presentation.AppCommand!>! Commands) -> void
+Core.Mvp.Presentation.CommandSet.Equals(Core.Mvp.Presentation.CommandSet? other) -> bool
+Core.Mvp.Presentation.ShellCommandIds
+Core.Mvp.Presentation.ShellSnapshot
+Core.Mvp.Presentation.ShellSnapshot.<Clone>$() -> Core.Mvp.Presentation.ShellSnapshot!
+Core.Mvp.Presentation.ShellSnapshot.Busy.get -> bool
+Core.Mvp.Presentation.ShellSnapshot.Busy.init -> void
+Core.Mvp.Presentation.ShellSnapshot.CanGoBack.get -> bool
+Core.Mvp.Presentation.ShellSnapshot.CanGoBack.init -> void
+Core.Mvp.Presentation.ShellSnapshot.Commands.get -> Core.Mvp.Presentation.CommandSet!
+Core.Mvp.Presentation.ShellSnapshot.Commands.init -> void
+Core.Mvp.Presentation.ShellSnapshot.Deconstruct(out string! Title, out string! Subtitle, out Core.Mvp.Presentation.CommandSet! Commands, out bool Busy, out bool CanGoBack) -> void
+Core.Mvp.Presentation.ShellSnapshot.Equals(Core.Mvp.Presentation.ShellSnapshot? other) -> bool
+Core.Mvp.Presentation.ShellSnapshot.ShellSnapshot(string! Title, string! Subtitle, Core.Mvp.Presentation.CommandSet! Commands, bool Busy = false, bool CanGoBack = false) -> void
+Core.Mvp.Presentation.ShellSnapshot.Subtitle.get -> string!
+Core.Mvp.Presentation.ShellSnapshot.Subtitle.init -> void
+Core.Mvp.Presentation.ShellSnapshot.Title.get -> string!
+Core.Mvp.Presentation.ShellSnapshot.Title.init -> void
+Core.Mvp.Presenters.IPresenter
+Core.Mvp.Presenters.IPresenter.ActivateAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Core.Mvp.Presenters.IPresenter.DeactivateAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Core.Mvp.Presenters.IPresenter.InitializeAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Core.Mvp.Presenters.IPresenter.IsBusy.get -> bool
+Core.Mvp.Presenters.IPresenter<TView>
+Core.Mvp.Presenters.IPresenter<TView>.View.get -> TView!
+Core.Mvp.Presenters.PresenterBase<TView>
+Core.Mvp.Presenters.PresenterBase<TView>.ActivateAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Core.Mvp.Presenters.PresenterBase<TView>.DeactivateAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Core.Mvp.Presenters.PresenterBase<TView>.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Core.Mvp.Presenters.PresenterBase<TView>.InitializeAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Core.Mvp.Presenters.PresenterBase<TView>.IsBusy.get -> bool
+Core.Mvp.Presenters.PresenterBase<TView>.PresenterBase(TView! view) -> void
+Core.Mvp.Presenters.PresenterBase<TView>.RunGuardedAsync(System.Func<System.Threading.CancellationToken, System.Threading.Tasks.ValueTask<Core.Results.Result<Core.Mvp.Models.Unit>>>! operation, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask
+Core.Mvp.Presenters.PresenterBase<TView>.RunGuardedAsync<T>(System.Func<System.Threading.CancellationToken, System.Threading.Tasks.ValueTask<Core.Results.Result<T>>>! operation, System.Action<T>! apply, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask
+Core.Mvp.Presenters.PresenterBase<TView>.RunGuardedAsync<T>(System.Func<System.Threading.CancellationToken, System.Threading.Tasks.ValueTask<Core.Results.Result<T>>>! operation, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Core.Results.Result<T>>
+Core.Mvp.Presenters.PresenterBase<TView>.SetBusy(bool busy) -> void
+Core.Mvp.Presenters.PresenterBase<TView>.View.get -> TView!
+Core.Mvp.Services.AppearanceSettings
+Core.Mvp.Services.AppearanceSettings.<Clone>$() -> Core.Mvp.Services.AppearanceSettings!
+Core.Mvp.Services.AppearanceSettings.AccentKey.get -> string?
+Core.Mvp.Services.AppearanceSettings.AccentKey.init -> void
+Core.Mvp.Services.AppearanceSettings.AppearanceSettings(Core.Mvp.Services.ThemePreference Theme = Core.Mvp.Services.ThemePreference.System, string? AccentKey = null, bool Remember = false) -> void
+Core.Mvp.Services.AppearanceSettings.Deconstruct(out Core.Mvp.Services.ThemePreference Theme, out string? AccentKey, out bool Remember) -> void
+Core.Mvp.Services.AppearanceSettings.Equals(Core.Mvp.Services.AppearanceSettings? other) -> bool
+Core.Mvp.Services.AppearanceSettings.Remember.get -> bool
+Core.Mvp.Services.AppearanceSettings.Remember.init -> void
+Core.Mvp.Services.AppearanceSettings.Theme.get -> Core.Mvp.Services.ThemePreference
+Core.Mvp.Services.AppearanceSettings.Theme.init -> void
+Core.Mvp.Services.CloseBehavior
+Core.Mvp.Services.CloseBehavior.HideToTray = 1 -> Core.Mvp.Services.CloseBehavior
+Core.Mvp.Services.CloseBehavior.Quit = 0 -> Core.Mvp.Services.CloseBehavior
+Core.Mvp.Services.ConfirmRequest
+Core.Mvp.Services.ConfirmRequest.<Clone>$() -> Core.Mvp.Services.ConfirmRequest!
+Core.Mvp.Services.ConfirmRequest.AlternativeLabel.get -> string!
+Core.Mvp.Services.ConfirmRequest.AlternativeLabel.init -> void
+Core.Mvp.Services.ConfirmRequest.Body.get -> string!
+Core.Mvp.Services.ConfirmRequest.Body.init -> void
+Core.Mvp.Services.ConfirmRequest.CancelLabel.get -> string!
+Core.Mvp.Services.ConfirmRequest.CancelLabel.init -> void
+Core.Mvp.Services.ConfirmRequest.ConfirmLabel.get -> string!
+Core.Mvp.Services.ConfirmRequest.ConfirmLabel.init -> void
+Core.Mvp.Services.ConfirmRequest.ConfirmRequest(string! Title, string! Body = "", string! ConfirmLabel = "OK", string! AlternativeLabel = "", string! CancelLabel = "Cancel", bool Destructive = false) -> void
+Core.Mvp.Services.ConfirmRequest.Deconstruct(out string! Title, out string! Body, out string! ConfirmLabel, out string! AlternativeLabel, out string! CancelLabel, out bool Destructive) -> void
+Core.Mvp.Services.ConfirmRequest.Destructive.get -> bool
+Core.Mvp.Services.ConfirmRequest.Destructive.init -> void
+Core.Mvp.Services.ConfirmRequest.Equals(Core.Mvp.Services.ConfirmRequest? other) -> bool
+Core.Mvp.Services.ConfirmRequest.Title.get -> string!
+Core.Mvp.Services.ConfirmRequest.Title.init -> void
+Core.Mvp.Services.ConfirmResult
+Core.Mvp.Services.ConfirmResult.Accept = 0 -> Core.Mvp.Services.ConfirmResult
+Core.Mvp.Services.ConfirmResult.Alternative = 1 -> Core.Mvp.Services.ConfirmResult
+Core.Mvp.Services.ConfirmResult.Cancel = 2 -> Core.Mvp.Services.ConfirmResult
+Core.Mvp.Services.FilePickerOptions
+Core.Mvp.Services.FilePickerOptions.<Clone>$() -> Core.Mvp.Services.FilePickerOptions!
+Core.Mvp.Services.FilePickerOptions.AllowMultiple.get -> bool
+Core.Mvp.Services.FilePickerOptions.AllowMultiple.init -> void
+Core.Mvp.Services.FilePickerOptions.Deconstruct(out string! Title, out bool AllowMultiple, out System.Collections.Generic.IReadOnlyList<Core.Mvp.Services.FileTypeFilter!>? Filters) -> void
+Core.Mvp.Services.FilePickerOptions.Equals(Core.Mvp.Services.FilePickerOptions? other) -> bool
+Core.Mvp.Services.FilePickerOptions.FilePickerOptions(string! Title, bool AllowMultiple = false, System.Collections.Generic.IReadOnlyList<Core.Mvp.Services.FileTypeFilter!>? Filters = null) -> void
+Core.Mvp.Services.FilePickerOptions.Filters.get -> System.Collections.Generic.IReadOnlyList<Core.Mvp.Services.FileTypeFilter!>?
+Core.Mvp.Services.FilePickerOptions.Filters.init -> void
+Core.Mvp.Services.FilePickerOptions.Title.get -> string!
+Core.Mvp.Services.FilePickerOptions.Title.init -> void
+Core.Mvp.Services.FileTypeFilter
+Core.Mvp.Services.FileTypeFilter.<Clone>$() -> Core.Mvp.Services.FileTypeFilter!
+Core.Mvp.Services.FileTypeFilter.Deconstruct(out string! Name, out System.Collections.Generic.IReadOnlyList<string!>! Patterns) -> void
+Core.Mvp.Services.FileTypeFilter.Equals(Core.Mvp.Services.FileTypeFilter? other) -> bool
+Core.Mvp.Services.FileTypeFilter.FileTypeFilter(string! Name, System.Collections.Generic.IReadOnlyList<string!>! Patterns) -> void
+Core.Mvp.Services.FileTypeFilter.Name.get -> string!
+Core.Mvp.Services.FileTypeFilter.Name.init -> void
+Core.Mvp.Services.FileTypeFilter.Patterns.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Core.Mvp.Services.FileTypeFilter.Patterns.init -> void
+Core.Mvp.Services.IAppearanceService
+Core.Mvp.Services.IAppearanceService.Apply() -> void
+Core.Mvp.Services.IAppearanceService.ChooseAccent(string! key) -> void
+Core.Mvp.Services.IAppearanceService.ChooseTheme(Core.Mvp.Services.ThemePreference theme) -> void
+Core.Mvp.Services.IAppearanceService.Current.get -> Core.Mvp.Services.AppearanceSettings!
+Core.Mvp.Services.IAppearanceService.SetRemember(bool remember) -> void
+Core.Mvp.Services.IAppearanceStore
+Core.Mvp.Services.IAppearanceStore.Clear() -> void
+Core.Mvp.Services.IAppearanceStore.Load() -> Core.Mvp.Services.AppearanceSettings?
+Core.Mvp.Services.IAppearanceStore.Save(Core.Mvp.Services.AppearanceSettings! settings) -> void
+Core.Mvp.Services.IClipboardService
+Core.Mvp.Services.IClipboardService.GetImageAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<byte[]?>
+Core.Mvp.Services.IClipboardService.GetTextAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<string?>
+Core.Mvp.Services.IClipboardService.SetImageAsync(byte[]! png, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Core.Mvp.Services.IClipboardService.SetTextAsync(string! text, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Core.Mvp.Services.IDialogService
+Core.Mvp.Services.IDialogService.ConfirmAsync(Core.Mvp.Services.ConfirmRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Core.Mvp.Services.ConfirmResult>
+Core.Mvp.Services.IDialogService.ConfirmQuitAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Core.Mvp.Services.QuitChoice>
+Core.Mvp.Services.IDialogService.ConfirmSaveAsync(string! documentName, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Core.Mvp.Services.SavePromptChoice>
+Core.Mvp.Services.IFilePicker
+Core.Mvp.Services.IFilePicker.OpenFilesAsync(Core.Mvp.Services.FilePickerOptions! options, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<string!>!>
+Core.Mvp.Services.IFilePicker.SaveFileAsync(Core.Mvp.Services.SaveFilePickerOptions! options, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<string?>
+Core.Mvp.Services.INotificationService
+Core.Mvp.Services.INotificationService.Banner(string! message, Core.Mvp.Services.MessageSeverity severity = Core.Mvp.Services.MessageSeverity.Error) -> void
+Core.Mvp.Services.INotificationService.DismissBanner() -> void
+Core.Mvp.Services.INotificationService.Toast(string! message, Core.Mvp.Services.MessageSeverity severity = Core.Mvp.Services.MessageSeverity.Information) -> void
+Core.Mvp.Services.IService
+Core.Mvp.Services.ITrayService
+Core.Mvp.Services.ITrayService.Hide() -> void
+Core.Mvp.Services.ITrayService.Show(string! toolTip, Core.Mvp.Presentation.CommandSet! menu) -> void
+Core.Mvp.Services.JsonAppearanceStore
+Core.Mvp.Services.JsonAppearanceStore.Clear() -> void
+Core.Mvp.Services.JsonAppearanceStore.JsonAppearanceStore(string! path, Core.Platform.IAtomicFileWriterFactory! atomicFiles, Core.Platform.IFileSystem! fileSystem) -> void
+Core.Mvp.Services.JsonAppearanceStore.Load() -> Core.Mvp.Services.AppearanceSettings?
+Core.Mvp.Services.JsonAppearanceStore.Path.get -> string!
+Core.Mvp.Services.JsonAppearanceStore.Save(Core.Mvp.Services.AppearanceSettings! settings) -> void
+Core.Mvp.Services.JsonSettingsStore<T>
+Core.Mvp.Services.JsonSettingsStore<T>.Clear() -> void
+Core.Mvp.Services.JsonSettingsStore<T>.JsonSettingsStore(string! path, System.Text.Json.Serialization.Metadata.JsonTypeInfo<T!>! typeInfo, Core.Platform.IAtomicFileWriterFactory! atomicFiles, Core.Platform.IFileSystem! fileSystem) -> void
+Core.Mvp.Services.JsonSettingsStore<T>.Load() -> T?
+Core.Mvp.Services.JsonSettingsStore<T>.Path.get -> string!
+Core.Mvp.Services.JsonSettingsStore<T>.Save(T! settings) -> void
+Core.Mvp.Services.MessageSeverity
+Core.Mvp.Services.MessageSeverity.Error = 3 -> Core.Mvp.Services.MessageSeverity
+Core.Mvp.Services.MessageSeverity.Information = 0 -> Core.Mvp.Services.MessageSeverity
+Core.Mvp.Services.MessageSeverity.Success = 1 -> Core.Mvp.Services.MessageSeverity
+Core.Mvp.Services.MessageSeverity.Warning = 2 -> Core.Mvp.Services.MessageSeverity
+Core.Mvp.Services.QuitChoice
+Core.Mvp.Services.QuitChoice.Cancel = 1 -> Core.Mvp.Services.QuitChoice
+Core.Mvp.Services.QuitChoice.Quit = 0 -> Core.Mvp.Services.QuitChoice
+Core.Mvp.Services.SaveFilePickerOptions
+Core.Mvp.Services.SaveFilePickerOptions.<Clone>$() -> Core.Mvp.Services.SaveFilePickerOptions!
+Core.Mvp.Services.SaveFilePickerOptions.Deconstruct(out string! Title, out string? SuggestedFileName, out System.Collections.Generic.IReadOnlyList<Core.Mvp.Services.FileTypeFilter!>? Filters) -> void
+Core.Mvp.Services.SaveFilePickerOptions.Equals(Core.Mvp.Services.SaveFilePickerOptions? other) -> bool
+Core.Mvp.Services.SaveFilePickerOptions.Filters.get -> System.Collections.Generic.IReadOnlyList<Core.Mvp.Services.FileTypeFilter!>?
+Core.Mvp.Services.SaveFilePickerOptions.Filters.init -> void
+Core.Mvp.Services.SaveFilePickerOptions.SaveFilePickerOptions(string! Title, string? SuggestedFileName = null, System.Collections.Generic.IReadOnlyList<Core.Mvp.Services.FileTypeFilter!>? Filters = null) -> void
+Core.Mvp.Services.SaveFilePickerOptions.SuggestedFileName.get -> string?
+Core.Mvp.Services.SaveFilePickerOptions.SuggestedFileName.init -> void
+Core.Mvp.Services.SaveFilePickerOptions.Title.get -> string!
+Core.Mvp.Services.SaveFilePickerOptions.Title.init -> void
+Core.Mvp.Services.SavePromptChoice
+Core.Mvp.Services.SavePromptChoice.Cancel = 2 -> Core.Mvp.Services.SavePromptChoice
+Core.Mvp.Services.SavePromptChoice.Discard = 1 -> Core.Mvp.Services.SavePromptChoice
+Core.Mvp.Services.SavePromptChoice.Save = 0 -> Core.Mvp.Services.SavePromptChoice
+Core.Mvp.Services.ThemePreference
+Core.Mvp.Services.ThemePreference.Dark = 2 -> Core.Mvp.Services.ThemePreference
+Core.Mvp.Services.ThemePreference.Light = 1 -> Core.Mvp.Services.ThemePreference
+Core.Mvp.Services.ThemePreference.System = 0 -> Core.Mvp.Services.ThemePreference
+Core.Mvp.Views.IBusyView
+Core.Mvp.Views.IBusyView.BusyChanged -> System.Action<bool>?
+Core.Mvp.Views.IView
+Core.Mvp.Views.IView.SetBusy(bool busy) -> void
+Core.Mvp.Views.IView.ShowError(Core.Results.CoreError! error) -> void
+const Core.Mvp.Presentation.ShellCommandIds.About = "core.about" -> string!
+const Core.Mvp.Presentation.ShellCommandIds.Preferences = "core.preferences" -> string!
+const Core.Mvp.Presentation.ShellCommandIds.Quit = "core.quit" -> string!
+override Core.Mvp.Models.WindowPlacement.Equals(object? obj) -> bool
+override Core.Mvp.Models.WindowPlacement.GetHashCode() -> int
+override Core.Mvp.Models.WindowPlacement.ToString() -> string!
+override Core.Mvp.Presentation.AppCommand.Equals(object? obj) -> bool
+override Core.Mvp.Presentation.AppCommand.GetHashCode() -> int
+override Core.Mvp.Presentation.AppCommand.ToString() -> string!
+override Core.Mvp.Presentation.CommandSet.Equals(object? obj) -> bool
+override Core.Mvp.Presentation.CommandSet.GetHashCode() -> int
+override Core.Mvp.Presentation.CommandSet.ToString() -> string!
+override Core.Mvp.Presentation.ShellSnapshot.Equals(object? obj) -> bool
+override Core.Mvp.Presentation.ShellSnapshot.GetHashCode() -> int
+override Core.Mvp.Presentation.ShellSnapshot.ToString() -> string!
+override Core.Mvp.Services.AppearanceSettings.Equals(object? obj) -> bool
+override Core.Mvp.Services.AppearanceSettings.GetHashCode() -> int
+override Core.Mvp.Services.AppearanceSettings.ToString() -> string!
+override Core.Mvp.Services.ConfirmRequest.Equals(object? obj) -> bool
+override Core.Mvp.Services.ConfirmRequest.GetHashCode() -> int
+override Core.Mvp.Services.ConfirmRequest.ToString() -> string!
+override Core.Mvp.Services.FilePickerOptions.Equals(object? obj) -> bool
+override Core.Mvp.Services.FilePickerOptions.GetHashCode() -> int
+override Core.Mvp.Services.FilePickerOptions.ToString() -> string!
+override Core.Mvp.Services.FileTypeFilter.Equals(object? obj) -> bool
+override Core.Mvp.Services.FileTypeFilter.GetHashCode() -> int
+override Core.Mvp.Services.FileTypeFilter.ToString() -> string!
+override Core.Mvp.Services.SaveFilePickerOptions.Equals(object? obj) -> bool
+override Core.Mvp.Services.SaveFilePickerOptions.GetHashCode() -> int
+override Core.Mvp.Services.SaveFilePickerOptions.ToString() -> string!
+static Core.Mvp.Models.Unit.Value.get -> Core.Mvp.Models.Unit
+static Core.Mvp.Models.WindowPlacement.operator !=(Core.Mvp.Models.WindowPlacement? left, Core.Mvp.Models.WindowPlacement? right) -> bool
+static Core.Mvp.Models.WindowPlacement.operator ==(Core.Mvp.Models.WindowPlacement? left, Core.Mvp.Models.WindowPlacement? right) -> bool
+static Core.Mvp.Presentation.AppCommand.operator !=(Core.Mvp.Presentation.AppCommand? left, Core.Mvp.Presentation.AppCommand? right) -> bool
+static Core.Mvp.Presentation.AppCommand.operator ==(Core.Mvp.Presentation.AppCommand? left, Core.Mvp.Presentation.AppCommand? right) -> bool
+static Core.Mvp.Presentation.CommandSet.Empty.get -> Core.Mvp.Presentation.CommandSet!
+static Core.Mvp.Presentation.CommandSet.operator !=(Core.Mvp.Presentation.CommandSet? left, Core.Mvp.Presentation.CommandSet? right) -> bool
+static Core.Mvp.Presentation.CommandSet.operator ==(Core.Mvp.Presentation.CommandSet? left, Core.Mvp.Presentation.CommandSet? right) -> bool
+static Core.Mvp.Presentation.ShellSnapshot.operator !=(Core.Mvp.Presentation.ShellSnapshot? left, Core.Mvp.Presentation.ShellSnapshot? right) -> bool
+static Core.Mvp.Presentation.ShellSnapshot.operator ==(Core.Mvp.Presentation.ShellSnapshot? left, Core.Mvp.Presentation.ShellSnapshot? right) -> bool
+static Core.Mvp.Services.AppearanceSettings.Default.get -> Core.Mvp.Services.AppearanceSettings!
+static Core.Mvp.Services.AppearanceSettings.operator !=(Core.Mvp.Services.AppearanceSettings? left, Core.Mvp.Services.AppearanceSettings? right) -> bool
+static Core.Mvp.Services.AppearanceSettings.operator ==(Core.Mvp.Services.AppearanceSettings? left, Core.Mvp.Services.AppearanceSettings? right) -> bool
+static Core.Mvp.Services.ConfirmRequest.operator !=(Core.Mvp.Services.ConfirmRequest? left, Core.Mvp.Services.ConfirmRequest? right) -> bool
+static Core.Mvp.Services.ConfirmRequest.operator ==(Core.Mvp.Services.ConfirmRequest? left, Core.Mvp.Services.ConfirmRequest? right) -> bool
+static Core.Mvp.Services.FilePickerOptions.operator !=(Core.Mvp.Services.FilePickerOptions? left, Core.Mvp.Services.FilePickerOptions? right) -> bool
+static Core.Mvp.Services.FilePickerOptions.operator ==(Core.Mvp.Services.FilePickerOptions? left, Core.Mvp.Services.FilePickerOptions? right) -> bool
+static Core.Mvp.Services.FileTypeFilter.operator !=(Core.Mvp.Services.FileTypeFilter? left, Core.Mvp.Services.FileTypeFilter? right) -> bool
+static Core.Mvp.Services.FileTypeFilter.operator ==(Core.Mvp.Services.FileTypeFilter? left, Core.Mvp.Services.FileTypeFilter? right) -> bool
+static Core.Mvp.Services.SaveFilePickerOptions.operator !=(Core.Mvp.Services.SaveFilePickerOptions? left, Core.Mvp.Services.SaveFilePickerOptions? right) -> bool
+static Core.Mvp.Services.SaveFilePickerOptions.operator ==(Core.Mvp.Services.SaveFilePickerOptions? left, Core.Mvp.Services.SaveFilePickerOptions? right) -> bool
+virtual Core.Mvp.Presenters.PresenterBase<TView>.OnActivateAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask
+virtual Core.Mvp.Presenters.PresenterBase<TView>.OnDeactivateAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask
+virtual Core.Mvp.Presenters.PresenterBase<TView>.OnDisposeAsync() -> System.Threading.Tasks.ValueTask
+virtual Core.Mvp.Presenters.PresenterBase<TView>.OnInitializeAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask
+const Core.Mvp.Services.JsonSettingsStore<T>.MaxFileBytes = 16777216 -> long
+Core.Mvp.Composition.IApplicationHost.QuitAsync() -> System.Threading.Tasks.ValueTask
+Core.Mvp.Composition.INavigationHost.WhenIdleAsync() -> System.Threading.Tasks.ValueTask

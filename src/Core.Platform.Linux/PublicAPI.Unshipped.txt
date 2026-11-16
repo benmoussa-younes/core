@@ -1,0 +1,211 @@
+#nullable enable
+Core.Platform.Linux.XdgDirectories
+static Core.Platform.Linux.XdgDirectories.Create(Core.Platform.Linux.XdgEnvironment environment) -> Core.Results.Result<Core.Paths.PathSet!>
+static Core.Platform.Linux.XdgDirectories.FromEnvironment() -> Core.Results.Result<Core.Paths.PathSet!>
+Core.Platform.Linux.XdgEnvironment
+Core.Platform.Linux.XdgEnvironment.XdgEnvironment() -> void
+Core.Platform.Linux.XdgEnvironment.CacheHome.get -> string?
+Core.Platform.Linux.XdgEnvironment.ConfigDirectories.get -> string?
+Core.Platform.Linux.XdgEnvironment.ConfigHome.get -> string?
+Core.Platform.Linux.XdgEnvironment.DataDirectories.get -> string?
+Core.Platform.Linux.XdgEnvironment.DataHome.get -> string?
+Core.Platform.Linux.XdgEnvironment.HomeDirectory.get -> string?
+Core.Platform.Linux.XdgEnvironment.RuntimeDirectory.get -> string?
+Core.Platform.Linux.XdgEnvironment.StateHome.get -> string?
+Core.Platform.Linux.XdgEnvironment.XdgEnvironment(string? homeDirectory, string? configHome, string? stateHome, string? dataHome, string? cacheHome, string? runtimeDirectory, string? configDirectories, string? dataDirectories) -> void
+Core.Platform.Linux.XdgPathResolver
+Core.Platform.Linux.XdgPathResolver.Resolve() -> Core.Results.Result<Core.Paths.PathSet!>
+Core.Platform.Linux.XdgPathResolver.XdgPathResolver() -> void
+Core.Platform.Linux.XdgPathResolver.XdgPathResolver(Core.Platform.Linux.XdgEnvironment environment) -> void
+Core.Platform.Linux.LinuxAccessMode
+Core.Platform.Linux.LinuxAccessMode.Execute = 1 -> Core.Platform.Linux.LinuxAccessMode
+Core.Platform.Linux.LinuxAccessMode.Exists = 0 -> Core.Platform.Linux.LinuxAccessMode
+Core.Platform.Linux.LinuxAccessMode.Read = 4 -> Core.Platform.Linux.LinuxAccessMode
+Core.Platform.Linux.LinuxAccessMode.Write = 2 -> Core.Platform.Linux.LinuxAccessMode
+Core.Platform.Linux.LinuxErrno
+Core.Platform.Linux.LinuxErrno.AlreadyExists = 17 -> Core.Platform.Linux.LinuxErrno
+Core.Platform.Linux.LinuxErrno.BadAddress = 14 -> Core.Platform.Linux.LinuxErrno
+Core.Platform.Linux.LinuxErrno.BadFileDescriptor = 9 -> Core.Platform.Linux.LinuxErrno
+Core.Platform.Linux.LinuxErrno.BrokenPipe = 32 -> Core.Platform.Linux.LinuxErrno
+Core.Platform.Linux.LinuxErrno.Busy = 16 -> Core.Platform.Linux.LinuxErrno
+Core.Platform.Linux.LinuxErrno.FileTableOverflow = 23 -> Core.Platform.Linux.LinuxErrno
+Core.Platform.Linux.LinuxErrno.FunctionNotImplemented = 38 -> Core.Platform.Linux.LinuxErrno
+Core.Platform.Linux.LinuxErrno.InputOutput = 5 -> Core.Platform.Linux.LinuxErrno
+Core.Platform.Linux.LinuxErrno.Interrupted = 4 -> Core.Platform.Linux.LinuxErrno
+Core.Platform.Linux.LinuxErrno.InvalidArgument = 22 -> Core.Platform.Linux.LinuxErrno
+Core.Platform.Linux.LinuxErrno.IsDirectory = 21 -> Core.Platform.Linux.LinuxErrno
+Core.Platform.Linux.LinuxErrno.NameTooLong = 36 -> Core.Platform.Linux.LinuxErrno
+Core.Platform.Linux.LinuxErrno.NoEntry = 2 -> Core.Platform.Linux.LinuxErrno
+Core.Platform.Linux.LinuxErrno.NoSpaceLeft = 28 -> Core.Platform.Linux.LinuxErrno
+Core.Platform.Linux.LinuxErrno.None = 0 -> Core.Platform.Linux.LinuxErrno
+Core.Platform.Linux.LinuxErrno.NotDirectory = 20 -> Core.Platform.Linux.LinuxErrno
+Core.Platform.Linux.LinuxErrno.OperationNotPermitted = 1 -> Core.Platform.Linux.LinuxErrno
+Core.Platform.Linux.LinuxErrno.OutOfMemory = 12 -> Core.Platform.Linux.LinuxErrno
+Core.Platform.Linux.LinuxErrno.PermissionDenied = 13 -> Core.Platform.Linux.LinuxErrno
+Core.Platform.Linux.LinuxErrno.ReadOnlyFileSystem = 30 -> Core.Platform.Linux.LinuxErrno
+Core.Platform.Linux.LinuxErrno.TooManyOpenFiles = 24 -> Core.Platform.Linux.LinuxErrno
+Core.Platform.Linux.LinuxErrno.TooManySymbolicLinks = 40 -> Core.Platform.Linux.LinuxErrno
+Core.Platform.Linux.LinuxErrno.TryAgain = 11 -> Core.Platform.Linux.LinuxErrno
+Core.Platform.Linux.LinuxFileStatus
+Core.Platform.Linux.LinuxFileStatus.Device.get -> ulong
+Core.Platform.Linux.LinuxFileStatus.Inode.get -> ulong
+Core.Platform.Linux.LinuxFileStatus.LinuxFileStatus() -> void
+Core.Platform.Linux.LinuxFileStatus.LinuxFileStatus(Core.Platform.Linux.LinuxFileType type, long size, long mtimeNanoseconds, ulong device, ulong inode, uint ownerUserId, uint ownerGroupId, uint mode) -> void
+Core.Platform.Linux.LinuxFileStatus.Mode.get -> uint
+Core.Platform.Linux.LinuxFileStatus.MtimeNanoseconds.get -> long
+Core.Platform.Linux.LinuxFileStatus.OwnerGroupId.get -> uint
+Core.Platform.Linux.LinuxFileStatus.OwnerUserId.get -> uint
+Core.Platform.Linux.LinuxFileStatus.Size.get -> long
+Core.Platform.Linux.LinuxFileStatus.Type.get -> Core.Platform.Linux.LinuxFileType
+Core.Platform.Linux.LinuxFileType
+Core.Platform.Linux.LinuxFileType.BlockDevice = 6 -> Core.Platform.Linux.LinuxFileType
+Core.Platform.Linux.LinuxFileType.CharacterDevice = 2 -> Core.Platform.Linux.LinuxFileType
+Core.Platform.Linux.LinuxFileType.Directory = 4 -> Core.Platform.Linux.LinuxFileType
+Core.Platform.Linux.LinuxFileType.Fifo = 1 -> Core.Platform.Linux.LinuxFileType
+Core.Platform.Linux.LinuxFileType.RegularFile = 8 -> Core.Platform.Linux.LinuxFileType
+Core.Platform.Linux.LinuxFileType.Socket = 12 -> Core.Platform.Linux.LinuxFileType
+Core.Platform.Linux.LinuxFileType.SymbolicLink = 10 -> Core.Platform.Linux.LinuxFileType
+Core.Platform.Linux.LinuxFileType.Unknown = 0 -> Core.Platform.Linux.LinuxFileType
+Core.Platform.Linux.SingleInstanceLock.Activated -> System.Action<System.ReadOnlyMemory<byte>>?
+Core.Platform.Linux.SingleInstanceLock.TryAcquire(System.ReadOnlySpan<byte> payload) -> bool
+Core.Platform.Linux.SystemLinkLauncher
+Core.Platform.Linux.SystemLinkLauncher.SystemLinkLauncher(Core.Execution.IProcessRunner! runner) -> void
+Core.Platform.Linux.SystemLinkLauncher.OpenAsync(string! url, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Core.Results.Result<bool>>
+Core.Platform.Linux.NotifySendNotifier
+Core.Platform.Linux.NotifySendNotifier.NotifySendNotifier(Core.Execution.IProcessRunner! runner, string! applicationName = "Core") -> void
+Core.Platform.Linux.NotifySendNotifier.NotifyAsync(string! title, string! body, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Core.Platform.Linux.LinuxDirectoryEntry
+Core.Platform.Linux.LinuxDirectoryEntry.Inode.get -> ulong
+Core.Platform.Linux.LinuxDirectoryEntry.IsNameValidUtf8.get -> bool
+Core.Platform.Linux.LinuxDirectoryEntry.LinuxDirectoryEntry() -> void
+Core.Platform.Linux.LinuxDirectoryEntry.LinuxDirectoryEntry(string! name, Core.Platform.Linux.LinuxFileType type, bool isNameValidUtf8) -> void
+Core.Platform.Linux.LinuxDirectoryEntry.LinuxDirectoryEntry(string! name, Core.Platform.Linux.LinuxFileType type, bool isNameValidUtf8, ulong inode) -> void
+Core.Platform.Linux.LinuxDirectoryEntry.Name.get -> string!
+Core.Platform.Linux.LinuxDirectoryEntry.Type.get -> Core.Platform.Linux.LinuxFileType
+Core.Platform.Linux.LinuxDirectoryHandle
+Core.Platform.Linux.LinuxDirectoryHandle.Dispose() -> void
+Core.Platform.Linux.LinuxDirectoryHandle.Enumerate() -> Core.Platform.Linux.LinuxDirectoryReader!
+Core.Platform.Linux.LinuxDirectoryHandle.FileDescriptor.get -> int
+Core.Platform.Linux.LinuxDirectoryHandle.TryGetStatus(out Core.Platform.Linux.LinuxFileStatus status) -> bool
+Core.Platform.Linux.LinuxDirectoryHandle.TryOpenAt(System.ReadOnlySpan<byte> nullTerminatedName, bool followSymbolicLinks, out Core.Platform.Linux.LinuxDirectoryHandle? handle) -> bool
+Core.Platform.Linux.LinuxDirectoryReader
+Core.Platform.Linux.LinuxDirectoryReader.Dispose() -> void
+Core.Platform.Linux.LinuxDirectoryReader.TryRead(out Core.Platform.Linux.LinuxDirectoryEntry entry) -> bool
+Core.Platform.Linux.LinuxFileAdvice
+Core.Platform.Linux.LinuxFileAdvice.DoNotNeed = 4 -> Core.Platform.Linux.LinuxFileAdvice
+Core.Platform.Linux.LinuxFileAdvice.Normal = 0 -> Core.Platform.Linux.LinuxFileAdvice
+Core.Platform.Linux.LinuxFileAdvice.Random = 1 -> Core.Platform.Linux.LinuxFileAdvice
+Core.Platform.Linux.LinuxFileAdvice.Sequential = 2 -> Core.Platform.Linux.LinuxFileAdvice
+Core.Platform.Linux.LinuxFileAdvice.WillNeed = 3 -> Core.Platform.Linux.LinuxFileAdvice
+Core.Platform.Linux.LinuxFileSystem
+Core.Platform.Linux.LinuxMemoryAdvice
+Core.Platform.Linux.LinuxMemoryAdvice.DoNotNeed = 4 -> Core.Platform.Linux.LinuxMemoryAdvice
+Core.Platform.Linux.LinuxMemoryAdvice.Normal = 0 -> Core.Platform.Linux.LinuxMemoryAdvice
+Core.Platform.Linux.LinuxMemoryAdvice.Random = 1 -> Core.Platform.Linux.LinuxMemoryAdvice
+Core.Platform.Linux.LinuxMemoryAdvice.Sequential = 2 -> Core.Platform.Linux.LinuxMemoryAdvice
+Core.Platform.Linux.LinuxMemoryAdvice.WillNeed = 3 -> Core.Platform.Linux.LinuxMemoryAdvice
+Core.Platform.Linux.LinuxMemoryMapping
+Core.Platform.Linux.LinuxMemoryMapping.Advise(Core.Platform.Linux.LinuxMemoryAdvice advice) -> bool
+Core.Platform.Linux.LinuxMemoryMapping.Dispose() -> void
+Core.Platform.Linux.LinuxMemoryMapping.Length.get -> long
+Core.Platform.Linux.LinuxMemoryMapping.Slice(long offset, int length) -> System.ReadOnlySpan<byte>
+Core.Platform.Linux.SingleInstanceLock
+Core.Platform.Linux.SingleInstanceLock.ActivationRequested -> System.Action?
+Core.Platform.Linux.SingleInstanceLock.Dispose() -> void
+Core.Platform.Linux.SingleInstanceLock.SingleInstanceLock(string! socketPath) -> void
+Core.Platform.Linux.SingleInstanceLock.SocketPath.get -> string!
+Core.Platform.Linux.SingleInstanceLock.TryAcquire() -> bool
+Core.Platform.Linux.LinuxMemoryMappingFactory
+Core.Platform.Linux.LinuxMemoryMappingFactory.LinuxMemoryMappingFactory() -> void
+Core.Platform.Linux.LinuxMemoryMappingFactory.Open(string! path) -> Core.Results.Result<Core.Platform.IMemoryMapping!>
+Core.Platform.Linux.AtomicFileWriter
+Core.Platform.Linux.AtomicFileWriter.Abort() -> void
+Core.Platform.Linux.AtomicFileWriter.AtomicFileWriter(string! targetPath, System.IO.UnixFileMode mode) -> void
+Core.Platform.Linux.AtomicFileWriter.Commit() -> Core.Results.Result<bool>
+Core.Platform.Linux.AtomicFileWriter.Dispose() -> void
+Core.Platform.Linux.AtomicFileWriter.Stream.get -> System.IO.Stream!
+Core.Platform.Linux.LinuxAtomicFileWriterFactory
+Core.Platform.Linux.LinuxAtomicFileWriterFactory.Create(string! targetPath, Core.Platform.AtomicFileOptions! options) -> Core.Results.Result<Core.Platform.IAtomicFileWriter!>
+Core.Platform.Linux.LinuxAtomicFileWriterFactory.EnsureDirectory(string! path, bool ownerOnly) -> void
+Core.Platform.Linux.LinuxAtomicFileWriterFactory.LinuxAtomicFileWriterFactory() -> void
+Core.Platform.Linux.LinuxFileSystemAdapter
+Core.Platform.Linux.LinuxFileSystemAdapter.LinuxFileSystemAdapter() -> void
+const Core.Platform.Linux.SingleInstanceLock.MaxPayloadBytes = 65536 -> int
+static Core.Platform.Linux.LinuxDirectoryHandle.Open(string! path) -> Core.Results.Result<Core.Platform.Linux.LinuxDirectoryHandle!>
+static Core.Platform.Linux.LinuxFileSystem.LastError.get -> Core.Platform.Linux.LinuxErrno
+static Core.Platform.Linux.LinuxFileSystem.TryAccess(System.ReadOnlySpan<byte> nullTerminatedPath, Core.Platform.Linux.LinuxAccessMode mode) -> bool
+static Core.Platform.Linux.LinuxFileSystem.TryAccess(string! path, Core.Platform.Linux.LinuxAccessMode mode) -> bool
+static Core.Platform.Linux.LinuxFileSystem.TryAdvise(int descriptor, long offset, long length, Core.Platform.Linux.LinuxFileAdvice advice) -> bool
+static Core.Platform.Linux.LinuxFileSystem.TryGetFileStatusFlags(int descriptor, out int flags) -> bool
+static Core.Platform.Linux.LinuxFileSystem.TryOpen(string! path, out int descriptor) -> bool
+static Core.Platform.Linux.LinuxFileSystem.TryOpenReadNoBlock(string! path, out Microsoft.Win32.SafeHandles.SafeFileHandle? handle) -> bool
+static Core.Platform.Linux.LinuxFileSystem.TryReadAt(int descriptor, System.Span<byte> buffer, long offset) -> int
+static Core.Platform.Linux.LinuxFileSystem.TryStat(System.ReadOnlySpan<byte> nullTerminatedPath, out Core.Platform.Linux.LinuxFileStatus status) -> bool
+static Core.Platform.Linux.LinuxFileSystem.TryStat(string! path, out Core.Platform.Linux.LinuxFileStatus status) -> bool
+static Core.Platform.Linux.LinuxFileSystem.TryStatAt(Core.Platform.Linux.LinuxDirectoryHandle! directory, System.ReadOnlySpan<byte> nullTerminatedName, bool followSymbolicLinks, out Core.Platform.Linux.LinuxFileStatus status) -> bool
+static Core.Platform.Linux.LinuxFileSystem.TryStatDescriptor(int descriptor, out Core.Platform.Linux.LinuxFileStatus status) -> bool
+static Core.Platform.Linux.LinuxFileSystem.TrySyncDirectory(string! path) -> bool
+static Core.Platform.Linux.LinuxFileSystem.TryWrite(int descriptor, System.ReadOnlySpan<byte> buffer) -> int
+static Core.Platform.Linux.LinuxMemoryMapping.Open(string! path) -> Core.Results.Result<Core.Platform.Linux.LinuxMemoryMapping!>
+static Core.Platform.Linux.SingleInstanceLock.DefaultSocketPath(string! applicationName) -> string!
+Core.Platform.Linux.RotatingTextFile.RetainedFiles.get -> int
+Core.Platform.Linux.RotatingFileLogger
+Core.Platform.Linux.RotatingFileLogger.RotatingFileLogger(string! path, long maxBytes = 1048576, int retainedFiles = 5, System.TimeProvider? timeProvider = null) -> void
+Core.Platform.Linux.RotatingFileLogger.Path.get -> string!
+Core.Platform.Linux.RotatingFileLogger.RetainedFiles.get -> int
+Core.Platform.Linux.RotatingFileLogger.Log(Core.Diagnostics.LogLevel level, string! message) -> void
+Core.Platform.Linux.RotatingFileLogger.Dispose() -> void
+Core.Platform.Linux.RotatingTextFile.RetainedFiles.init -> void
+Core.Platform.Linux.SystemProcessRunner
+Core.Platform.Linux.SystemProcessRunner.RunAsync(Core.Execution.ProcessRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Core.Results.Result<Core.Execution.ProcessResult!>>!
+Core.Platform.Linux.SystemProcessRunner.SystemProcessRunner() -> void
+Core.Platform.Linux.TextFileStore
+Core.Platform.Linux.TextFileStore.TextFileStore(long maximumBytes = 268435456) -> void
+Core.Platform.Linux.TextFileStore.MaximumBytes.get -> long
+Core.Platform.Linux.TextFileStore.Read(string! path) -> Core.Results.Result<Core.Text.TextDocument!>
+Core.Platform.Linux.TextFileStore.Write(string! path, Core.Text.TextDocument! document) -> Core.Results.Result<string!>
+Core.Platform.Linux.TextFileStore.Write(string! path, string! text, Core.Text.LineEnding lineEnding = Core.Text.LineEnding.LineFeed, bool writeBom = false) -> Core.Results.Result<string!>
+Core.Platform.Linux.RecoveryStore
+Core.Platform.Linux.RecoveryStore.RecoveryStore(Core.Platform.Linux.TextFileStore? store = null) -> void
+Core.Platform.Linux.RecoveryStore.Load(string! documentPath) -> Core.Results.Result<Core.Text.TextDocument?>
+Core.Platform.Linux.RecoveryStore.Save(string! documentPath, Core.Text.TextDocument! document) -> Core.Results.Result<string!>
+Core.Platform.Linux.RotatingOperationJournal
+Core.Platform.Linux.RotatingOperationJournal.RotatingOperationJournal(string! path, long maxBytes = 1048576, int retainedFiles = 5, System.TimeProvider? timeProvider = null) -> void
+Core.Platform.Linux.RotatingOperationJournal.Path.get -> string!
+Core.Platform.Linux.RotatingOperationJournal.Record(string! operation, string! message) -> void
+Core.Platform.Linux.RotatingOperationJournal.Dispose() -> void
+Core.Platform.Linux.CrashLog
+Core.Platform.Linux.CrashLog.CrashLog(string! path, long maxBytes = 1048576, int retainedFiles = 5, int maximumLines = 200, System.TimeProvider? timeProvider = null, System.Func<string!, string!>? redact = null) -> void
+Core.Platform.Linux.CrashLog.Path.get -> string!
+Core.Platform.Linux.CrashLog.Write(System.Exception! exception, string? context = null) -> void
+Core.Platform.Linux.CrashLog.Dispose() -> void
+Core.Platform.Linux.RotatingTextFile
+Core.Platform.Linux.RotatingTextFile.Dispose() -> void
+Core.Platform.Linux.RotatingTextFile.Path.get -> string!
+Core.Platform.Linux.RotatingTextFile.RotatingTextFile(string! path, long maxBytes = 1048576) -> void
+Core.Platform.Linux.RotatingTextFile.WriteLine(string! line) -> void
+Core.Platform.Linux.RawFileHandler
+Core.Platform.Linux.RawFileSkipHandler
+Core.Platform.Linux.RawFileWalker
+Core.Platform.Linux.RawFileWalker.RawFileWalker(int maximumDepth = 0, bool includePseudoFilesystems = false) -> void
+Core.Platform.Linux.RawFileWalker.Walk(string! root, Core.Platform.Linux.RawFileHandler! onFile, Core.Platform.Linux.RawFileSkipHandler? onSkip = null) -> void
+static readonly Core.Platform.Linux.SystemProcessRunner.DefaultTimeout -> System.TimeSpan
+const Core.Platform.Linux.RecoveryStore.Suffix = ".recovery" -> string!
+static Core.Platform.Linux.RecoveryStore.PathFor(string! documentPath) -> string!
+static Core.Platform.Linux.RecoveryStore.Clear(string! documentPath) -> Core.Results.Result<bool>
+virtual Core.Platform.Linux.RawFileHandler.Invoke(System.ReadOnlySpan<byte> relativePath, int directoryDescriptor, System.ReadOnlySpan<byte> name, Core.IO.Files.FileIdentity identity) -> void
+virtual Core.Platform.Linux.RawFileSkipHandler.Invoke(System.ReadOnlySpan<byte> relativePath, Core.IO.Walking.WalkSkipReason reason) -> void
+Core.Platform.Linux.LinuxCoreHostServices
+Core.Platform.Linux.LinuxCoreHostServices.LinuxCoreHostServices() -> void
+Core.Platform.Linux.LinuxCoreHostServices.Processes.get -> Core.Execution.IProcessRunner!
+Core.Platform.Linux.LinuxCoreHostServices.Links.get -> Core.Platform.ISystemLinkLauncher!
+Core.Platform.Linux.LinuxCoreHostServices.CreateLogger(string! path, long maxBytes, int retainedFiles) -> Core.Diagnostics.IApplicationLogger!
+Core.Platform.Linux.LinuxCoreHostServices.CreateJournal(string! path, long maxBytes, int retainedFiles) -> Core.Diagnostics.IOperationJournal!
+Core.Platform.Linux.LinuxCoreHostServices.CreateCrashLog(string! path, long maxBytes, int retainedFiles, int maximumLines) -> Core.Diagnostics.ICrashLog!
+Core.Platform.Linux.LinuxCoreHostServices.CreateSingleInstance(string! socketPath) -> Core.Platform.ISingleInstance!
+Core.Platform.Linux.LinuxCoreHostServices.CreateNotifier(string! application) -> Core.Notifications.ISystemNotifier!
+Core.Platform.Linux.LinuxCoreHostServices.PrepareStateDirectory(string! path) -> void
+Core.Platform.Linux.LinuxPlatform
+static Core.Platform.Linux.LinuxPlatform.Create(Core.Platform.IPathResolver! paths) -> Core.Platform.CorePlatform!
+Core.Platform.Linux.LinuxErrno.Overflow = 75 -> Core.Platform.Linux.LinuxErrno
+Core.Platform.Linux.TextFileStore.ReadNoFollow(string! path) -> Core.Results.Result<Core.Text.TextDocument!>
