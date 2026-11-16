@@ -219,11 +219,11 @@ public sealed unsafe class RawFileWalker
                     AppendPath(name, separator: true);
                     int child;
 
-                    fixed (byte* namesPointer = names)
+                    fixed (byte* namesPointer = &names[entry.Offset])
                     {
                         child = Interop.OpenAt(
                             descriptor,
-                            namesPointer + entry.Offset,
+                            namesPointer,
                             OpenReadOnly | OpenDirectory | OpenNoFollow | OpenCloseOnExec,
                             0);
                     }

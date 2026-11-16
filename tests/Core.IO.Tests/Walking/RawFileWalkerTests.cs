@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Younes BENMOUSSA <younes.benmoussa@pm.me>
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
+using System.Globalization;
 using System.Text;
 using Core.IO.Walking;
 using Core.Platform.Linux;
@@ -106,6 +107,32 @@ public sealed class RawFileWalkerTests
             (relativePath, reason) => skipped.Add((Encoding.UTF8.GetString(relativePath), reason)));
 
         Assert.Contains(skipped, item => item.Path == "missing" && item.Reason == WalkSkipReason.Unreadable);
+    }
+
+    [Fact]
+    public void It_reports_long_names_after_the_name_buffer_grows()
+    {
+        using var temp = new TempDirectory();
+        var expected = new string[300];
+
+        for (var index = 0; index < expected.Length; index++)
+        {
+            expected[index] = "f" + index.ToString("D6", CultureInfo.InvariantCulture);
+            temp.WriteFile(expected[index] + new string('x', 255 - expected[index].Length), string.Empty);
+        }
+
+        var actual = new List<string>();
+        new RawFileWalker().Walk(
+            temp.Path,
+            (relativePath, _, _, _) => actual.Add(Encoding.UTF8.GetString(relativePath)));
+
+        var files = Directory.GetFiles(temp.Path)
+            .Select(System.IO.Path.GetFileName)
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+
+        Assert.Equal(300, files.Length);
+        Assert.Equal(files, actual.Order(StringComparer.Ordinal));
     }
 
     private static IEnumerable<string> Files(IEnumerable<WalkEntry> entries)
