@@ -18,10 +18,8 @@ jobs:
         with:
           dotnet-version: 10.0.x
           dotnet-quality: ga
-      - name: Install reuse
-        run: pipx install reuse==5.0.2
       - name: Licence
-        run: ~/.local/bin/reuse lint
+        run: pipx run reuse==5.0.2 lint
       - name: Build
         run: dotnet build -c Release
       - name: Test

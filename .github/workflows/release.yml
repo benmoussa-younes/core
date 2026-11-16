@@ -3,13 +3,22 @@ name: Release
 on:
   push:
     tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to release (for example v0.1.0)'
+        required: true
+        type: string
 
 permissions:
   contents: read
 
 concurrency:
-  group: release-${{ github.ref }}
+  group: release-${{ github.event.inputs.tag || github.ref_name }}
   cancel-in-progress: false
+
+env:
+  TAG: ${{ github.event.inputs.tag || github.ref_name }}
 
 jobs:
   build:
@@ -20,6 +29,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.inputs.tag || github.ref_name }}
           fetch-depth: 0
           persist-credentials: false
 
@@ -29,11 +39,8 @@ jobs:
           dotnet-version: 10.0.x
           dotnet-quality: ga
 
-      - name: Install reuse
-        run: pipx install reuse==5.0.2
-
       - name: Licence
-        run: ~/.local/bin/reuse lint
+        run: pipx run reuse==5.0.2 lint
 
       - name: Build
         run: dotnet build -c Release
@@ -44,12 +51,12 @@ jobs:
       - name: Verify tag matches VersionPrefix
         run: |
           version="$(dotnet msbuild src/Core/Core.csproj -getProperty:VersionPrefix -nologo)"
-          test "$version" = "${GITHUB_REF_NAME#v}"
+          test "$version" = "${TAG#v}"
 
       - name: Create source archive
         run: |
           mkdir -p artifacts
-          prefix="core-${GITHUB_REF_NAME}"
+          prefix="core-${TAG}"
           git archive --format=tar.gz --prefix="${prefix}/" \
             -o "artifacts/${prefix}-src.tar.gz" HEAD
           (cd artifacts && sha256sum "${prefix}-src.tar.gz" > "${prefix}-src.tar.gz.sha256")
@@ -57,10 +64,10 @@ jobs:
       - name: Verify source archive and create SBOM
         run: |
           mkdir -p /tmp/core-src
-          tar -xzf "artifacts/core-${GITHUB_REF_NAME}-src.tar.gz" -C /tmp/core-src
-          cd "/tmp/core-src/core-${GITHUB_REF_NAME}"
-          ~/.local/bin/reuse lint
-          ~/.local/bin/reuse spdx > "${GITHUB_WORKSPACE}/artifacts/core.spdx"
+          tar -xzf "artifacts/core-${TAG}-src.tar.gz" -C /tmp/core-src
+          cd "/tmp/core-src/core-${TAG}"
+          pipx run reuse==5.0.2 lint
+          pipx run reuse==5.0.2 spdx > "${GITHUB_WORKSPACE}/artifacts/core.spdx"
           dotnet build -c Release
           dotnet test -c Release --no-build
 
@@ -88,12 +95,12 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: |
-          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
-            gh release upload "$GITHUB_REF_NAME" artifacts/* --clobber
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" artifacts/* --clobber
           else
-            gh release create "$GITHUB_REF_NAME" \
+            gh release create "$TAG" \
               --verify-tag \
-              --title "Core ${GITHUB_REF_NAME}" \
+              --title "Core ${TAG}" \
               --generate-notes \
               artifacts/*
           fi
