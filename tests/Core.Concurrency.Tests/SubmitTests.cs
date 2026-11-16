@@ -249,9 +249,15 @@ public sealed class SubmitTests
     [Fact]
     public void A_slot_creates_a_value_for_a_worker_the_pool_grows_later()
     {
-        // Steady state is 2, but a nested call grows the pool to 4. The slot array
-        // starts at 2 and must grow so the grown workers each get their own value.
-        using var context = ConcurrencyContext.Create(new ConcurrencyConfiguration { WorkerCount = 2 });
+        // Steady state is 2, but a nested call grows the pool to 4. Pin the ceiling
+        // to 4 so a 2-physical-core runner still exercises the growth path. The
+        // slot array starts at 2 and must grow so the grown workers each get their
+        // own value.
+        using var context = ConcurrencyContext.Create(new ConcurrencyConfiguration
+        {
+            WorkerCount = 2,
+            MaximumPoolSize = 4,
+        });
 
         var created = new ConcurrentBag<int>();
         var slot = context.RegisterSlot(

@@ -102,11 +102,16 @@ public sealed class NestedParallelTests
     public async Task A_nested_For_under_a_workers_equal_four_bound_shares_the_pool()
     {
         // A call with workers=4 inside a call with workers=4 would want 8 threads at
-        // once, but the physical ceiling forbids growing past the physical core
-        // count: the inner call reuses what the outer does not hold and runs the
-        // deficit on its calling worker. The result must still be complete.
+        // once. Pin the ceiling to 4 so the test is independent of the host's
+        // physical core count: the inner call reuses what the outer does not hold
+        // and runs the deficit on its calling worker. The result must still be
+        // complete.
         const int bound = 4;
-        using var context = ConcurrencyContext.Create(new ConcurrencyConfiguration { WorkerCount = bound });
+        using var context = ConcurrencyContext.Create(new ConcurrencyConfiguration
+        {
+            WorkerCount = bound,
+            MaximumPoolSize = bound,
+        });
 
         var innerVisited = 0;
 
@@ -129,10 +134,8 @@ public sealed class NestedParallelTests
         // Every outer index ran a full inner bound-sized range.
         Assert.Equal(4 * 4, innerVisited);
 
-        // The pool respected the physical ceiling: never more than it, and on an
-        // 8+ core host the nesting grew it towards (but never past) the ceiling.
-        var ceiling = ProcessorTopology.PhysicalCoreCount();
-        Assert.True(context.WorkerCount <= ceiling, $"pool holds {context.WorkerCount}, ceiling {ceiling}");
+        // The pool respected the explicit ceiling, whatever the host topology.
+        Assert.True(context.WorkerCount <= bound, $"pool holds {context.WorkerCount}, ceiling {bound}");
     }
 
     [Fact]

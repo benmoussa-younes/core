@@ -198,7 +198,12 @@ public sealed class WorkerBufferPoolTests
         // each worker always sees the same buffer. A wide inner range gives the
         // grown workers items to claim, without asserting how many the scheduler
         // picks — a narrow range can collapse onto fewer participants.
-        using var context = ConcurrencyContext.Create(new ConcurrencyConfiguration { WorkerCount = 2, WorkerStackBytes = 1024 * 1024 });
+        using var context = ConcurrencyContext.Create(new ConcurrencyConfiguration
+        {
+            WorkerCount = 2,
+            MaximumPoolSize = 4,
+            WorkerStackBytes = 1024 * 1024,
+        });
         using var pool = context.RegisterBufferPool<int>(8);
 
         var perWorker = new ConcurrentDictionary<long, Buffer<int>>();
