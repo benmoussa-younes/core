@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] - 2026-11-17
+
+Security hardening for the raw Linux walker.
+
+### Security
+
+- Harden `RawFileWalker` name handling: derive the `openat` pointer from a
+  bounds-checked array index instead of unchecked pointer arithmetic. This
+  addresses the CodeQL `cs/unvalidated-local-pointer-arithmetic` finding
+  (CWE-119, CWE-120, CWE-122, CWE-788). The pre-fix code held the same
+  invariant in `ReadEntries`; the new form makes the bound explicit.
+- Add a regression test with 300 long names so the 64 KiB name buffer grows
+  and the long-name `openat` path stays covered.
+
 ## [0.1.0] - 2026-11-16
 
 First public source release.
@@ -55,5 +69,7 @@ First public source release.
   headers; non-commentable `.txt` files use `.license` sidecars.
 - The texts in `LICENSES/` are the official Apache, GNU, Creative Commons and
   SPDX License List texts; the project `LICENSE` embeds the official LGPL text.
+
+[0.1.1]: https://github.com/benmoussa-younes/core/releases/tag/v0.1.1
 
 [0.1.0]: https://github.com/benmoussa-younes/core/releases/tag/v0.1.0
