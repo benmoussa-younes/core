@@ -1,6 +1,6 @@
-#!/usr/bin/bcs run
-import "../modules/verdict.bcs" as verdict
-import "../modules/repo.bcs" as repo
+#!/usr/bin/env -S scripts run
+import "../modules/verdict.scs" as verdict
+import "../modules/repo.scs" as repo
 # gate — read-only verification of the Core repository.
 #
 #   tools/scripts/binaries/gate
@@ -8,7 +8,7 @@ import "../modules/repo.bcs" as repo
 # AGENTS.md, short nested AGENTS.md allowed, no agent or editor files, no
 # internal host or personal path, the
 # version, an empty PublicAPI.Shipped, the LGPL files) and runs the build, the
-# tests and `reuse lint`. It writes nothing and needs bcs 0.5.0 on PATH.
+# tests and `reuse lint`. It writes nothing and needs the Scripts interpreter on PATH.
 
 function read_text(base: string, relative: string) -> string {
     match filesystem.read_file("{base}/{relative}".to_path()) {

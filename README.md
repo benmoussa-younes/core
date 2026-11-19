@@ -28,14 +28,14 @@ the first adapter; .NET 10, NativeAOT-compatible and trim-safe.
 dotnet build -c Release
 dotnet test -c Release
 reuse lint
-tools/scripts/binaries/gate          # fast gate: build, tests, architecture
-tools/scripts/binaries/gate --perf   # manual/nightly AOT budgets (hyperfine, jq)
+tools/scripts/binaries/gate.scs          # fast gate: build, tests, architecture
+tools/scripts/binaries/gate.scs --perf   # manual/nightly AOT budgets (hyperfine, jq)
 ```
 
 The gate needs a Git checkout (it uses `git ls-files`), the root `AGENTS.md`
-and `bcs`; it is not a source-tarball tool. `bcs` is not vendored as a binary:
+and the Scripts interpreter; it is not a source-tarball tool. the Scripts interpreter is not vendored as a binary:
 the scripts project is vendored **by source** with its own GPL licence when it
-lands. Until then, a local `bcs` 0.5.0 on `PATH` is accepted.
+lands. Until then, a local the Scripts interpreter 0.5.0 on `PATH` is accepted.
 
 ## Release
 
@@ -65,7 +65,7 @@ produced). In a product project file:
 LGPL-3.0-or-later. See [`LICENSE`](LICENSE); the other licence texts that cover
 the assets (MIT, OFL-1.1, Apache-2.0, BSD-3-Clause, CC-BY-SA-4.0) live in [`LICENSES/`](LICENSES/), and the
 third-party components are listed in [`THIRD-PARTY`](THIRD-PARTY). The
-documentation is CC BY-SA 4.0. The `bcs`/scripts project is vendored by source
+documentation is CC BY-SA 4.0. The the Scripts project is vendored by source
 under GPL-3.0-or-later; its complete source and licence ship in the vendored
 tree.
 

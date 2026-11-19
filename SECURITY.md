@@ -6,7 +6,7 @@ Security fixes are considered on a **best-effort** basis for the current 0.1.x
 tree. There is no long-term support branch, support contract, response-time
 guarantee or warranty. The software is distributed under
 **LGPL-3.0-or-later**, without warranty, as stated in [`LICENSE`](LICENSE). The
-vendored `bcs` source is under **GPL-3.0-or-later** and carries its own licence
+vendored the Scripts interpreter source is under **GPL-3.0-or-later** and carries its own licence
 in the vendored tree.
 
 ## Reporting a vulnerability
