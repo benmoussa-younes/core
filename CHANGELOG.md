@@ -62,7 +62,7 @@ First public source release.
   package is produced.
 - External contributions are not accepted at this time. No support, service
   level or warranty is provided beyond the licences.
-- Licence: LGPL-3.0-or-later; the documentation is CC BY-SA 4.0. The `bcs`
+- Licence: LGPL-3.0-or-later; the documentation is CC BY-SA 4.0. The the Scripts interpreter
   scripts project is vendored by source, not as a binary, under
   GPL-3.0-or-later; its complete source and licence ship in the vendored tree.
 - Every file under `src/**` and `tests/**` carries SPDX copyright and licence

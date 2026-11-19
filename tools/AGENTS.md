@@ -3,5 +3,5 @@
 
 # tools
 
-- `tools/scripts/binaries/gate` is read-only: it must not change tracked files.
-- `bcs` is vendored by source, not as a binary.
+- `tools/scripts/binaries/gate.scs` is read-only: it must not change tracked files.
+- the Scripts interpreter is vendored by source, not as a binary.

@@ -25,7 +25,7 @@ There is no package to download and no separate product page.
 Vendored source
 ===============
 
-The `bcs`/scripts project is vendored by source, not as a binary, under
+The the Scripts project is vendored by source, not as a binary, under
 GPL-3.0-or-later. Its complete source, licence and notices ship inside the
 vendored tree. It is not linked into the Core libraries.
 

@@ -11,7 +11,7 @@ is free software, and you may fork it and modify it under the licence terms.
 
 No support, service level or warranty is provided. The software is distributed
 under **LGPL-3.0-or-later**, without warranty, as stated in [`LICENSE`](LICENSE).
-The `bcs`/scripts project is vendored by source under **GPL-3.0-or-later**; its
+The the Scripts project is vendored by source under **GPL-3.0-or-later**; its
 complete source and licence ship in the vendored tree. You are responsible for
 your deployment and for complying with the licences when you redistribute or
 modify the code.
@@ -20,15 +20,15 @@ modify the code.
 
 - .NET SDK 10 (`global.json` floor `10.0.100`, `latestFeature`)
 - `reuse` 5.0.2 for the licence check
-- `bcs` for the repository gate; the scripts project is vendored by source, so
+- the Scripts interpreter for the repository gate; the scripts project is vendored by source, so
   no binary is placed in `tools/binaries/`. Until the source lands, a local
-  `bcs` 0.5.0 on `PATH` is accepted.
+  the Scripts interpreter 0.5.0 on `PATH` is accepted.
 
 ```sh
 dotnet build -c Release
 dotnet test -c Release
 reuse lint
-bcs run tools/scripts/binaries/gate
+scripts run tools/scripts/binaries/gate.scs.scs
 ```
 
 The gate runs the build, the tests, `reuse lint`, the architecture checks and
@@ -43,6 +43,6 @@ the root `AGENTS.md`.
 - Keep the libraries NativeAOT- and trim-safe; the gate rejects a Linux API in
   the portable assemblies.
 - No secret, credential, internal URL or personal path in a tracked file.
-- Core is LGPL-3.0-or-later; the vendored `bcs` source is GPL-3.0-or-later; the
+- Core is LGPL-3.0-or-later; the vendored the Scripts interpreter source is GPL-3.0-or-later; the
   documentation is CC BY-SA 4.0.
 - The owner commits, tags, pushes and publishes.

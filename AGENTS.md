@@ -11,10 +11,10 @@ products; it is not a NuGet package.
 dotnet build -c Release
 dotnet test -c Release
 reuse lint
-tools/scripts/binaries/gate          # one VERDICT line, exit 0/1
+tools/scripts/binaries/gate.scs          # one VERDICT line, exit 0/1
 ```
 
-The gate needs Git, this file and `bcs` (vendored by source; a local `bcs` 0.5.0
+The gate needs Git, this file and the Scripts interpreter (vendored by source; a local the Scripts interpreter 0.5.0
 on `PATH` is accepted until that source lands). It does not change tracked files.
 
 ## Conventions
@@ -31,7 +31,7 @@ on `PATH` is accepted until that source lands). It does not change tracked files
 
 ## Repository facts
 
-- Core is `LGPL-3.0-or-later`; the vendored `bcs` source is `GPL-3.0-or-later`.
+- Core is `LGPL-3.0-or-later`; the vendored the Scripts interpreter source is `GPL-3.0-or-later`.
 - The only Markdown files are `README.md`, `AGENTS.md`, `CHANGELOG.md`,
   `SECURITY.md` and `CONTRIBUTING.md`.
 - A release is a signed tag and the source tree; no package is published.
