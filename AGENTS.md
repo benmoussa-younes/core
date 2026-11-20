@@ -35,15 +35,16 @@ run`); it does not change tracked files.
   runs the Scripts interpreter from `PATH`.
 - The tracked Markdown is `README.md`, `AGENTS.md`, `CHANGELOG.md`,
   `SECURITY.md`, `CONTRIBUTING.md` and the deltas (`src/**/AGENTS.md`,
-  `tests/AGENTS.md`, `tools/AGENTS.md`); `docs/` is untracked and local.
+  `tests/AGENTS.md`, `tools/AGENTS.md`).
 - A release is a signed tag and the source tree; no package is published.
 
 ## Commits and releases
 
 - One branch per task, `work/<slug>`; one concern per commit; English,
   imperative subject; the body says why.
-- Commits and tags are GPG-signed. The maintainer merges a green `check`
-  locally; publishing (push, tag, release) is the owner's act.
+- Commits and tags are GPG-signed. A change lands on `main` only when
+  `tools/scripts/binaries/gate.scs` prints `VERDICT: PASS`; a release is the
+  maintainer's decision.
 
 ## Security
 

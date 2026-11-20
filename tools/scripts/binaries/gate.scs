@@ -35,8 +35,8 @@ function report(name: string, passed: boolean, detail: string) -> boolean {
 # enough for a loaded machine but tight enough to catch a catastrophic regression.
 # It needs hyperfine and jq; the fast gate does not.
 function run_perf(name: string, flag: string, count: string, budget_seconds: float) -> boolean {
-    let binary = "/tmp/opencode/core-gate-perf/Core.UI.Shell"
-    let timing = "/tmp/opencode/core-gate-perf-{name}.json"
+    let binary = "/tmp/core-gate-perf/Core.UI.Shell"
+    let timing = "/tmp/core-gate-perf-{name}.json"
     let command = "{binary} {flag} {count}"
     match process.run(process.request("hyperfine", ["--warmup", "1", "--runs", "3", "--export-json", timing, command])) {
         ok(completed) => {
@@ -275,7 +275,7 @@ match process.run(process.request("reuse", ["lint"]).with_working_directory(root
 }
 
 if perf_mode {
-    match process.run(process.request("dotnet", ["publish", "experiments/Core.UI.Shell/Core.UI.Shell.csproj", "-c", "Release", "-r", "linux-x64", "-p:PublishAot=true", "-p:StripSymbols=false", "-o", "/tmp/opencode/core-gate-perf"]).with_working_directory(root)) {
+    match process.run(process.request("dotnet", ["publish", "experiments/Core.UI.Shell/Core.UI.Shell.csproj", "-c", "Release", "-r", "linux-x64", "-p:PublishAot=true", "-p:StripSymbols=false", "-o", "/tmp/core-gate-perf"]).with_working_directory(root)) {
         ok(completed) => {
             if completed.exit_code == 0 {
                 io.write_standard_output_line("PASS perf publish")
