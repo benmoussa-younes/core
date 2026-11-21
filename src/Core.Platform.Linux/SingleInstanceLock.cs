@@ -4,6 +4,7 @@
 using System.Net.Sockets;
 using System.Runtime.Versioning;
 using System.Text;
+using Core.Paths;
 using Core.Primitives;
 
 namespace Core.Platform.Linux;
@@ -122,7 +123,10 @@ public sealed class SingleInstanceLock : ISingleInstance
         var directory = string.IsNullOrEmpty(runtimeDirectory)
             ? Path.Combine(Path.GetTempPath(), $"core-{user}")
             : runtimeDirectory;
-        var path = Path.Combine(directory, $"core-{validated.Value}-{user}.sock");
+
+        // "core" is the default vendor, not a prefix of its own: the host passes
+        // its own vendor, and the two must agree on one naming rule.
+        var path = Path.Combine(directory, SingleInstanceSocketName.For("core", validated.Value, user));
 
         if (Encoding.UTF8.GetByteCount(path) > MaxSocketPathBytes)
         {

@@ -206,6 +206,7 @@ Core.Paths.ApplicationPaths.DataDirectory.get -> string!
 Core.Paths.ApplicationPaths.DataFile(string! name) -> string!
 Core.Paths.ApplicationPaths.StateDirectory.get -> string!
 Core.Paths.ApplicationPaths.StateFile(string! name) -> string!
+Core.Paths.SingleInstanceSocketName
 Core.Primitives.ByteSize
 Core.Primitives.ByteSize.ByteSize() -> void
 Core.Primitives.ByteSize.ByteSize(long bytes) -> void
@@ -301,6 +302,7 @@ override Core.Units.Temperature.Equals(object? obj) -> bool
 override Core.Units.Temperature.GetHashCode() -> int
 override Core.Units.Temperature.ToString() -> string!
 static Core.Paths.ApplicationPaths.Create(Core.Paths.PathSet! directories, string! vendor, string! application) -> Core.Results.Result<Core.Paths.ApplicationPaths!>
+static Core.Paths.SingleInstanceSocketName.For(string! vendor, string! application, string! user) -> string!
 static Core.Primitives.ByteSize.FromBytes(long bytes) -> Core.Primitives.ByteSize
 static Core.Primitives.ByteSize.FromGibibytes(long gibibytes) -> Core.Primitives.ByteSize
 static Core.Primitives.ByteSize.FromKibibytes(long kibibytes) -> Core.Primitives.ByteSize

@@ -49,6 +49,9 @@ public sealed class CoreHost : IAsyncDisposable
     private readonly object _shutdownGate = new();
     private TrayService? _tray;
     private CoreWindow? _window;
+    private CoreApplication? _attachedApplication;
+    private Action<Exception>? _applicationHandler;
+    private Action<Exception>? _previousApplicationHandler;
     private bool _started;
     private int _disposed;
     private Task? _shutdownTask;
@@ -218,9 +221,12 @@ public sealed class CoreHost : IAsyncDisposable
             if (options.SingleInstance)
             {
                 var user = PathComponent.Validate(Environment.UserName).ValueOr("user");
+
+                // The vendor is part of the name: the state directory already
+                // isolates two vendors' products, and the lock must too.
                 var socketPath = Path.Combine(
                     runtimeDirectory!,
-                    $"core-{options.Application}-{user}.sock");
+                    SingleInstanceSocketName.For(options.Vendor, options.Application, user));
                 singleInstance = services.CreateSingleInstance(socketPath);
             }
 
@@ -344,12 +350,19 @@ public sealed class CoreHost : IAsyncDisposable
         ArgumentNullException.ThrowIfNull(application);
         ObjectDisposedException.ThrowIf(Volatile.Read(ref _disposed) != 0, this);
 
-        var previous = application.UnhandledExceptionHandler;
-        application.UnhandledExceptionHandler = exception =>
+        Detach();
+
+        _attachedApplication = application;
+        _previousApplicationHandler = application.UnhandledExceptionHandler;
+
+        Action<Exception> handler = exception =>
         {
             _crashLog.Write(exception, "application");
-            previous?.Invoke(exception);
+            _previousApplicationHandler?.Invoke(exception);
         };
+
+        _applicationHandler = handler;
+        application.UnhandledExceptionHandler = handler;
     }
 
     /// <summary>
@@ -381,6 +394,10 @@ public sealed class CoreHost : IAsyncDisposable
         }
         finally
         {
+            // The handler captures this host and its crash log: leaving it on the
+            // application would swallow every later failure once the log is closed.
+            Detach();
+
             // Every resource is released even when one of them throws; the first
             // failure still surfaces to the caller.
             try
@@ -427,27 +444,57 @@ public sealed class CoreHost : IAsyncDisposable
 
     internal void OnActivated(ReadOnlyMemory<byte> payload)
     {
+        // A host that shut down must not raise activation on a stopped application.
+        if (Volatile.Read(ref _disposed) != 0)
+        {
+            return;
+        }
+
+        // The lock lends the buffer for the duration of the callback, and the UI
+        // dispatch below is deferred, so the copy happens before this returns.
+        var copy = payload.IsEmpty ? [] : payload.ToArray();
+
         // The instance lock raises this on a background thread. Once the window
         // exists, the product expects to touch the UI tree, so marshal; a host
         // without a window (a headless test or a pre-window launch) stays direct.
         if (_window is null)
         {
-            Raise();
+            Raise(copy);
             return;
         }
 
-        DispatchToUi(Raise);
+        DispatchToUi(() => Raise(copy));
 
-        void Raise()
+        void Raise(byte[] bytes)
         {
-            if (payload.IsEmpty)
+            if (Volatile.Read(ref _disposed) != 0)
+            {
+                return;
+            }
+
+            if (bytes.Length == 0)
             {
                 ActivationRequested?.Invoke();
                 return;
             }
 
-            Activated?.Invoke(payload.ToArray());
+            Activated?.Invoke(bytes);
         }
+    }
+
+    private void Detach()
+    {
+        // Only restore a handler that is still ours: a product that installed its
+        // own after Attach keeps it.
+        if (_attachedApplication is { } application &&
+            ReferenceEquals(application.UnhandledExceptionHandler, _applicationHandler))
+        {
+            application.UnhandledExceptionHandler = _previousApplicationHandler;
+        }
+
+        _attachedApplication = null;
+        _applicationHandler = null;
+        _previousApplicationHandler = null;
     }
 
     private static void DispatchToUi(Action action)
