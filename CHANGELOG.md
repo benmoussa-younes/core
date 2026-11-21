@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Security
+
+- The application survives an exception thrown from the dispatcher: it is
+  reported once to the crash log and marked handled, instead of killing the
+  process and writing the same entry twice.
+- A UI service called from a foreign thread fails fast (`VerifyAccess`) instead
+  of mutating the visual tree off the UI thread, and the dialog gate keeps the
+  caller's context across its await.
+- A folder picked from a remote URI (`smb://`, `sftp://`, `http://`) no longer
+  maps to a local path such as `/share`; the picker returns no path.
+
+### Fixed
+
+- Each toast expires on its own deadline instead of a single timer that a stream
+  of toasts re-armed forever; a burst keeps the ten most recent, and a live theme
+  switch re-resolves the brushes of the toasts already showing.
+
 ## [0.1.1] - 2026-11-17
 
 Security hardening for the raw Linux walker.
