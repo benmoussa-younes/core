@@ -17,6 +17,7 @@ using Core.Diagnostics;
 using Core.Mvp.Services;
 using Core.Security;
 using Core.Mvp.Views;
+using Core.UI.Hosting;
 using Core.UI.Notifications;
 using Core.UI.Dialogs;
 using Core.UI.Platform;
@@ -1402,10 +1403,31 @@ public class CoreWindow : Window, IApplicationHost, INavigationHost, IDisposable
         }
     }
 
-    internal void ReportLifecycleFailure(string action, Exception exception) =>
-        Notifications.Banner(
-            $"The view could not {action}: {SecretRedaction.Scrub(LogRedaction.SingleLine(exception.Message, 256))}",
-            MessageSeverity.Error);
+    internal void ReportLifecycleFailure(string action, Exception exception)
+    {
+        var message =
+            $"The view could not {action}: {SecretRedaction.Scrub(LogRedaction.SingleLine(exception.Message, 256))}";
+        var application = Application.Current as CoreApplication;
+
+        // WHY: an I/O, cancellation or disposal failure is a view error the operator
+        // can act on, so it is a warning in the application log; a programming fault
+        // must reach the crash log. The banner stays the feedback in both cases.
+        // WHY: a product that is not a CoreApplication, or one without diagnostics,
+        // has nowhere to write these two branches: the banner is the only feedback.
+        if (exception is IOException or UnauthorizedAccessException or
+            OperationCanceledException or ObjectDisposedException)
+        {
+            application?.Diagnostics?.Logger.Log(
+                LogLevel.Warning,
+                string.Concat(message, " (", exception.GetType().Name, ")"));
+        }
+        else
+        {
+            application?.ReportUnhandledException(exception);
+        }
+
+        Notifications.Banner(message, MessageSeverity.Error);
+    }
 
     private void OnViewBusyChanged(bool busy)
     {
