@@ -9,6 +9,7 @@ using Core.UI.Adwaita;
 
 namespace Core.UI.Tests;
 
+[Collection("headless")]
 public sealed class HeaderBarTests
 {
     [Fact]
