@@ -77,12 +77,13 @@ public sealed class AtomicFilePermissionReproTests
     [Fact]
     public void TryStatRefusesAPathWithAnEmbeddedNul()
     {
-        // The string overload encodes UTF-8 without rejecting an interior NUL, and
-        // the kernel stops at the first NUL. The path below therefore stats the
-        // real file and silently ignores the smuggled suffix.
+        // The string overload encodes UTF-8, and the kernel stops at the first
+        // NUL. The path below would otherwise stat the real file and silently
+        // ignore the smuggled suffix.
         using var temp = new TempDirectory();
         var real = temp.WriteFile("real.txt", "x");
 
-        Assert.False(LinuxFileSystem.TryStat(string.Concat(real, "\0", "/../../etc/shadow"), out _));
+        Assert.Throws<ArgumentException>(
+            () => LinuxFileSystem.TryStat(string.Concat(real, "\0", "/../../etc/shadow"), out _));
     }
 }

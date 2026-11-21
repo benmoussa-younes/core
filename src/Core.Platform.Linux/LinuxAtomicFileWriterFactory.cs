@@ -45,15 +45,32 @@ public sealed class LinuxAtomicFileWriterFactory : IAtomicFileWriterFactory
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
 
+        var created = !Directory.Exists(path);
         Directory.CreateDirectory(path);
 
-        // Tighten a pre-existing directory too: a shared 0775 state directory
-        // would let another local user replace the artefact being committed.
-        if (ownerOnly && OperatingSystem.IsLinux())
+        if (!ownerOnly || !OperatingSystem.IsLinux())
+        {
+            return;
+        }
+
+        if (created)
         {
             File.SetUnixFileMode(
                 path,
                 UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+            return;
+        }
+
+        // A pre-existing directory belongs to the application, not to this writer:
+        // tightening it would fight the host's own policy (a 0750 state directory
+        // is legitimate) and fails with EPERM on a directory the process does not
+        // own. The attack that matters is another local user replacing the file,
+        // which needs write access, so only that is refused.
+        if (LinuxFileSystem.TryStat(path, out var status) &&
+            status.Type == LinuxFileType.Directory &&
+            (status.Mode & 0x12) != 0)
+        {
+            throw new IOException("The directory is group- or world-writable.");
         }
     }
 }

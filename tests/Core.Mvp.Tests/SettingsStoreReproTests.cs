@@ -37,10 +37,21 @@ public sealed class SettingsStoreReproTests : IDisposable
     private JsonAppearanceStore Store(string path) =>
         new(path, new LinuxAtomicFileWriterFactory(), new LinuxFileSystemAdapter());
 
+    // The store refuses a group- or world-writable state directory, as the host
+    // does; the process umask here makes a bare CreateDirectory group-writable,
+    // so the fixture states the mode it means.
+    private void CreateStateDirectory()
+    {
+        Directory.CreateDirectory(_directory);
+        File.SetUnixFileMode(
+            _directory,
+            UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+    }
+
     [Fact]
     public void SaveLeavesAnExistingWorldReadableFileOwnerOnly()
     {
-        Directory.CreateDirectory(_directory);
+        CreateStateDirectory();
         var path = Path.Combine(_directory, "preferences.json");
         File.WriteAllText(path, "{}");
         File.SetUnixFileMode(path, WorldReadable);
@@ -69,7 +80,7 @@ public sealed class SettingsStoreReproTests : IDisposable
         // Clear must not be the one operation that follows the opposite policy: it
         // currently unlinks whatever sits at the path, including a link the store
         // never wrote. This case encodes that symmetry for the owner to confirm.
-        Directory.CreateDirectory(_directory);
+        CreateStateDirectory();
         var target = Path.Combine(_directory, "target.json");
         File.WriteAllText(target, "{}");
 
