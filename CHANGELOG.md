@@ -8,6 +8,34 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-11-21
+
+Version 0.2.2 was never released; this release follows 0.2.1 directly.
+
+### Added
+
+- `SingleInstanceSocketName.For(vendor, application)` builds
+  `<vendor>-<application>.socket` for a product whose runtime directory is
+  already per-user. Both parts are validated path components, and the
+  three-argument overload is unchanged.
+- `CoreHostOptions.IncludeUserInSingleInstanceName` selects the socket name. Its
+  default, `true`, keeps the released
+  `<vendor>-<application>-<user>.sock`; `false` uses
+  `<vendor>-<application>.socket` and reads no user name.
+
+### Changed
+
+- With `IncludeUserInSingleInstanceName: false`, `CoreHost.Create` no longer
+  calls `Environment.UserName` and names the single-instance socket and its
+  `.lock` after the vendor and the application only.
+
+### Security
+
+- The user-less name is correct only when `XDG_RUNTIME_DIR` is per-user and
+  owner-only, as the XDG base directory specification requires. The default that
+  carries the user stays the safe choice for a runtime directory shared by
+  mistake.
+
 ## [0.2.1] - 2026-11-21
 
 ### Added
