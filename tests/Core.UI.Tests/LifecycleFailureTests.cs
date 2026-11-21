@@ -65,8 +65,11 @@ public sealed class LifecycleFailureTests : IDisposable
         {
             var platform = LinuxPlatform.Create(new XdgPathResolver(
                 new XdgEnvironment(_state, _state, _state, _state, _state, _state, null, null)));
-            using var diagnostics = CoreDiagnostics.Create(
-                new CoreHostOptions("core", "lifecycle", SingleInstance: false, Platform: platform)).Value;
+            var created = CoreDiagnostics.Create(
+                new CoreHostOptions("core", "lifecycle", SingleInstance: false, Platform: platform));
+
+            Assert.True(created.IsSuccess, created.IsSuccess ? string.Empty : created.Error.Code);
+            using var diagnostics = created.Value;
 
             var application = (CoreApplication)Application.Current!;
             var previous = application.Diagnostics;

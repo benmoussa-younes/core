@@ -48,6 +48,7 @@ public sealed class DiagnosticsIntegrationTests
                     window.ConfirmClose = () => throw new NullReferenceException("close guard probe");
                     window.Show();
                     window.Close();
+                    window.Hide();
                 }
                 finally
                 {

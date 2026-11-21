@@ -5,7 +5,9 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Core.Diagnostics;
 using Core.Platform;
+using Core.UI.Hosting;
 
 namespace Core.UI.Dialogs;
 
@@ -24,6 +26,7 @@ public sealed class AboutDialog : CoreDialog
     /// <c>file:</c> or <c>smb:</c> URL never opens.
     /// </param>
     /// <exception cref="ArgumentNullException"><paramref name="info"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException">A link is not an absolute URI.</exception>
     public AboutDialog(AboutInfo info, ISystemLinkLauncher? links = null)
     {
         ArgumentNullException.ThrowIfNull(info);
@@ -94,7 +97,19 @@ public sealed class AboutDialog : CoreDialog
 
         if (links is not null)
         {
-            link.Click += async (_, _) => await links.OpenAsync(target.AbsoluteUri).ConfigureAwait(true);
+            link.Click += async (_, _) =>
+            {
+                var opened = await links.OpenAsync(target.AbsoluteUri).ConfigureAwait(true);
+
+                if (opened.IsFailure)
+                {
+                    // WHY: the operator sees nothing when a refused scheme fails, so a
+                    // refused or failed launch must at least leave a trace.
+                    (Application.Current as CoreApplication)?.Diagnostics?.Logger.Log(
+                        LogLevel.Warning,
+                        string.Concat("The link could not open: ", opened.Error.Code, "."));
+                }
+            };
         }
 
         return link;

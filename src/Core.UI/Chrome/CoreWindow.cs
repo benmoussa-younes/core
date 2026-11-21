@@ -1412,10 +1412,14 @@ public class CoreWindow : Window, IApplicationHost, INavigationHost, IDisposable
         // WHY: an I/O, cancellation or disposal failure is a view error the operator
         // can act on, so it is a warning in the application log; a programming fault
         // must reach the crash log. The banner stays the feedback in both cases.
+        // WHY: a product that is not a CoreApplication, or one without diagnostics,
+        // has nowhere to write these two branches: the banner is the only feedback.
         if (exception is IOException or UnauthorizedAccessException or
             OperationCanceledException or ObjectDisposedException)
         {
-            application?.Diagnostics?.Logger.Log(LogLevel.Warning, message);
+            application?.Diagnostics?.Logger.Log(
+                LogLevel.Warning,
+                string.Concat(message, " (", exception.GetType().Name, ")"));
         }
         else
         {

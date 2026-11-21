@@ -4,8 +4,10 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Core.Platform;
+using Core.Platform.Linux;
 using Core.Results;
 using Core.UI.Dialogs;
+using Core.UI.Hosting;
 
 namespace Core.UI.Tests;
 
@@ -43,6 +45,7 @@ public sealed class AboutDialogTests
             var dialog = new AboutDialog(info);
 
             Assert.Equal(new Uri("https://example.com/source"), dialog.SourceLink.NavigateUri);
+            Assert.Equal(LegalNotice.LicenseUrl, dialog.LicenseLink.NavigateUri);
         });
     }
 
@@ -64,8 +67,61 @@ public sealed class AboutDialogTests
         });
     }
 
+    [Fact]
+    public async Task A_failed_launch_leaves_a_warning_in_the_application_log()
+    {
+        var state = Path.Combine(Path.GetTempPath(), string.Concat("core-about-", Guid.NewGuid().ToString("N")));
+
+        try
+        {
+            await Headless.Dispatch(async () =>
+            {
+                var platform = LinuxPlatform.Create(new XdgPathResolver(
+                    new XdgEnvironment(state, state, state, state, state, state, null, null)));
+                using var diagnostics = CoreDiagnostics.Create(
+                    new CoreHostOptions("core", "about", SingleInstance: false, Platform: platform)).Value;
+
+                var application = (CoreApplication)Avalonia.Application.Current!;
+                var previous = application.Diagnostics;
+                application.Diagnostics = diagnostics;
+
+                try
+                {
+                    var dialog = new AboutDialog(
+                        new AboutInfo("Tool", "1.0", "notice", new Uri("https://example.com/source")),
+                        new RefusingLauncher());
+
+                    Click(dialog.SourceLink);
+                    await Task.Delay(50);
+
+                    Assert.Contains(
+                        "link.invalid",
+                        File.ReadAllText(diagnostics.Paths.ApplicationLogFile),
+                        StringComparison.Ordinal);
+                }
+                finally
+                {
+                    application.Diagnostics = previous;
+                }
+            });
+        }
+        finally
+        {
+            if (Directory.Exists(state))
+            {
+                Directory.Delete(state, recursive: true);
+            }
+        }
+    }
+
     private static void Click(Button button) =>
         button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+
+    private sealed class RefusingLauncher : ISystemLinkLauncher
+    {
+        public ValueTask<Result<bool>> OpenAsync(string url, CancellationToken cancellationToken = default) =>
+            ValueTask.FromResult(Result<bool>.Failure(new CoreError("link.invalid", "refused")));
+    }
 
     private sealed class RecordingLauncher : ISystemLinkLauncher
     {
