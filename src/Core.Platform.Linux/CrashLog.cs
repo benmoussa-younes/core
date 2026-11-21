@@ -48,7 +48,7 @@ public sealed class CrashLog : ICrashLog
 
         _file = new RotatingTextFile(path, maxBytes) { RetainedFiles = retainedFiles };
         _timeProvider = timeProvider ?? TimeProvider.System;
-        _redact = redact ?? (static line => PathRedaction.ForMessage(line));
+        _redact = redact ?? (static line => PathRedaction.Scrub(line));
         _maximumLines = maximumLines;
     }
 

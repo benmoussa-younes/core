@@ -13,6 +13,7 @@ using Core.Paths;
 using Core.Platform;
 using Core.Primitives;
 using Core.Results;
+using Core.Security;
 
 namespace Core.UI.Hosting;
 
@@ -348,6 +349,17 @@ public sealed class CoreHost : IAsyncDisposable
         application.UnhandledExceptionHandler = exception =>
         {
             _crashLog.Write(exception, "application");
+
+            // The crash log is the last chance and it is capped per entry; the
+            // operational log is what an operator reads, so the failure appears in
+            // both, with the same redaction as the crash line.
+            _logger.Log(
+                LogLevel.Error,
+                string.Concat(
+                    "unhandled exception: ",
+                    PathRedaction.Scrub(
+                        SecretRedaction.Scrub(LogRedaction.SingleLine(exception.Message, 2_048)))));
+
             previous?.Invoke(exception);
         };
     }

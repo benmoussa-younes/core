@@ -149,6 +149,14 @@ public sealed class CoreHostTests : IDisposable
         });
 
         Assert.Contains("host probe", File.ReadAllText(crashPath), StringComparison.Ordinal);
+
+        // The operational log is what an operator reads: the same failure must be
+        // there, not only in the capped crash log.
+        Assert.Contains(
+            "host probe",
+            File.ReadAllText(host.Paths.StateFile("application.log")),
+            StringComparison.Ordinal);
+
         await host.ShutdownAsync();
     }
 

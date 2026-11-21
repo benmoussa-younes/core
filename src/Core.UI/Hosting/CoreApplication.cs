@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 using Avalonia;
+using Core.Diagnostics;
+using Core.Primitives;
 using Core.Security;
 using Avalonia.Media;
 using Avalonia.Platform;
@@ -102,7 +104,11 @@ public abstract class CoreApplication : Application
         }
         else
         {
-            Console.Error.WriteLine(SecretRedaction.Scrub(exception.ToString()));
+            // Same redaction as CrashLog.Write: a message can carry the home path and
+            // control characters, and stderr is still a durable sink for a service.
+            Console.Error.WriteLine(
+                PathRedaction.Scrub(
+                    SecretRedaction.Scrub(LogRedaction.SingleLine(exception.ToString(), 2_048))));
         }
     }
 

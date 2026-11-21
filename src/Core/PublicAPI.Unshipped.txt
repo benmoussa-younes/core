@@ -195,6 +195,8 @@ Core.Diagnostics.IOperationJournal.Record(string! operation, string! message) ->
 Core.Primitives.PathRedaction
 static Core.Primitives.PathRedaction.ForMessage(string? path) -> string!
 static Core.Primitives.PathRedaction.ForMessage(string? path, string! home) -> string!
+static Core.Primitives.PathRedaction.Scrub(string? text) -> string!
+static Core.Primitives.PathRedaction.Scrub(string? text, string! home) -> string!
 Core.Capabilities.ICapability<TRequest, TResponse>
 Core.Capabilities.ICapability<TRequest, TResponse>.InvokeAsync(TRequest request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Core.Results.Result<TResponse>>
 Core.Paths.ApplicationPaths
