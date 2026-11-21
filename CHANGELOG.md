@@ -8,8 +8,11 @@ and this project adheres to
 
 ## [Unreleased]
 
-Security and robustness fixes from the 0.1.1 audit, plus the diagnostics
-composition. Every rule below landed with the test that failed before it.
+## [0.2.0] - 2026-11-21
+
+Security and robustness fixes from the 0.1.1 audit, the diagnostics composition
+and a GUI integration suite. Every rule below landed with the test that failed
+before it.
 
 ### Added
 
@@ -21,6 +24,19 @@ composition. Every rule below landed with the test that failed before it.
 - `tests/Core.UI.IntegrationTests` hosts Avalonia on the real X11 backend, for the
   two facts the headless suite cannot prove: the dispatcher refuses a foreign
   thread, and a shell window reaches a compositor. It runs in CI under Xvfb.
+
+### Changed
+
+- The committed file mode is the intersection of the requested mode and the
+  destination's: a commit never widens access, and an owner-only save repairs an
+  over-permissive file. `EnsureDirectory` no longer tightens a pre-existing
+  directory; it creates owner-only and refuses group- or world-writable.
+- `CoreHost.Attach` writes the application log as well as the crash log, and
+  `ShutdownAsync` restores the application's previous last-chance handler.
+- `CoreApplication.ReportUnhandledException` no longer throws for the failure it
+  reports: a handler or a sink that throws cannot take the process down.
+- `TrayService.Show` reuses its native menu when the command set and the tooltip
+  are unchanged.
 
 ### Security
 
@@ -130,6 +146,8 @@ First public source release.
   headers; non-commentable `.txt` files use `.license` sidecars.
 - The texts in `LICENSES/` are the official Apache, GNU, Creative Commons and
   SPDX License List texts; the project `LICENSE` embeds the official LGPL text.
+
+[0.2.0]: https://github.com/benmoussa-younes/core/releases/tag/v0.2.0
 
 [0.1.1]: https://github.com/benmoussa-younes/core/releases/tag/v0.1.1
 

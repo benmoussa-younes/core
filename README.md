@@ -40,7 +40,7 @@ source-tarball tool.
 
 A `v*` tag runs `.github/workflows/release.yml`: it builds, tests, checks the
 licence metadata, verifies that the tag matches `VersionPrefix`, and attaches a
-source tarball plus its SHA-256 to the GitHub release. Core 0.1.1 is source-only:
+source tarball plus its SHA-256 to the GitHub release. Core 0.2.0 is source-only:
 no NuGet package is published.
 
 ## Diagnostics
