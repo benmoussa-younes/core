@@ -202,6 +202,9 @@ Core.Capabilities.ICapability<TRequest, TResponse>.InvokeAsync(TRequest request,
 Core.Paths.ApplicationPaths
 Core.Paths.ApplicationPaths.CacheDirectory.get -> string!
 Core.Paths.ApplicationPaths.CacheFile(string! name) -> string!
+Core.Paths.ApplicationPaths.ApplicationLogFile.get -> string!
+Core.Paths.ApplicationPaths.OperationJournalFile.get -> string!
+Core.Paths.ApplicationPaths.CrashLogFile.get -> string!
 Core.Paths.ApplicationPaths.ConfigDirectory.get -> string!
 Core.Paths.ApplicationPaths.ConfigFile(string! name) -> string!
 Core.Paths.ApplicationPaths.DataDirectory.get -> string!
@@ -302,6 +305,9 @@ override Core.Units.Power.ToString() -> string!
 override Core.Units.Temperature.Equals(object? obj) -> bool
 override Core.Units.Temperature.GetHashCode() -> int
 override Core.Units.Temperature.ToString() -> string!
+const Core.Paths.ApplicationPaths.ApplicationLogName = "application.log" -> string!
+const Core.Paths.ApplicationPaths.OperationJournalName = "operations.log" -> string!
+const Core.Paths.ApplicationPaths.CrashLogName = "crash.log" -> string!
 static Core.Paths.ApplicationPaths.Create(Core.Paths.PathSet! directories, string! vendor, string! application) -> Core.Results.Result<Core.Paths.ApplicationPaths!>
 static Core.Primitives.ByteSize.FromBytes(long bytes) -> Core.Primitives.ByteSize
 static Core.Primitives.ByteSize.FromGibibytes(long gibibytes) -> Core.Primitives.ByteSize

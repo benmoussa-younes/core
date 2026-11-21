@@ -53,6 +53,20 @@ public abstract class CoreApplication : Application
     /// </summary>
     public Action<Exception>? UnhandledExceptionHandler { get; set; }
 
+    /// <summary>
+    /// Gets or sets the durable diagnostics of this application: when no
+    /// <see cref="UnhandledExceptionHandler"/> is set, an unhandled exception is
+    /// written to its crash log and application log instead of the console.
+    /// </summary>
+    /// <remarks>
+    /// A product that creates a <see cref="CoreHost"/> gets this through
+    /// <see cref="CoreHost.Attach"/>. A product without a host assigns
+    /// <c>CoreDiagnostics.Create(options).Value</c> here, so the files land in its
+    /// XDG state directory instead of being lost. Both write the same redacted
+    /// entry; the console is the last resort when neither is set.
+    /// </remarks>
+    public CoreDiagnostics? Diagnostics { get; set; }
+
     /// <summary>Gets the application id: the base name of the desktop entry.</summary>
     protected abstract string ApplicationId { get; }
 
@@ -101,6 +115,10 @@ public abstract class CoreApplication : Application
         if (UnhandledExceptionHandler is { } handler)
         {
             handler(exception);
+        }
+        else if (Diagnostics is { } diagnostics)
+        {
+            diagnostics.Report(exception);
         }
         else
         {

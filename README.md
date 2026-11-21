@@ -43,6 +43,27 @@ licence metadata, verifies that the tag matches `VersionPrefix`, and attaches a
 source tarball plus its SHA-256 to the GitHub release. Core 0.1.1 is source-only:
 no NuGet package is published.
 
+## Diagnostics
+
+The three durable sinks live below the application's XDG state directory,
+`$XDG_STATE_HOME/<vendor>/<application>/` (`~/.local/state/...` when the variable
+is unset), and `ApplicationPaths` names them: `application.log`,
+`operations.log`, `crash.log`.
+
+A product with a `CoreHost` gets them from `CoreHost.Create` and routes unhandled
+exceptions with `host.Attach(application)`. A product without a host builds the
+same files on its own and assigns them, so an unhandled exception is written to
+the crash log and the application log instead of being lost:
+
+```csharp
+var diagnostics = CoreDiagnostics.Create(options).Value;
+application.Diagnostics = diagnostics;
+```
+
+Every unhandled exception then reaches both files, with the home directory and
+the secrets redacted. Without a handler and without diagnostics, the fallback is
+the redacted standard error.
+
 ## Reference
 
 Core is source-only: it is consumed by `ProjectReference` (no NuGet package is
