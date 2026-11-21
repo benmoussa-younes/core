@@ -197,6 +197,11 @@ public abstract class CoreApplication : Application
         if (Application.Current is CoreApplication application)
         {
             application.ReportUnhandledException(e.Exception);
+
+            // The failure is reported, so letting it escape the dispatcher would
+            // both kill the process and write the same entry to the crash log a
+            // second time through the AppDomain hook.
+            e.Handled = true;
         }
     }
 
