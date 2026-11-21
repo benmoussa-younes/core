@@ -8,6 +8,7 @@ using Core.Diagnostics;
 using Core.Platform.Linux;
 using Core.Paths;
 using Core.Platform;
+using Core.Primitives;
 using Core.Results;
 
 namespace Core.UI.Tests;
@@ -322,8 +323,11 @@ public sealed class CoreHostTests : IDisposable
         });
     }
 
-    [Fact]
-    public async Task Two_vendors_sharing_an_application_name_get_distinct_socket_paths()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task Two_vendors_sharing_an_application_name_get_distinct_socket_paths(
+        bool includeUser)
     {
         // ApplicationPaths isolates a product under <vendor>/<application>; the
         // single-instance socket must isolate it the same way.
@@ -331,12 +335,14 @@ public sealed class CoreHostTests : IDisposable
             "acme",
             "tool",
             SingleInstance: true,
-            Platform: Platform())).Value;
+            Platform: Platform(),
+            IncludeUserInSingleInstanceName: includeUser)).Value;
         var second = CoreHost.Create(new CoreHostOptions(
             "globex",
             "tool",
             SingleInstance: true,
-            Platform: Platform())).Value;
+            Platform: Platform(),
+            IncludeUserInSingleInstanceName: includeUser)).Value;
 
         var firstPath = ((SingleInstanceLock)first.SingleInstance!).SocketPath;
         var secondPath = ((SingleInstanceLock)second.SingleInstance!).SocketPath;
@@ -345,6 +351,104 @@ public sealed class CoreHostTests : IDisposable
 
         await first.ShutdownAsync();
         await second.ShutdownAsync();
+    }
+
+    [Fact]
+    public async Task A_host_without_the_user_names_the_socket_after_the_product_only()
+    {
+        var host = CoreHost.Create(new CoreHostOptions(
+            "benmoussa",
+            "vpn-manager",
+            SingleInstance: true,
+            Platform: Platform(),
+            IncludeUserInSingleInstanceName: false)).Value;
+
+        var socketPath = ((SingleInstanceLock)host.SingleInstance!).SocketPath;
+
+        Assert.Equal(Path.Combine(_root, "run", "benmoussa-vpn-manager.socket"), socketPath);
+
+        Assert.True(host.TryStart());
+        Assert.Equal(socketPath, ((SingleInstanceLock)host.SingleInstance!).SocketPath);
+        Assert.True(File.Exists(string.Concat(socketPath, ".lock")));
+        Assert.Equal(
+            UnixFileMode.UserRead | UnixFileMode.UserWrite,
+            File.GetUnixFileMode(socketPath));
+        Assert.Equal(
+            UnixFileMode.UserRead | UnixFileMode.UserWrite,
+            File.GetUnixFileMode(string.Concat(socketPath, ".lock")));
+
+        await host.ShutdownAsync();
+    }
+
+    [Fact]
+    public async Task The_default_host_name_still_carries_the_user()
+    {
+        var host = CoreHost.Create(new CoreHostOptions(
+            "benmoussa",
+            "vpn-manager",
+            SingleInstance: true,
+            Platform: Platform())).Value;
+
+        var user = PathComponent.Validate(System.Environment.UserName).ValueOr("user");
+
+        Assert.Equal(
+            Path.Combine(_root, "run", $"benmoussa-vpn-manager-{user}.sock"),
+            ((SingleInstanceLock)host.SingleInstance!).SocketPath);
+
+        await host.ShutdownAsync();
+    }
+
+    [Fact]
+    public async Task Two_launches_without_the_user_share_one_instance()
+    {
+        var options = new CoreHostOptions(
+            "benmoussa",
+            "vpn-manager",
+            SingleInstance: true,
+            Platform: Platform(),
+            IncludeUserInSingleInstanceName: false);
+        var first = CoreHost.Create(options).Value;
+        var second = CoreHost.Create(options).Value;
+
+        Assert.True(first.TryStart());
+        Assert.False(second.TryStart());
+
+        await second.ShutdownAsync();
+        await first.ShutdownAsync();
+    }
+
+    [Fact]
+    public void A_socket_path_over_the_kernel_limit_is_refused_without_the_user()
+    {
+        Assert.Equal(
+            "host.socket_path_invalid",
+            CoreHost.Create(new CoreHostOptions(
+                "vendor",
+                new string('a', 200),
+                SingleInstance: true,
+                Platform: Platform(),
+                IncludeUserInSingleInstanceName: false)).Error.Code);
+    }
+
+    [Fact]
+    public void A_host_without_a_runtime_directory_fails_without_the_user()
+    {
+        var result = CoreHost.Create(new CoreHostOptions(
+            "benmoussa",
+            "vpn-manager",
+            SingleInstance: true,
+            Platform: Platform(new XdgEnvironment(
+                _root,
+                Path.Combine(_root, "config"),
+                Path.Combine(_root, "state"),
+                Path.Combine(_root, "data"),
+                Path.Combine(_root, "cache"),
+                null,
+                null,
+                null)),
+            IncludeUserInSingleInstanceName: false));
+
+        Assert.Equal("host.runtime_dir_unset", result.Error.Code);
     }
 
     [Fact]

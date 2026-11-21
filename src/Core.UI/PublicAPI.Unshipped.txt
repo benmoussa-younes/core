@@ -173,11 +173,13 @@ Core.UI.Hosting.CoreHostOptions
 Core.UI.Hosting.CoreHostOptions.<Clone>$() -> Core.UI.Hosting.CoreHostOptions!
 Core.UI.Hosting.CoreHostOptions.Application.get -> string!
 Core.UI.Hosting.CoreHostOptions.Application.init -> void
-Core.UI.Hosting.CoreHostOptions.CoreHostOptions(string! Vendor, string! Application, bool SingleInstance = true, long LogMaxBytes = 1048576, int RetainedFiles = 5, int CrashMaximumLines = 200, Core.Platform.CorePlatform? Platform = null) -> void
+Core.UI.Hosting.CoreHostOptions.CoreHostOptions(string! Vendor, string! Application, bool SingleInstance = true, long LogMaxBytes = 1048576, int RetainedFiles = 5, int CrashMaximumLines = 200, Core.Platform.CorePlatform? Platform = null, bool IncludeUserInSingleInstanceName = true) -> void
 Core.UI.Hosting.CoreHostOptions.CrashMaximumLines.get -> int
 Core.UI.Hosting.CoreHostOptions.CrashMaximumLines.init -> void
-Core.UI.Hosting.CoreHostOptions.Deconstruct(out string! Vendor, out string! Application, out bool SingleInstance, out long LogMaxBytes, out int RetainedFiles, out int CrashMaximumLines, out Core.Platform.CorePlatform? Platform) -> void
+Core.UI.Hosting.CoreHostOptions.Deconstruct(out string! Vendor, out string! Application, out bool SingleInstance, out long LogMaxBytes, out int RetainedFiles, out int CrashMaximumLines, out Core.Platform.CorePlatform? Platform, out bool IncludeUserInSingleInstanceName) -> void
 Core.UI.Hosting.CoreHostOptions.Equals(Core.UI.Hosting.CoreHostOptions? other) -> bool
+Core.UI.Hosting.CoreHostOptions.IncludeUserInSingleInstanceName.get -> bool
+Core.UI.Hosting.CoreHostOptions.IncludeUserInSingleInstanceName.init -> void
 Core.UI.Hosting.CoreHostOptions.LogMaxBytes.get -> long
 Core.UI.Hosting.CoreHostOptions.LogMaxBytes.init -> void
 Core.UI.Hosting.CoreHostOptions.Platform.get -> Core.Platform.CorePlatform?
