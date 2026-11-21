@@ -161,20 +161,8 @@ public sealed class CoreHost : IAsyncDisposable
             return Result<CoreHost>.Failure(directoryError);
         }
 
-        var paths = ApplicationPaths.Create(directories.Value, options.Vendor, options.Application);
-
-        if (paths.TryGetError(out var pathError))
-        {
-            return Result<CoreHost>.Failure(pathError);
-        }
-
-        if (options.LogMaxBytes <= 0 || options.RetainedFiles <= 0 || options.CrashMaximumLines <= 0)
-        {
-            return Result<CoreHost>.Failure(new CoreError(
-                CoreErrorCodes.HostInvalidOptions,
-                "The log size, the retained archive count and the crash line count must be positive."));
-        }
-
+        // The diagnostics own the path and the retention validation: they resolve
+        // the same <vendor>/<application> paths and report the same typed failures.
         var runtimeDirectory = directories.Value.RuntimeDirectory;
 
         if (options.SingleInstance &&
