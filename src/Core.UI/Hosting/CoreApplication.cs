@@ -112,6 +112,10 @@ public abstract class CoreApplication : Application
     /// <see cref="TaskScheduler.UnobservedTaskException"/> and Avalonia's
     /// <c>Dispatcher.UnhandledException</c>) route here.
     /// </summary>
+    /// <remarks>
+    /// The report is the last chance: a handler or a sink that throws does not
+    /// escape this method, because the caller is already unwinding a failure.
+    /// </remarks>
     /// <param name="exception">The exception.</param>
     /// <exception cref="ArgumentNullException"><paramref name="exception"/> is <see langword="null"/>.</exception>
     public void ReportUnhandledException(Exception exception)
