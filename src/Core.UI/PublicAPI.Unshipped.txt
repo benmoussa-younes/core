@@ -104,7 +104,7 @@ Core.UI.Controls.StatusChip.Show(string! state, Core.Mvp.Services.MessageSeverit
 Core.UI.Controls.StatusChip.State.get -> string!
 Core.UI.Controls.StatusChip.StatusChip() -> void
 Core.UI.Dialogs.AboutDialog
-Core.UI.Dialogs.AboutDialog.AboutDialog(Core.UI.Dialogs.AboutInfo! info) -> void
+Core.UI.Dialogs.AboutDialog.AboutDialog(Core.UI.Dialogs.AboutInfo! info, Core.Platform.ISystemLinkLauncher? links = null) -> void
 Core.UI.Dialogs.AboutInfo
 Core.UI.Dialogs.AboutInfo.<Clone>$() -> Core.UI.Dialogs.AboutInfo!
 Core.UI.Dialogs.AboutInfo.AboutInfo(string! ProductName, string! Version, string! Notice, System.Uri! SourceUrl, string! LicenseName = "GNU LGPL v3.0 or later", System.Uri? LicenseUrl = null, Avalonia.Media.IImage? Icon = null) -> void

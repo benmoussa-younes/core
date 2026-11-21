@@ -5,6 +5,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Core.Platform;
 
 namespace Core.UI.Dialogs;
 
@@ -17,8 +18,13 @@ public sealed class AboutDialog : CoreDialog
 {
     /// <summary>Initializes the dialog from a product's identity.</summary>
     /// <param name="info">The product identity.</param>
+    /// <param name="links">
+    /// The URL launcher, or <see langword="null"/> to let the platform launcher handle
+    /// the click. When supplied, every link goes through its scheme validation, so a
+    /// <c>file:</c> or <c>smb:</c> URL never opens.
+    /// </param>
     /// <exception cref="ArgumentNullException"><paramref name="info"/> is <see langword="null"/>.</exception>
-    public AboutDialog(AboutInfo info)
+    public AboutDialog(AboutInfo info, ISystemLinkLauncher? links = null)
     {
         ArgumentNullException.ThrowIfNull(info);
 
@@ -35,20 +41,10 @@ public sealed class AboutDialog : CoreDialog
             Classes = { "muted" },
         };
 
-        LicenseLink = new HyperlinkButton
-        {
-            Content = info.LicenseName,
-            NavigateUri = info.LicenseUrl ?? LegalNotice.LicenseUrl,
-            Padding = new Thickness(0),
-        };
-        SourceLink = new HyperlinkButton
-        {
-            Content = "Corresponding source",
-            NavigateUri = info.SourceUrl,
-            Padding = new Thickness(0),
-        };
+        LicenseLink = Link(info.LicenseName, info.LicenseUrl ?? LegalNotice.LicenseUrl, links);
+        SourceLink = Link("Corresponding source", info.SourceUrl, links);
 
-        var links = new StackPanel
+        var linkRow = new StackPanel
         {
             Orientation = Orientation.Horizontal,
             Spacing = 16,
@@ -67,8 +63,27 @@ public sealed class AboutDialog : CoreDialog
         {
             Spacing = 14,
             Margin = new Thickness(20),
-            Children = { identity, version, NoticeText, links, close },
+            Children = { identity, version, NoticeText, linkRow, close },
         };
+    }
+
+    // A link with a launcher is a plain click: the port decides whether the scheme
+    // is allowed, so the platform launcher never sees an unvalidated URL.
+    private static HyperlinkButton Link(string content, Uri target, ISystemLinkLauncher? links)
+    {
+        var link = new HyperlinkButton
+        {
+            Content = content,
+            NavigateUri = links is null ? target : null,
+            Padding = new Thickness(0),
+        };
+
+        if (links is not null)
+        {
+            link.Click += async (_, _) => await links.OpenAsync(target.AbsoluteUri).ConfigureAwait(true);
+        }
+
+        return link;
     }
 
     /// <summary>Gets the notice text, for tests.</summary>
