@@ -1,7 +1,10 @@
 // SPDX-FileCopyrightText: 2026 Younes BENMOUSSA <younes.benmoussa@pm.me>
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using Avalonia.Input.Platform;
 using Avalonia.Threading;
 using Core.Mvp.Models;
@@ -95,6 +98,35 @@ public sealed class PlatformIntegrationTests
         });
 
         Assert.True(registered, "the tray icon was not registered");
+    }
+
+    // Proves the Skia surface reaches the window's visual tree and produces a PNG.
+    // It does not compare pixels: a snapshot would break on every font or Skia
+    // version, and the point here is that the pipeline runs on a real backend.
+    [GuiFact]
+    public async Task The_window_renders_a_frame()
+    {
+        var (pixelSize, pngLength) = await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            var window = CreateWindow();
+            window.Show();
+            window.UpdateLayout();
+
+            var size = new PixelSize(
+                Math.Max(1, (int)window.ClientSize.Width),
+                Math.Max(1, (int)window.ClientSize.Height));
+
+            using var target = new RenderTargetBitmap(size, new Vector(96, 96));
+            target.Render(window);
+
+            using var stream = new MemoryStream();
+            target.Save(stream, PngBitmapEncoderOptions.Default);
+            window.Close();
+            return (target.PixelSize, stream.Length);
+        });
+
+        Assert.True(pixelSize.Width > 0 && pixelSize.Height > 0, $"pixelSize={pixelSize}");
+        Assert.True(pngLength > 100, $"pngLength={pngLength}");
     }
 
     private static CoreWindow CreateWindow() => new(new TrayService(icon: null, activated: _ => { }));

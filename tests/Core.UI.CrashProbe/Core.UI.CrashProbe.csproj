@@ -1,0 +1,20 @@
+<!-- SPDX-FileCopyrightText: 2026 Younes BENMOUSSA <younes.benmoussa@pm.me> -->
+<!-- SPDX-License-Identifier: LGPL-3.0-or-later -->
+
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Core.UI.CrashProbe</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <!-- A separate process on purpose: the survival of an exception raised by the
+         dispatcher can only be observed by the process that survives it. -->
+    <IsAotCompatible>false</IsAotCompatible>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia.Headless" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/Core.UI/Core.UI.csproj" />
+    <ProjectReference Include="../../src/Core.Platform.Linux/Core.Platform.Linux.csproj" />
+  </ItemGroup>
+</Project>
