@@ -56,6 +56,8 @@ composition. Every rule below landed with the test that failed before it.
 
 ### Fixed
 
+- The tray menu is reused when the command set and the tooltip are unchanged,
+  instead of rebuilding the DBus menu on every publication.
 - The modal layer is released only by the dialog that owns it: a stale completion
   no longer re-enables the shell under another overlay.
 - A saved placement with a NaN or out-of-range size is ignored, and quitting then
