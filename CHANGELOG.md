@@ -6,6 +6,65 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+Security and robustness fixes from the 0.1.1 audit, plus the diagnostics
+composition. Every rule below landed with the test that failed before it.
+
+### Added
+
+- `CoreDiagnostics` composes the application log, the operation journal and the
+  crash log below the XDG state directory (`<state>/<vendor>/<application>`), and
+  `CoreApplication.Diagnostics` gives a product without a host the same durable
+  sink: an unhandled exception reaches both files instead of being lost.
+  `ApplicationPaths` declares the three file names.
+- `tests/Core.UI.IntegrationTests` hosts Avalonia on the real X11 backend, for the
+  two facts the headless suite cannot prove: the dispatcher refuses a foreign
+  thread, and a shell window reaches a compositor. It runs in CI under Xvfb.
+
+### Security
+
+- An owner-only save narrows an existing settings file to 0600 instead of
+  preserving a wider mode, and a commit never widens a destination's access.
+- A settings directory is created owner-only; a pre-existing one is checked for
+  group or world write access, never re-chmoded, so a 0750 state directory
+  survives and a directory owned by another user no longer fails with EPERM.
+- A path with an interior NUL is refused by the platform encoder instead of being
+  silently truncated at the NUL.
+- Clearing a settings file removes only a regular file, so it no longer unlinks a
+  symbolic link that loading and saving refuse.
+- Two vendors that share an application name no longer share one single-instance
+  socket; the name is built by `SingleInstanceSocketName`.
+- A password prompt clears its field and its mask when it closes.
+- A host that has shut down no longer raises activation, and it restores the
+  application's last-chance handler on shutdown.
+- The application survives an exception thrown from the dispatcher: it is reported
+  once to the crash log and marked handled, instead of killing the process and
+  writing the same entry twice.
+- An unhandled exception reaches the application log as well as the crash log, and
+  the home directory is redacted wherever it appears in a line, not only when the
+  line is a bare path. Secrets are scrubbed before the line is capped.
+- A UI service called from a foreign thread fails fast (`VerifyAccess`) instead of
+  mutating the visual tree off the UI thread, and the dialog gate keeps the
+  caller's context across its await. A cancellation raised while the dispatcher
+  shuts down releases the gate instead of waiting for a post that never runs.
+- A control character in `XDG_STATE_HOME` falls back to the spec default instead
+  of throwing, a state directory that is a symbolic link is refused, and every
+  state component the host creates is owner-only.
+- A folder picked from a remote URI (`smb://`, `sftp://`, `http://`) no longer maps
+  to a local path such as `/share`; the picker returns no path.
+
+### Fixed
+
+- The modal layer is released only by the dialog that owns it: a stale completion
+  no longer re-enables the shell under another overlay.
+- A saved placement with a NaN or out-of-range size is ignored, and quitting then
+  closing writes the placement once instead of twice.
+- A closed presenter is no longer retained by the window for its whole lifetime.
+- Each toast expires on its own deadline instead of a single timer that a stream of
+  toasts re-armed forever; a burst keeps the ten most recent, and a live theme
+  switch re-resolves the brushes of the toasts already showing.
+
 ## [0.1.1] - 2026-11-17
 
 Security hardening for the raw Linux walker.

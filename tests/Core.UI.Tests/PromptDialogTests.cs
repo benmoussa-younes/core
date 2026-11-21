@@ -191,7 +191,8 @@ public sealed class PromptDialogTests
     [Fact]
     public async Task The_service_returns_the_value_and_cancels_to_null()
     {
-        var value = await Headless.Dispatch(() =>
+        string? value = null;
+        await Headless.Dispatch(async () =>
         {
             var window = Show(out var dialog);
             var service = new PromptService(dialog);
@@ -199,12 +200,11 @@ public sealed class PromptDialogTests
 
             dialog.Input.Text = "typed";
             Click(dialog.ConfirmButton);
+            value = await task;
             window.Close();
-
-            return task;
         });
 
-        Assert.Equal("typed", await value);
+        Assert.Equal("typed", value);
 
         using var cancellation = new CancellationTokenSource();
         await Headless.Dispatch(async () =>

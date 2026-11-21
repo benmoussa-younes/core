@@ -542,6 +542,14 @@ public static class LinuxFileSystem
     // includes the NUL.
     private static byte[] RentNullTerminatedPath(string path, out int length)
     {
+        // A NUL cannot be part of a path: the kernel stops at the first one, so the
+        // call would silently act on a prefix. Refuse it here, once, so no wrapper
+        // can forget the check.
+        if (path.Contains('\0'))
+        {
+            throw new ArgumentException("A path cannot contain a NUL character.", nameof(path));
+        }
+
         var byteCount = Encoding.UTF8.GetByteCount(path);
         var rented = ArrayPool<byte>.Shared.Rent(byteCount + 1);
 

@@ -14,10 +14,12 @@ namespace Core.Mvp.Services;
 /// <remarks>
 /// The file is best-effort: an unreadable or malformed file loads as no settings,
 /// so a corrupt preferences or placement file never blocks startup. On Linux the
-/// temporary file is created owner-only (0600) before the rename, and the
-/// directory is created owner-only (0700). The caller supplies the
-/// source-generated <see cref="JsonTypeInfo{T}"/>, so the store stays trim-safe
-/// and AOT-friendly.
+/// temporary file is created owner-only (0600) before the rename, and an existing
+/// file is narrowed to that mode, so a save repairs a file that was ever
+/// world-readable. A directory that does not exist is created owner-only (0700);
+/// a pre-existing one is checked for group or world write access, never
+/// re-chmoded. The caller supplies the source-generated
+/// <see cref="JsonTypeInfo{T}"/>, so the store stays trim-safe and AOT-friendly.
 /// </remarks>
 /// <typeparam name="T">The settings type.</typeparam>
 public sealed class JsonSettingsStore<T>
@@ -36,7 +38,7 @@ public sealed class JsonSettingsStore<T>
     /// <param name="typeInfo">The source-generated JSON type information.</param>
     /// <param name="atomicFiles">The platform atomic-writer factory.</param>
     /// <param name="fileSystem">The platform file system, used for a bounded no-follow read.</param>
-    /// <exception cref="ArgumentException"><paramref name="path"/> is empty or whitespace.</exception>
+    /// <exception cref="ArgumentException"><paramref name="path"/> is empty, whitespace, or contains a NUL.</exception>
     /// <exception cref="ArgumentNullException"><paramref name="typeInfo"/>, <paramref name="atomicFiles"/> or <paramref name="fileSystem"/> is <see langword="null"/>.</exception>
     public JsonSettingsStore(
         string path,
@@ -45,6 +47,14 @@ public sealed class JsonSettingsStore<T>
         IFileSystem fileSystem)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
+
+        // The platform encoder stops at the first NUL, so a path that contains one
+        // would name a prefix of itself; the boundary refuses it.
+        if (path.Contains('\0'))
+        {
+            throw new ArgumentException("A settings path cannot contain a NUL character.", nameof(path));
+        }
+
         ArgumentNullException.ThrowIfNull(typeInfo);
         ArgumentNullException.ThrowIfNull(atomicFiles);
         ArgumentNullException.ThrowIfNull(fileSystem);
@@ -145,10 +155,28 @@ public sealed class JsonSettingsStore<T>
     }
 
     /// <summary>Forgets the saved settings.</summary>
+    /// <remarks>
+    /// Only a regular file at the settings path is removed. A symbolic link, a
+    /// FIFO or a directory there is not a file this store wrote, and unlinking it
+    /// would act on an entry the store does not own.
+    /// </remarks>
     public void Clear()
     {
         try
         {
+            if (!_fileSystem.TryStat(_path, out var status) ||
+                status.Type != FileType.RegularFile)
+            {
+                return;
+            }
+
+            // The port stats through a final link; the attributes do not follow it,
+            // so a link to a regular file is still refused here.
+            if ((File.GetAttributes(_path) & FileAttributes.ReparsePoint) != 0)
+            {
+                return;
+            }
+
             File.Delete(_path);
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)

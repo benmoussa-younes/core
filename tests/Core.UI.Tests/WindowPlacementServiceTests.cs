@@ -3,8 +3,10 @@
 
 using Core.UI.Chrome;
 using Core.UI.Tray;
+using Core.Platform;
 using Core.Platform.Linux;
 using Core.Mvp.Models;
+using Core.Results;
 
 namespace Core.UI.Tests;
 
@@ -131,6 +133,44 @@ public sealed class WindowPlacementServiceTests : IDisposable
 
             window.Close();
         });
+    }
+
+    [Fact]
+    public async Task Quitting_then_closing_writes_the_placement_once()
+    {
+        var path = Path.Combine(_directory, "quit.json");
+        var files = new CountingAtomicFiles();
+
+        var creates = 0;
+        await Headless.Dispatch(async () =>
+        {
+            var window = new TestWindow { Width = 500, Height = 400 };
+            _ = new WindowPlacementService(window, path, files, new LinuxFileSystemAdapter());
+            window.Show();
+            window.UpdateLayout();
+
+            await window.QuitAsync();
+            window.Close();
+
+            creates = files.Creates;
+        });
+
+        Assert.Equal(1, creates);
+    }
+
+    private sealed class CountingAtomicFiles : IAtomicFileWriterFactory
+    {
+        private readonly LinuxAtomicFileWriterFactory _inner = new();
+
+        public int Creates { get; private set; }
+
+        public Result<IAtomicFileWriter> Create(string targetPath, AtomicFileOptions options)
+        {
+            Creates++;
+            return _inner.Create(targetPath, options);
+        }
+
+        public void EnsureDirectory(string path, bool ownerOnly) => _inner.EnsureDirectory(path, ownerOnly);
     }
 
     private sealed class TestWindow : CoreWindow

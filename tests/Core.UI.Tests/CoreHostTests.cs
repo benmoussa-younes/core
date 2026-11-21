@@ -149,6 +149,14 @@ public sealed class CoreHostTests : IDisposable
         });
 
         Assert.Contains("host probe", File.ReadAllText(crashPath), StringComparison.Ordinal);
+
+        // The operational log is what an operator reads: the same failure must be
+        // there, not only in the capped crash log.
+        Assert.Contains(
+            "host probe",
+            File.ReadAllText(host.Paths.StateFile("application.log")),
+            StringComparison.Ordinal);
+
         await host.ShutdownAsync();
     }
 
@@ -311,6 +319,63 @@ public sealed class CoreHostTests : IDisposable
             Assert.Throws<InvalidOperationException>(() => host.CreateWindow());
 
             host.ShutdownAsync().AsTask().GetAwaiter().GetResult();
+        });
+    }
+
+    [Fact]
+    public async Task Two_vendors_sharing_an_application_name_get_distinct_socket_paths()
+    {
+        // ApplicationPaths isolates a product under <vendor>/<application>; the
+        // single-instance socket must isolate it the same way.
+        var first = CoreHost.Create(new CoreHostOptions(
+            "acme",
+            "tool",
+            SingleInstance: true,
+            Platform: Platform())).Value;
+        var second = CoreHost.Create(new CoreHostOptions(
+            "globex",
+            "tool",
+            SingleInstance: true,
+            Platform: Platform())).Value;
+
+        var firstPath = ((SingleInstanceLock)first.SingleInstance!).SocketPath;
+        var secondPath = ((SingleInstanceLock)second.SingleInstance!).SocketPath;
+
+        Assert.NotEqual(firstPath, secondPath);
+
+        await first.ShutdownAsync();
+        await second.ShutdownAsync();
+    }
+
+    [Fact]
+    public async Task A_host_that_has_shut_down_ignores_a_late_activation()
+    {
+        var host = CreateHost(singleInstance: true).Value;
+        await host.ShutdownAsync();
+
+        var raised = false;
+        host.Activated += _ => raised = true;
+
+        host.OnActivated(new byte[] { 1 });
+
+        Assert.False(raised);
+    }
+
+    [Fact]
+    public async Task Shutdown_restores_the_application_crash_handler()
+    {
+        await Headless.Dispatch(async () =>
+        {
+            var application = Assert.IsAssignableFrom<CoreApplication>(Application.Current);
+            var previous = application.UnhandledExceptionHandler;
+
+            var host = CreateHost().Value;
+            host.Attach(application);
+            Assert.NotSame(previous, application.UnhandledExceptionHandler);
+
+            await host.ShutdownAsync();
+
+            Assert.Same(previous, application.UnhandledExceptionHandler);
         });
     }
 

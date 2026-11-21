@@ -5,6 +5,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Core.Mvp.Presentation;
 using Core.Mvp.Services;
+using Core.UI.Hosting;
 
 namespace Core.UI.Tray;
 
@@ -55,6 +56,7 @@ public sealed class TrayService : ITrayService, IDisposable
         ObjectDisposedException.ThrowIf(Volatile.Read(ref _disposed) != 0, this);
         ArgumentNullException.ThrowIfNull(toolTip);
         ArgumentNullException.ThrowIfNull(menu);
+        UiServices.Dispatcher.VerifyAccess();
 
         var tray = _tray ??= new TrayIcon();
 
@@ -70,6 +72,7 @@ public sealed class TrayService : ITrayService, IDisposable
     public void Hide()
     {
         ObjectDisposedException.ThrowIf(Volatile.Read(ref _disposed) != 0, this);
+        UiServices.Dispatcher.VerifyAccess();
 
         if (_tray is not null)
         {
@@ -81,6 +84,11 @@ public sealed class TrayService : ITrayService, IDisposable
     /// Removes and disposes this service's tray icon, leaving any other icon the
     /// application registered in place.
     /// </summary>
+    /// <remarks>
+    /// No VerifyAccess: the host disposes the tray from its shutdown path, which a
+    /// product may await from any thread, and a throw here would mask a shutdown
+    /// failure. The tray is only touched when the service created one.
+    /// </remarks>
     public void Dispose()
     {
         if (Interlocked.Exchange(ref _disposed, 1) == 1)

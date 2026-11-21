@@ -3,6 +3,7 @@
 
 using Avalonia.Platform.Storage;
 using Core.Mvp.Services;
+using Core.UI.Hosting;
 
 namespace Core.UI.Platform;
 
@@ -57,6 +58,7 @@ public sealed class StorageProviderFilePicker : IFilePicker, IFolderPicker
     {
         ArgumentNullException.ThrowIfNull(options);
         cancellationToken.ThrowIfCancellationRequested();
+        UiServices.Dispatcher.VerifyAccess();
 
         var picked = await _open(new FilePickerOpenOptions
         {
@@ -86,6 +88,7 @@ public sealed class StorageProviderFilePicker : IFilePicker, IFolderPicker
     {
         ArgumentNullException.ThrowIfNull(options);
         cancellationToken.ThrowIfCancellationRequested();
+        UiServices.Dispatcher.VerifyAccess();
 
         var file = await _save(new FilePickerSaveOptions
         {
@@ -105,6 +108,7 @@ public sealed class StorageProviderFilePicker : IFilePicker, IFolderPicker
     {
         ArgumentNullException.ThrowIfNull(options);
         cancellationToken.ThrowIfCancellationRequested();
+        UiServices.Dispatcher.VerifyAccess();
 
         var folders = await _openFolder(new FolderPickerOpenOptions
         {
@@ -141,14 +145,7 @@ public sealed class StorageProviderFilePicker : IFilePicker, IFolderPicker
         return mapped;
     }
 
-    private static string? LocalPath(IStorageItem item) => item.Path.IsFile ? item.Path.LocalPath : null;
+    private static string? LocalPath(IStorageItem item) => StorageItemPaths.File(item.Path);
 
-    private static string? LocalFolderPath(IStorageItem item)
-    {
-        var path = item.Path.LocalPath;
-
-        // A folder URI carries a trailing separator; a caller combining it with a
-        // child name should not get a double separator. The root stays "/".
-        return string.IsNullOrEmpty(path) ? null : Path.TrimEndingDirectorySeparator(path);
-    }
+    private static string? LocalFolderPath(IStorageItem item) => StorageItemPaths.Folder(item.Path);
 }

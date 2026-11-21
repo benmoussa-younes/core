@@ -26,14 +26,16 @@ namespace Core.Platform.Linux;
 /// measured, not asserted away.
 /// </para>
 /// <para>
-/// Committing over an existing regular file preserves that file's permission
-/// bits: the mode is read from the destination and applied to the temporary
-/// file before the rename, so replacing an artefact never widens or narrows its
-/// access. A destination that does not exist is created with the mode passed to
-/// the constructor, as the kernel applies the process umask. A destination that
-/// is a symbolic link is refused as a failure value, because the rename would
-/// replace the link itself rather than write through it. The check runs before
-/// the rename; the window it leaves is stated on <see cref="Commit"/>.
+/// Committing over an existing regular file narrows it to the bits the requested
+/// mode and the destination mode share: the mode is read from the destination,
+/// intersected with the constructor's mode and applied to the temporary file
+/// before the rename, so replacing an artefact never widens its access and an
+/// owner-only request repairs an over-permissive file. A destination that does
+/// not exist is created with the mode passed to the constructor, as the kernel
+/// applies the process umask. A destination that is a symbolic link is refused
+/// as a failure value, because the rename would replace the link itself rather
+/// than write through it; the check runs before the rename and the window it
+/// leaves is stated on <see cref="Commit"/>.
 /// </para>
 /// </remarks>
 public sealed class AtomicFileWriter : IAtomicFileWriter
@@ -41,6 +43,7 @@ public sealed class AtomicFileWriter : IAtomicFileWriter
     private readonly string _targetPath;
     private readonly string _directoryPath;
     private readonly string _temporaryPath;
+    private readonly UnixFileMode _mode;
     private readonly FileStream _stream;
     private bool _finished;
     private bool _disposed;
@@ -52,8 +55,9 @@ public sealed class AtomicFileWriter : IAtomicFileWriter
     /// <param name="targetPath">The path the committed content appears at.</param>
     /// <param name="mode">
     /// The permission bits of the temporary file when the destination does not
-    /// exist yet, as the kernel applies the process umask. An existing
-    /// regular-file destination keeps its own mode instead.
+    /// exist yet, as the kernel applies the process umask. An existing regular
+    /// file keeps only the bits the two modes share, so a commit never widens
+    /// its access and a narrower request is still honoured.
     /// </param>
     /// <exception cref="ArgumentException"><paramref name="targetPath"/> is empty or whitespace.</exception>
     /// <exception cref="IOException">The temporary file cannot be created.</exception>
@@ -62,6 +66,7 @@ public sealed class AtomicFileWriter : IAtomicFileWriter
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(targetPath);
 
+        _mode = mode;
         _targetPath = Path.GetFullPath(targetPath);
         _directoryPath = Path.GetDirectoryName(_targetPath) ?? ".";
         _temporaryPath = Path.Combine(
@@ -105,9 +110,9 @@ public sealed class AtomicFileWriter : IAtomicFileWriter
 
     /// <summary>
     /// Flushes the artefact, syncs it, renames it over the target and syncs the
-    /// target directory. An existing regular-file target keeps its permission
-    /// bits; a new target keeps the mode the temporary file was created with, as
-    /// the kernel applied the process umask.
+    /// target directory. An existing regular-file target narrows to the bits the
+    /// requested and the previous mode share; a new target keeps the mode the
+    /// temporary file was created with, as the kernel applied the process umask.
     /// </summary>
     /// <returns>
     /// A successful result, whose value is always <see langword="true"/>, once
@@ -202,13 +207,8 @@ public sealed class AtomicFileWriter : IAtomicFileWriter
         Abort();
     }
 
-    /// <summary>
-    /// Inspects the destination without following a symbolic link. A symbolic
-    /// link is refused; an existing regular file has its mode applied to the
-    /// temporary file so the rename carries it to the committed artefact.
-    /// </summary>
-    /// <param name="error">The refusal when the destination is a symbolic link.</param>
-    /// <returns><see langword="true"/> when the commit may proceed.</returns>
+    // WHY: the rename never writes through a link, and the committed mode is the
+    // intersection so a commit cannot widen access.
     private bool TryPrepareDestination([NotNullWhen(false)] out CoreError? error)
     {
         error = null;
@@ -238,7 +238,10 @@ public sealed class AtomicFileWriter : IAtomicFileWriter
             LinuxFileSystem.TryStat(_targetPath, out var status) &&
             status.Type == LinuxFileType.RegularFile)
         {
-            File.SetUnixFileMode(_temporaryPath, (UnixFileMode)status.Mode);
+            // A commit never widens: the destination's bits survive only where
+            // the caller asked for them, so OwnerOnly (0600) repairs an
+            // over-permissive file instead of preserving it.
+            File.SetUnixFileMode(_temporaryPath, (UnixFileMode)status.Mode & _mode);
         }
 
         return true;

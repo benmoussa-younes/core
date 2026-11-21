@@ -11,6 +11,8 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Core.UI.Tests/Core.UI.Tests.csproj" />
+    <Project Path="tests/Core.UI.IntegrationTests/Core.UI.IntegrationTests.csproj" />
+    <Project Path="tests/Core.UI.CrashProbe/Core.UI.CrashProbe.csproj" />
     <Project Path="tests/Core.Concurrency.Tests/Core.Concurrency.Tests.csproj" />
     <Project Path="tests/Core.IO.Tests/Core.IO.Tests.csproj" />
     <Project Path="tests/Core.Mvp.Tests/Core.Mvp.Tests.csproj" />

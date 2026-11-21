@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 using Avalonia;
+using Core.Diagnostics;
+using Core.Primitives;
 using Core.Security;
 using Avalonia.Media;
 using Avalonia.Platform;
@@ -47,9 +49,28 @@ public abstract class CoreApplication : Application
     /// <summary>
     /// Gets or sets the last-chance handler for an exception that escaped the UI
     /// loop. When it is <see langword="null"/>, <see cref="ReportUnhandledException"/>
-    /// writes to <see cref="Console.Error"/>.
+    /// writes to <see cref="Diagnostics"/> when one is set, and to
+    /// <see cref="Console.Error"/> otherwise.
     /// </summary>
     public Action<Exception>? UnhandledExceptionHandler { get; set; }
+
+    /// <summary>
+    /// Gets or sets the durable diagnostics of this application: when no
+    /// <see cref="UnhandledExceptionHandler"/> is set, an unhandled exception is
+    /// written to its crash log and application log instead of the console.
+    /// </summary>
+    /// <remarks>
+    /// A product that creates a <see cref="CoreHost"/> gets this through
+    /// <see cref="CoreHost.Attach"/>. A product without a host assigns
+    /// <c>CoreDiagnostics.Create(options).Value</c> here, so the files land in its
+    /// XDG state directory instead of being lost. Both write the same redacted
+    /// entry; the console is the last resort when neither is set.
+    /// <para>
+    /// The application does not own the instance: dispose it from the product's
+    /// quit path, after the last failure it can report.
+    /// </para>
+    /// </remarks>
+    public CoreDiagnostics? Diagnostics { get; set; }
 
     /// <summary>Gets the application id: the base name of the desktop entry.</summary>
     protected abstract string ApplicationId { get; }
@@ -85,24 +106,66 @@ public abstract class CoreApplication : Application
 
     /// <summary>
     /// Reports an exception that escaped the application to the last-chance handler,
-    /// or to <see cref="Console.Error"/> when none is set. The process-level hooks
+    /// to <see cref="Diagnostics"/> when no handler is set, or to
+    /// <see cref="Console.Error"/> when neither is. The process-level hooks
     /// (<see cref="AppDomain.UnhandledException"/>,
     /// <see cref="TaskScheduler.UnobservedTaskException"/> and Avalonia's
     /// <c>Dispatcher.UnhandledException</c>) route here.
     /// </summary>
+    /// <remarks>
+    /// The report is the last chance: a handler or a sink that throws does not
+    /// escape this method, because the caller is already unwinding a failure.
+    /// </remarks>
     /// <param name="exception">The exception.</param>
     /// <exception cref="ArgumentNullException"><paramref name="exception"/> is <see langword="null"/>.</exception>
     public void ReportUnhandledException(Exception exception)
     {
         ArgumentNullException.ThrowIfNull(exception);
 
-        if (UnhandledExceptionHandler is { } handler)
+        // WHY: this is the last chance. A handler or a sink that throws must not take
+        // the process down after the failure was already being reported.
+        try
         {
-            handler(exception);
+            if (UnhandledExceptionHandler is { } handler)
+            {
+                handler(exception);
+                return;
+            }
+
+            if (Diagnostics is { } diagnostics)
+            {
+                diagnostics.Report(exception);
+                return;
+            }
+
+            // Same redaction as CrashLog.Write: a message can carry the home path and
+            // control characters, and stderr is still a durable sink for a service.
+            Console.Error.WriteLine(
+                LogRedaction.SingleLine(
+                    PathRedaction.Scrub(SecretRedaction.Scrub(exception.ToString())), 2_048));
         }
-        else
+        catch (Exception reportFailure)
         {
-            Console.Error.WriteLine(SecretRedaction.Scrub(exception.ToString()));
+            TryWriteReportFailure(exception, reportFailure);
+        }
+    }
+
+    private static void TryWriteReportFailure(Exception original, Exception reportFailure)
+    {
+        try
+        {
+            Console.Error.WriteLine(
+                LogRedaction.SingleLine(
+                    string.Concat(
+                        "unhandled exception could not be reported (",
+                        reportFailure.GetType().Name,
+                        "); original failure: ",
+                        original.GetType().Name),
+                    512));
+        }
+        catch (Exception)
+        {
+            // The last chance has no fallback left: a closed or broken console.
         }
     }
 
@@ -197,6 +260,11 @@ public abstract class CoreApplication : Application
         if (Application.Current is CoreApplication application)
         {
             application.ReportUnhandledException(e.Exception);
+
+            // The failure is reported, so letting it escape the dispatcher would
+            // both kill the process and write the same entry to the crash log a
+            // second time through the AppDomain hook.
+            e.Handled = true;
         }
     }
 

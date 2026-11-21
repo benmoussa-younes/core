@@ -1,0 +1,88 @@
+// SPDX-FileCopyrightText: 2026 Younes BENMOUSSA <younes.benmoussa@pm.me>
+// SPDX-License-Identifier: LGPL-3.0-or-later
+
+using Core.Platform;
+
+namespace Core.Platform.Linux.Tests;
+
+// Regression cases for the owner-only permission findings: each one states the
+// guarantee the documentation makes.
+public sealed class AtomicFilePermissionReproTests
+{
+    private const UnixFileMode OwnerOnly =
+        UnixFileMode.UserRead | UnixFileMode.UserWrite;
+
+    private const UnixFileMode WorldReadable =
+        UnixFileMode.UserRead | UnixFileMode.UserWrite |
+        UnixFileMode.GroupRead | UnixFileMode.OtherRead;
+
+    private const UnixFileMode GroupReadableDirectory =
+        UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute |
+        UnixFileMode.GroupRead | UnixFileMode.GroupExecute;
+
+    [Fact]
+    public void AnOwnerOnlyCommitOverAnExistingWorldReadableFileLeavesItOwnerOnly()
+    {
+        // JsonSettingsStore.Save documents a file created owner-only (0600) before
+        // the rename. AtomicFileOptions.OwnerOnly is an explicit request, so it must
+        // win over the "preserve the destination mode" rule when the destination is
+        // an existing file that is world-readable.
+        using var temp = new TempDirectory();
+        var target = temp.WriteFile("settings.json", "{}");
+        File.SetUnixFileMode(target, WorldReadable);
+
+        var created = new LinuxAtomicFileWriterFactory()
+            .Create(target, new AtomicFileOptions { OwnerOnly = true });
+
+        Assert.True(created.IsSuccess);
+        using (var writer = created.Value)
+        {
+            writer.Stream.Write("{\"theme\":\"Dark\"}"u8);
+            Assert.True(writer.Commit().IsSuccess);
+        }
+
+        Assert.Equal(OwnerOnly, File.GetUnixFileMode(target));
+    }
+
+    [Fact]
+    public void EnsureDirectoryKeepsAPreExistingGroupReadableDirectory()
+    {
+        // LinuxCoreHostServices.PrepareStateDirectory preserves a pre-existing 0750
+        // state directory and only refuses a group- or world-writable one.
+        // EnsureDirectory(ownerOnly: true) must not narrow a directory it did not
+        // create: the store does not own the directory policy.
+        using var temp = new TempDirectory();
+        var state = temp.CreateDirectory("state");
+        File.SetUnixFileMode(state, GroupReadableDirectory);
+
+        new LinuxAtomicFileWriterFactory().EnsureDirectory(state, ownerOnly: true);
+
+        Assert.Equal(GroupReadableDirectory, File.GetUnixFileMode(state));
+    }
+
+    [Fact]
+    public void EnsureDirectoryDoesNotTightenADirectoryOwnedByAnotherUser()
+    {
+        // WHY: /proc/sys is root-owned on every Linux host, so the chmod this used
+        // to run fails with EPERM even though create-if-absent would succeed.
+        if (Environment.IsPrivilegedProcess)
+        {
+            Assert.Skip("The case needs an unprivileged process.");
+        }
+
+        new LinuxAtomicFileWriterFactory().EnsureDirectory("/proc/sys", ownerOnly: true);
+    }
+
+    [Fact]
+    public void TryStatRefusesAPathWithAnEmbeddedNul()
+    {
+        // The string overload encodes UTF-8, and the kernel stops at the first
+        // NUL. The path below would otherwise stat the real file and silently
+        // ignore the smuggled suffix.
+        using var temp = new TempDirectory();
+        var real = temp.WriteFile("real.txt", "x");
+
+        Assert.Throws<ArgumentException>(
+            () => LinuxFileSystem.TryStat(string.Concat(real, "\0", "/../../etc/shadow"), out _));
+    }
+}

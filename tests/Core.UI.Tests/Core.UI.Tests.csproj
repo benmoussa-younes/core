@@ -21,7 +21,16 @@
     <ProjectReference Include="../../src/Core.UI/Core.UI.csproj" />
     <ProjectReference Include="../../src/Core.Platform/Core.Platform.csproj" />
     <ProjectReference Include="../../src/Core.Platform.Linux/Core.Platform.Linux.csproj" />
+    <!-- The probe is a separate process; it is copied with its runtimeconfig so the
+         test can start it with `dotnet <out>/crash-probe/Core.UI.CrashProbe.dll`. -->
+    <ProjectReference Include="../Core.UI.CrashProbe/Core.UI.CrashProbe.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="../../src/Core.IO/Core.IO.csproj" />
     <ProjectReference Include="../../src/Core.Serialization/Core.Serialization.csproj" />
   </ItemGroup>
+  <Target Name="CopyCrashProbe" AfterTargets="Build">
+    <ItemGroup>
+      <CrashProbeFiles Include="$(MSBuildThisFileDirectory)../Core.UI.CrashProbe/bin/$(Configuration)/$(TargetFramework)/**/*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(CrashProbeFiles)" DestinationFiles="@(CrashProbeFiles->'$(OutDir)crash-probe/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+  </Target>
 </Project>

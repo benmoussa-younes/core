@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2026 Younes BENMOUSSA <younes.benmoussa@pm.me>
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-using Avalonia.Threading;
 using Core.Mvp.Services;
+using Core.UI.Hosting;
 
 namespace Core.UI.Dialogs;
 
@@ -33,6 +33,10 @@ internal sealed class PromptService : IPromptService
     public ValueTask<string?> PromptAsync(PromptRequest request, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
+
+        // UI-thread affine: fail fast rather than mutate the visual tree from a
+        // pool thread once the await below resumes.
+        UiServices.Dispatcher.VerifyAccess();
 
         return new ValueTask<string?>(PromptAsyncCore(request, cancellationToken));
     }
@@ -66,11 +70,30 @@ internal sealed class PromptService : IPromptService
                 var dismissed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
                 dismissal = dismissed.Task;
 
-                Dispatcher.UIThread.Post(() =>
+                void Close()
                 {
                     _dialog.Dismiss(task);
                     dismissed.TrySetResult();
-                });
+                }
+
+                // WHY: the await below waits for this dismissal, so a cancellation
+                // raised on the UI thread must run it inline; a Post is only for a
+                // cancellation raised on another thread.
+                if (UiServices.Dispatcher.CheckAccess())
+                {
+                    Close();
+                }
+                else if (UiServices.Dispatcher.IsAvailable)
+                {
+                    UiServices.Dispatcher.Post(Close);
+                }
+                else
+                {
+                    // WHY: the dispatcher has started shutting down, so a posted
+                    // dismissal never runs and the await below would never return;
+                    // the dialog dies with the loop.
+                    dismissed.TrySetResult();
+                }
 
                 cancelled.TrySetResult(null);
             });

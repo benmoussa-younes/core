@@ -42,6 +42,8 @@ public sealed class AppearanceService : IAppearanceService
             throw new ArgumentOutOfRangeException(nameof(theme));
         }
 
+        UiServices.Dispatcher.VerifyAccess();
+
         _current = _current with { Theme = theme };
         ApplyTheme();
         Persist();
@@ -58,6 +60,8 @@ public sealed class AppearanceService : IAppearanceService
             throw new ArgumentException($"'{key}' is not in the accent palette.", nameof(key));
         }
 
+        UiServices.Dispatcher.VerifyAccess();
+
         _current = _current with { AccentKey = key };
         ApplyAccent(key);
         Persist();
@@ -66,6 +70,8 @@ public sealed class AppearanceService : IAppearanceService
     /// <inheritdoc />
     public void SetRemember(bool remember)
     {
+        UiServices.Dispatcher.VerifyAccess();
+
         _current = _current with { Remember = remember };
 
         if (remember)
@@ -81,6 +87,8 @@ public sealed class AppearanceService : IAppearanceService
     /// <inheritdoc />
     public void Apply()
     {
+        UiServices.Dispatcher.VerifyAccess();
+
         ApplyTheme();
 
         // A settings file from an older release can name an accent that has since

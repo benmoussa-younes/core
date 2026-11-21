@@ -19,6 +19,7 @@ public sealed class WindowPlacementService
 {
     private readonly CoreWindow _window;
     private readonly JsonSettingsStore<WindowPlacement> _store;
+    private WindowPlacement? _lastWritten;
 
     /// <summary>Initializes the service for a window and a settings file.</summary>
     /// <param name="window">The window to track.</param>
@@ -66,6 +67,7 @@ public sealed class WindowPlacementService
         if (_store.Load() is { } placement)
         {
             _window.ApplyPlacement(placement);
+            _lastWritten = placement;
         }
     }
 
@@ -81,9 +83,19 @@ public sealed class WindowPlacementService
 
     private void Save()
     {
+        var placement = _window.CapturePlacement();
+
+        // Quit then close is the normal exit, and both run this: writing the same
+        // placement twice costs two fsyncs on the UI thread for no change.
+        if (placement == _lastWritten)
+        {
+            return;
+        }
+
         try
         {
-            _store.Save(_window.CapturePlacement());
+            _store.Save(placement);
+            _lastWritten = placement;
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {

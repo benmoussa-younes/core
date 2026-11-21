@@ -195,17 +195,23 @@ Core.Diagnostics.IOperationJournal.Record(string! operation, string! message) ->
 Core.Primitives.PathRedaction
 static Core.Primitives.PathRedaction.ForMessage(string? path) -> string!
 static Core.Primitives.PathRedaction.ForMessage(string? path, string! home) -> string!
+static Core.Primitives.PathRedaction.Scrub(string? text) -> string!
+static Core.Primitives.PathRedaction.Scrub(string? text, string! home) -> string!
 Core.Capabilities.ICapability<TRequest, TResponse>
 Core.Capabilities.ICapability<TRequest, TResponse>.InvokeAsync(TRequest request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Core.Results.Result<TResponse>>
 Core.Paths.ApplicationPaths
 Core.Paths.ApplicationPaths.CacheDirectory.get -> string!
 Core.Paths.ApplicationPaths.CacheFile(string! name) -> string!
+Core.Paths.ApplicationPaths.ApplicationLogFile.get -> string!
+Core.Paths.ApplicationPaths.OperationJournalFile.get -> string!
+Core.Paths.ApplicationPaths.CrashLogFile.get -> string!
 Core.Paths.ApplicationPaths.ConfigDirectory.get -> string!
 Core.Paths.ApplicationPaths.ConfigFile(string! name) -> string!
 Core.Paths.ApplicationPaths.DataDirectory.get -> string!
 Core.Paths.ApplicationPaths.DataFile(string! name) -> string!
 Core.Paths.ApplicationPaths.StateDirectory.get -> string!
 Core.Paths.ApplicationPaths.StateFile(string! name) -> string!
+Core.Paths.SingleInstanceSocketName
 Core.Primitives.ByteSize
 Core.Primitives.ByteSize.ByteSize() -> void
 Core.Primitives.ByteSize.ByteSize(long bytes) -> void
@@ -300,7 +306,11 @@ override Core.Units.Power.ToString() -> string!
 override Core.Units.Temperature.Equals(object? obj) -> bool
 override Core.Units.Temperature.GetHashCode() -> int
 override Core.Units.Temperature.ToString() -> string!
+const Core.Paths.ApplicationPaths.ApplicationLogName = "application.log" -> string!
+const Core.Paths.ApplicationPaths.OperationJournalName = "operations.log" -> string!
+const Core.Paths.ApplicationPaths.CrashLogName = "crash.log" -> string!
 static Core.Paths.ApplicationPaths.Create(Core.Paths.PathSet! directories, string! vendor, string! application) -> Core.Results.Result<Core.Paths.ApplicationPaths!>
+static Core.Paths.SingleInstanceSocketName.For(string! vendor, string! application, string! user) -> string!
 static Core.Primitives.ByteSize.FromBytes(long bytes) -> Core.Primitives.ByteSize
 static Core.Primitives.ByteSize.FromGibibytes(long gibibytes) -> Core.Primitives.ByteSize
 static Core.Primitives.ByteSize.FromKibibytes(long kibibytes) -> Core.Primitives.ByteSize

@@ -54,6 +54,7 @@ public sealed class UnhandledExceptionTests
     [Fact]
     public async Task The_default_handler_writes_to_stderr()
     {
+        var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         var text = await Headless.Dispatch(() =>
         {
             var application = new TestApplication();
@@ -63,7 +64,8 @@ public sealed class UnhandledExceptionTests
 
             try
             {
-                application.ReportUnhandledException(new InvalidOperationException("boom"));
+                application.ReportUnhandledException(
+                    new InvalidOperationException(string.Concat("boom at ", home, "/secret/file.txt", "\nsecond")));
             }
             finally
             {
@@ -74,6 +76,11 @@ public sealed class UnhandledExceptionTests
         });
 
         Assert.Contains("boom", text, StringComparison.Ordinal);
+
+        // The fallback redacts like CrashLog.Write: the home path and a control
+        // character must not reach a journal or a terminal as-is.
+        Assert.DoesNotContain(home, text, StringComparison.Ordinal);
+        Assert.DoesNotContain("\nsecond", text, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -90,6 +97,23 @@ public sealed class UnhandledExceptionTests
 
         Assert.IsType<InvalidOperationException>(captured);
         Assert.Throws<ArgumentNullException>(() => new TestApplication().ReportUnhandledException(null!));
+    }
+
+    [Fact]
+    public async Task A_handler_that_throws_does_not_take_the_report_down()
+    {
+        await Headless.Dispatch(() =>
+        {
+            var application = new TestApplication
+            {
+                UnhandledExceptionHandler = _ => throw new InvalidOperationException("handler"),
+            };
+
+            var failure = Record.Exception(
+                () => application.ReportUnhandledException(new InvalidOperationException("boom")));
+
+            Assert.Null(failure);
+        });
     }
 
     private sealed class TestApplication : CoreApplication

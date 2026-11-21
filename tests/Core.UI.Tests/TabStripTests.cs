@@ -8,6 +8,7 @@ using Core.UI.Chrome;
 
 namespace Core.UI.Tests;
 
+[Collection("headless")]
 public sealed class TabStripTests
 {
     [Fact]

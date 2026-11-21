@@ -1,0 +1,26 @@
+<!-- SPDX-FileCopyrightText: 2026 Younes BENMOUSSA <younes.benmoussa@pm.me> -->
+<!-- SPDX-License-Identifier: LGPL-3.0-or-later -->
+
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>Core.UI.IntegrationTests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <OutputType>Exe</OutputType>
+    <!-- A real window and a real dispatcher. The project is in Core.slnx, but every
+         case is a GuiFact skipped unless CORE_GUI_TESTS=1, so the headless gate
+         never needs a display; the CI job runs it under Xvfb. -->
+    <IsAotCompatible>false</IsAotCompatible>
+  </PropertyGroup>
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.v3.mtp-off" />
+    <PackageReference Include="xunit.runner.visualstudio" PrivateAssets="all" />
+    <PackageReference Include="Avalonia.Desktop" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/Core.UI/Core.UI.csproj" />
+  </ItemGroup>
+</Project>

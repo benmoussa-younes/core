@@ -183,11 +183,25 @@ internal class PromptDialog : Grid
 
     private void Complete(string? result)
     {
-        IsVisible = false;
-        _endModal?.Invoke();
-
         var completion = _completion;
         _completion = null;
-        completion?.TrySetResult(result);
+
+        // Nothing is showing: a stale click, a second Escape or a dismissal that
+        // raced the answer must not release the modal layer another dialog owns.
+        if (completion is null)
+        {
+            return;
+        }
+
+        IsVisible = false;
+
+        // A password prompt must not keep the secret in the tree, and the box's
+        // undo history would otherwise still hold it. The answer is already in
+        // `result`, so the field can be cleared before the caller resumes.
+        _input.Text = string.Empty;
+        _input.PasswordChar = '\0';
+
+        _endModal?.Invoke();
+        completion.TrySetResult(result);
     }
 }

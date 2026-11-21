@@ -86,6 +86,24 @@ public sealed class ApplicationPaths
     /// <exception cref="ArgumentException"><paramref name="name"/> is empty or whitespace.</exception>
     public string StateFile(string name) => Combine(StateDirectory, name);
 
+    /// <summary>The file name of the durable application log.</summary>
+    public const string ApplicationLogName = "application.log";
+
+    /// <summary>The file name of the operation journal.</summary>
+    public const string OperationJournalName = "operations.log";
+
+    /// <summary>The file name of the last-chance crash log.</summary>
+    public const string CrashLogName = "crash.log";
+
+    /// <summary>Gets the durable application log path, below <see cref="StateDirectory"/>.</summary>
+    public string ApplicationLogFile => StateFile(ApplicationLogName);
+
+    /// <summary>Gets the operation journal path, below <see cref="StateDirectory"/>.</summary>
+    public string OperationJournalFile => StateFile(OperationJournalName);
+
+    /// <summary>Gets the crash log path, below <see cref="StateDirectory"/>.</summary>
+    public string CrashLogFile => StateFile(CrashLogName);
+
     /// <summary>
     /// Gets the path of a data file below <see cref="DataDirectory"/>.
     /// </summary>
