@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Younes BENMOUSSA <younes.benmoussa@pm.me>
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
+using Avalonia.Controls;
 using Core.Mvp.Services;
 using Core.UI.Notifications;
 
@@ -60,6 +61,31 @@ public sealed class NotificationExpiryTests
             }
 
             Assert.Equal(10, host.ToastCount);
+            Assert.Equal("toast 2", Assert.IsType<TextBlock>(host.ToastViews[0].Child).Text);
+            Assert.Equal("toast 11", Assert.IsType<TextBlock>(host.ToastViews[^1].Child).Text);
+        });
+    }
+
+    [Fact]
+    public async Task Re_attaching_the_host_re_arms_the_pending_deadlines()
+    {
+        await Headless.Dispatch(() =>
+        {
+            var clock = new FakeTimeProvider();
+            var host = new NotificationHost(clock) { ToastDuration = TimeSpan.FromSeconds(4) };
+            var window = new Window { Width = 200, Height = 200, Content = host };
+            window.Show();
+
+            host.Show("first", MessageSeverity.Information);
+            Assert.True(host.IsTimerArmed);
+
+            window.Content = null;
+            Assert.False(host.IsTimerArmed);
+
+            window.Content = host;
+            Assert.True(host.IsTimerArmed);
+
+            window.Close();
         });
     }
 

@@ -29,6 +29,7 @@ internal sealed class NotificationService : INotificationService
     /// <inheritdoc />
     public void Toast(string message, MessageSeverity severity = MessageSeverity.Information)
     {
+        ArgumentNullException.ThrowIfNull(message);
         Dispatcher.UIThread.VerifyAccess();
 
         _host.Show(message, severity);
@@ -37,6 +38,7 @@ internal sealed class NotificationService : INotificationService
     /// <inheritdoc />
     public void Banner(string message, MessageSeverity severity = MessageSeverity.Error)
     {
+        ArgumentNullException.ThrowIfNull(message);
         Dispatcher.UIThread.VerifyAccess();
 
         _host.Banner(message, severity);

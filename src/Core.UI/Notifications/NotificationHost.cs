@@ -10,17 +10,15 @@ using Core.UI.Adwaita;
 
 namespace Core.UI.Notifications;
 
-/// <summary>
-/// The feedback region of the shell: a persistent banner pinned under the toolbar
-/// and transient toasts stacked in a corner. There is no status bar; everything
-/// the operator must notice arrives here.
-/// </summary>
+// The feedback region of the shell: a persistent banner pinned under the toolbar
+// and transient toasts stacked in a corner. There is no status bar; everything the
+// operator must notice arrives here.
 internal class NotificationHost : Grid
 {
     private const int MaxToasts = 10;
 
-    // A zero delay would re-arm the timer in a busy loop when a deadline is already
-    // past, which happens under a fake clock or a stalled dispatcher.
+    // WHY: a zero delay would re-arm the timer in a busy loop when a deadline is
+    // already past, which happens under a fake clock or a stalled dispatcher.
     private static readonly TimeSpan MinimumTick = TimeSpan.FromMilliseconds(10);
 
     private readonly Border _banner;
@@ -32,9 +30,6 @@ internal class NotificationHost : Grid
     private TimeSpan _toastDuration = TimeSpan.FromSeconds(4);
     private MessageSeverity _bannerSeverity = MessageSeverity.Information;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="NotificationHost"/> class.
-    /// </summary>
     public NotificationHost()
         : this(TimeProvider.System)
     {
@@ -72,7 +67,7 @@ internal class NotificationHost : Grid
         Children.Add(_toasts);
     }
 
-    /// <summary>Gets or sets how long a toast stays before it expires; it applies to the toasts shown after the change.</summary>
+    // Applies to the toasts shown after the change; a live toast keeps its deadline.
     public TimeSpan ToastDuration
     {
         get => _toastDuration;
@@ -83,16 +78,15 @@ internal class NotificationHost : Grid
         }
     }
 
-    /// <summary>Gets a value indicating whether a banner is showing.</summary>
     public bool IsBannerOpen => _banner.IsVisible;
 
-    /// <summary>Gets the number of toasts currently showing.</summary>
     public int ToastCount => _toasts.Children.Count;
 
-    /// <summary>Shows a transient toast.</summary>
-    /// <param name="message">The message.</param>
-    /// <param name="severity">The severity, which selects the tone.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="message"/> is <see langword="null"/>.</exception>
+    internal bool IsTimerArmed => _timer?.IsEnabled == true;
+
+    // The toasts still showing, oldest first, for the tests and the theme re-apply.
+    internal IReadOnlyList<Border> ToastViews => [.. _pending.Select(toast => toast.Control)];
+
     public void Show(string message, MessageSeverity severity)
     {
         ArgumentNullException.ThrowIfNull(message);
@@ -112,10 +106,6 @@ internal class NotificationHost : Grid
         ArmTimer();
     }
 
-    /// <summary>Shows a persistent banner, replacing any current one.</summary>
-    /// <param name="message">The message.</param>
-    /// <param name="severity">The severity, which selects the tone.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="message"/> is <see langword="null"/>.</exception>
     public void Banner(string message, MessageSeverity severity)
     {
         ArgumentNullException.ThrowIfNull(message);
@@ -127,26 +117,30 @@ internal class NotificationHost : Grid
         _banner.IsVisible = true;
     }
 
-    /// <summary>Dismisses the current banner, if any.</summary>
     public void DismissBanner()
     {
         _banner.IsVisible = false;
     }
 
-    /// <inheritdoc />
+    // WHY: a host removed while a toast is live must not keep a dispatcher timer
+    // (and itself) referenced until the interval elapses.
     protected override void OnDetachedFromVisualTree(global::Avalonia.VisualTreeAttachmentEventArgs e)
     {
         base.OnDetachedFromVisualTree(e);
 
-        // A host removed while a toast is live must not keep a dispatcher timer
-        // (and itself) referenced until the interval elapses.
         _timer?.Stop();
         _timer = null;
     }
 
-    /// <summary>Resolves the brush that tones a message by its severity.</summary>
-    /// <param name="severity">The severity.</param>
-    /// <returns>The brush, from the shared theme.</returns>
+    // WHY: the detach stops the timer without dropping the pending toasts, so a
+    // re-attached host must arm their deadlines again or they never expire.
+    protected override void OnAttachedToVisualTree(global::Avalonia.VisualTreeAttachmentEventArgs e)
+    {
+        base.OnAttachedToVisualTree(e);
+
+        ArmTimer();
+    }
+
     internal static IBrush Tone(MessageSeverity severity)
     {
         return ThemeBrushes.Resolve(severity switch
@@ -158,7 +152,6 @@ internal class NotificationHost : Grid
         });
     }
 
-    /// <summary>Re-resolves the brushes set once, so a live theme switch is reflected.</summary>
     internal void ApplyTheme()
     {
         _bannerText.Foreground = ThemeBrushes.Resolve("ForegroundBrush");
@@ -177,10 +170,8 @@ internal class NotificationHost : Grid
         }
     }
 
-    /// <summary>Gets the banner surface, for tests and the theme re-apply.</summary>
     internal Border BannerView => _banner;
 
-    /// <summary>Removes every toast, whatever its deadline.</summary>
     internal void Expire()
     {
         _timer?.Stop();
@@ -188,7 +179,6 @@ internal class NotificationHost : Grid
         _pending.Clear();
     }
 
-    /// <summary>Removes the toasts whose deadline has passed.</summary>
     internal void ExpireDue()
     {
         var now = _timeProvider.GetUtcNow();

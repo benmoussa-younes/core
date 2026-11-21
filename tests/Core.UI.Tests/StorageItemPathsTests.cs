@@ -26,6 +26,15 @@ public sealed class StorageItemPathsTests
     }
 
     [Fact]
+    public void A_unc_file_uri_never_names_a_local_path()
+    {
+        // file://server/share is IsFile, but its LocalPath is a Windows UNC path.
+        Assert.Null(StorageItemPaths.File(new Uri("file://server/share/file.txt")));
+        Assert.Null(StorageItemPaths.Folder(new Uri("file://server/share")));
+        Assert.Null(StorageItemPaths.Folder(new Uri("file://localhost/home/user")));
+    }
+
+    [Fact]
     public void A_relative_uri_never_names_a_local_path()
     {
         var relative = new Uri("share/reports", UriKind.Relative);
