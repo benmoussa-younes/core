@@ -8,9 +8,7 @@ and this project adheres to
 
 ## [Unreleased]
 
-## [0.2.3] - 2026-11-21
-
-Version 0.2.2 was never released; this release follows 0.2.1 directly.
+## [0.2.2] - 2026-11-21
 
 ### Added
 

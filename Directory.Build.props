@@ -13,7 +13,7 @@
   <!-- Release identity. Core is consumed by ProjectReference, so no package is
        produced; the version and the licensing identity stay on the assemblies. -->
   <PropertyGroup>
-    <VersionPrefix Condition="'$(VersionPrefix)' == ''">0.2.3</VersionPrefix>
+    <VersionPrefix Condition="'$(VersionPrefix)' == ''">0.2.2</VersionPrefix>
     <Authors>Younes BENMOUSSA</Authors>
     <Company>Younes BENMOUSSA</Company>
     <Product>Core</Product>
