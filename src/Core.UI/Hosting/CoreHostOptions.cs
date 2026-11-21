@@ -16,6 +16,12 @@ namespace Core.UI.Hosting;
 /// <param name="RetainedFiles">How many rotated log and journal archives to keep.</param>
 /// <param name="CrashMaximumLines">How many stack lines a crash entry keeps.</param>
 /// <param name="Platform">The platform composition; required, so the host never picks an implicit Linux implementation.</param>
+/// <param name="IncludeUserInSingleInstanceName">
+/// Whether the single-instance socket name carries the user. The default keeps the
+/// released <c>&lt;vendor&gt;-&lt;application&gt;-&lt;user&gt;.sock</c>; <see langword="false"/>
+/// uses <c>&lt;vendor&gt;-&lt;application&gt;.socket</c> and reads no user name, which is
+/// correct only when <c>XDG_RUNTIME_DIR</c> is per-user as XDG requires.
+/// </param>
 public sealed record CoreHostOptions(
     string Vendor,
     string Application,
@@ -23,4 +29,5 @@ public sealed record CoreHostOptions(
     long LogMaxBytes = 1_048_576,
     int RetainedFiles = 5,
     int CrashMaximumLines = 200,
-    CorePlatform? Platform = null);
+    CorePlatform? Platform = null,
+    bool IncludeUserInSingleInstanceName = true);

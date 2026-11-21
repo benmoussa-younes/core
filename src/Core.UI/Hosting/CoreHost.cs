@@ -190,13 +190,15 @@ public sealed class CoreHost : IAsyncDisposable
         {
             if (options.SingleInstance)
             {
-                var user = PathComponent.Validate(Environment.UserName).ValueOr("user");
-
                 // The vendor is part of the name: the state directory already
                 // isolates two vendors' products, and the lock must too.
-                var socketPath = Path.Combine(
-                    runtimeDirectory!,
-                    SingleInstanceSocketName.For(options.Vendor, options.Application, user));
+                var socketName = options.IncludeUserInSingleInstanceName
+                    ? SingleInstanceSocketName.For(
+                        options.Vendor,
+                        options.Application,
+                        PathComponent.Validate(Environment.UserName).ValueOr("user"))
+                    : SingleInstanceSocketName.For(options.Vendor, options.Application);
+                var socketPath = Path.Combine(runtimeDirectory!, socketName);
                 singleInstance = services.CreateSingleInstance(socketPath);
             }
 

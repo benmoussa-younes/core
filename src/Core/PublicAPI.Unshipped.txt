@@ -291,6 +291,7 @@ static Core.Execution.ProcessRequest.operator ==(Core.Execution.ProcessRequest? 
 static Core.Execution.ProcessResult.operator !=(Core.Execution.ProcessResult? left, Core.Execution.ProcessResult? right) -> bool
 static Core.Execution.ProcessResult.operator ==(Core.Execution.ProcessResult? left, Core.Execution.ProcessResult? right) -> bool
 static Core.Paths.ApplicationPaths.Create(Core.Paths.PathSet! directories, string! vendor, string! application) -> Core.Results.Result<Core.Paths.ApplicationPaths!>
+static Core.Paths.SingleInstanceSocketName.For(string! vendor, string! application) -> string!
 static Core.Paths.SingleInstanceSocketName.For(string! vendor, string! application, string! user) -> string!
 static Core.Primitives.ByteSize.FromBytes(long bytes) -> Core.Primitives.ByteSize
 static Core.Primitives.ByteSize.FromGibibytes(long gibibytes) -> Core.Primitives.ByteSize
