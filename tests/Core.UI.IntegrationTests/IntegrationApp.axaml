@@ -1,0 +1,19 @@
+<!-- SPDX-FileCopyrightText: 2026 Younes BENMOUSSA <younes.benmoussa@pm.me> -->
+<!-- SPDX-License-Identifier: LGPL-3.0-or-later -->
+
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Core.UI.IntegrationTests.IntegrationApp">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://Core.UI/Themes/Tokens.axaml" />
+                <ResourceInclude Source="avares://Core.UI/Themes/Icons.axaml" />
+                <ResourceInclude Source="avares://Core.UI/Themes/Accents.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+    <Application.Styles>
+        <StyleInclude Source="avares://Core.UI/Themes/Controls.axaml" />
+    </Application.Styles>
+</Application>
