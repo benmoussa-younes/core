@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2026 Younes BENMOUSSA <younes.benmoussa@pm.me>
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-using Avalonia.Threading;
 using Core.Mvp.Services;
+using Core.UI.Hosting;
 
 namespace Core.UI.Notifications;
 
@@ -30,7 +30,7 @@ internal sealed class NotificationService : INotificationService
     public void Toast(string message, MessageSeverity severity = MessageSeverity.Information)
     {
         ArgumentNullException.ThrowIfNull(message);
-        Dispatcher.UIThread.VerifyAccess();
+        UiServices.Dispatcher.VerifyAccess();
 
         _host.Show(message, severity);
     }
@@ -39,7 +39,7 @@ internal sealed class NotificationService : INotificationService
     public void Banner(string message, MessageSeverity severity = MessageSeverity.Error)
     {
         ArgumentNullException.ThrowIfNull(message);
-        Dispatcher.UIThread.VerifyAccess();
+        UiServices.Dispatcher.VerifyAccess();
 
         _host.Banner(message, severity);
     }
@@ -47,7 +47,7 @@ internal sealed class NotificationService : INotificationService
     /// <inheritdoc />
     public void DismissBanner()
     {
-        Dispatcher.UIThread.VerifyAccess();
+        UiServices.Dispatcher.VerifyAccess();
 
         _host.DismissBanner();
     }

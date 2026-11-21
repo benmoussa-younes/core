@@ -3,7 +3,6 @@
 
 using Avalonia;
 using Avalonia.Styling;
-using Avalonia.Threading;
 using Core.UI.Adwaita;
 using Core.UI.Hosting;
 using Core.Mvp.Services;
@@ -43,7 +42,7 @@ public sealed class AppearanceService : IAppearanceService
             throw new ArgumentOutOfRangeException(nameof(theme));
         }
 
-        Dispatcher.UIThread.VerifyAccess();
+        UiServices.Dispatcher.VerifyAccess();
 
         _current = _current with { Theme = theme };
         ApplyTheme();
@@ -61,7 +60,7 @@ public sealed class AppearanceService : IAppearanceService
             throw new ArgumentException($"'{key}' is not in the accent palette.", nameof(key));
         }
 
-        Dispatcher.UIThread.VerifyAccess();
+        UiServices.Dispatcher.VerifyAccess();
 
         _current = _current with { AccentKey = key };
         ApplyAccent(key);
@@ -71,7 +70,7 @@ public sealed class AppearanceService : IAppearanceService
     /// <inheritdoc />
     public void SetRemember(bool remember)
     {
-        Dispatcher.UIThread.VerifyAccess();
+        UiServices.Dispatcher.VerifyAccess();
 
         _current = _current with { Remember = remember };
 
@@ -88,7 +87,7 @@ public sealed class AppearanceService : IAppearanceService
     /// <inheritdoc />
     public void Apply()
     {
-        Dispatcher.UIThread.VerifyAccess();
+        UiServices.Dispatcher.VerifyAccess();
 
         ApplyTheme();
 

@@ -1,8 +1,9 @@
 // SPDX-FileCopyrightText: 2026 Younes BENMOUSSA <younes.benmoussa@pm.me>
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-using Avalonia.Threading;
 using Core.Mvp.Services;
+
+using Core.UI.Hosting;
 
 namespace Core.UI.Dialogs;
 
@@ -36,7 +37,7 @@ internal sealed class PromptService : IPromptService
 
         // UI-thread affine: fail fast rather than mutate the visual tree from a
         // pool thread once the await below resumes.
-        Dispatcher.UIThread.VerifyAccess();
+        UiServices.Dispatcher.VerifyAccess();
 
         return new ValueTask<string?>(PromptAsyncCore(request, cancellationToken));
     }
@@ -79,13 +80,20 @@ internal sealed class PromptService : IPromptService
                 // WHY: the await below waits for this dismissal, so a cancellation
                 // raised on the UI thread must run it inline; a Post is only for a
                 // cancellation raised on another thread.
-                if (Dispatcher.UIThread.CheckAccess())
+                if (UiServices.Dispatcher.CheckAccess())
                 {
                     Close();
                 }
+                else if (UiServices.Dispatcher.IsAvailable)
+                {
+                    UiServices.Dispatcher.Post(Close);
+                }
                 else
                 {
-                    Dispatcher.UIThread.Post(Close);
+                    // WHY: the dispatcher has started shutting down, so a posted
+                    // dismissal never runs and the await below would never return;
+                    // the dialog dies with the loop.
+                    dismissed.TrySetResult();
                 }
 
                 cancelled.TrySetResult(null);

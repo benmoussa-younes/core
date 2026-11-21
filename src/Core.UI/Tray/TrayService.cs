@@ -3,9 +3,10 @@
 
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Threading;
 using Core.Mvp.Presentation;
 using Core.Mvp.Services;
+
+using Core.UI.Hosting;
 
 namespace Core.UI.Tray;
 
@@ -56,7 +57,7 @@ public sealed class TrayService : ITrayService, IDisposable
         ObjectDisposedException.ThrowIf(Volatile.Read(ref _disposed) != 0, this);
         ArgumentNullException.ThrowIfNull(toolTip);
         ArgumentNullException.ThrowIfNull(menu);
-        Dispatcher.UIThread.VerifyAccess();
+        UiServices.Dispatcher.VerifyAccess();
 
         var tray = _tray ??= new TrayIcon();
 
@@ -72,7 +73,7 @@ public sealed class TrayService : ITrayService, IDisposable
     public void Hide()
     {
         ObjectDisposedException.ThrowIf(Volatile.Read(ref _disposed) != 0, this);
-        Dispatcher.UIThread.VerifyAccess();
+        UiServices.Dispatcher.VerifyAccess();
 
         if (_tray is not null)
         {

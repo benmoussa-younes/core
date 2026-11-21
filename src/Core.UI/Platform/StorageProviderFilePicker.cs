@@ -2,8 +2,9 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 using Avalonia.Platform.Storage;
-using Avalonia.Threading;
 using Core.Mvp.Services;
+
+using Core.UI.Hosting;
 
 namespace Core.UI.Platform;
 
@@ -58,7 +59,7 @@ public sealed class StorageProviderFilePicker : IFilePicker, IFolderPicker
     {
         ArgumentNullException.ThrowIfNull(options);
         cancellationToken.ThrowIfCancellationRequested();
-        Dispatcher.UIThread.VerifyAccess();
+        UiServices.Dispatcher.VerifyAccess();
 
         var picked = await _open(new FilePickerOpenOptions
         {
@@ -88,7 +89,7 @@ public sealed class StorageProviderFilePicker : IFilePicker, IFolderPicker
     {
         ArgumentNullException.ThrowIfNull(options);
         cancellationToken.ThrowIfCancellationRequested();
-        Dispatcher.UIThread.VerifyAccess();
+        UiServices.Dispatcher.VerifyAccess();
 
         var file = await _save(new FilePickerSaveOptions
         {
@@ -108,7 +109,7 @@ public sealed class StorageProviderFilePicker : IFilePicker, IFolderPicker
     {
         ArgumentNullException.ThrowIfNull(options);
         cancellationToken.ThrowIfCancellationRequested();
-        Dispatcher.UIThread.VerifyAccess();
+        UiServices.Dispatcher.VerifyAccess();
 
         var folders = await _openFolder(new FolderPickerOpenOptions
         {

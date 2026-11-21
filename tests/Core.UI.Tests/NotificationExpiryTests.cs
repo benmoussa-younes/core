@@ -67,6 +67,24 @@ public sealed class NotificationExpiryTests
     }
 
     [Fact]
+    public async Task The_timer_is_armed_on_the_earliest_deadline()
+    {
+        // A timer restarted by every Show would report the second toast's duration
+        // and let the first outlive its deadline.
+        await Headless.Dispatch(() =>
+        {
+            var clock = new FakeTimeProvider();
+            var host = new NotificationHost(clock) { ToastDuration = TimeSpan.FromSeconds(4) };
+
+            host.Show("first", MessageSeverity.Information);
+            clock.Advance(TimeSpan.FromSeconds(3));
+            host.Show("second", MessageSeverity.Information);
+
+            Assert.Equal(TimeSpan.FromSeconds(1), host.TimerInterval);
+        });
+    }
+
+    [Fact]
     public async Task Re_attaching_the_host_re_arms_the_pending_deadlines()
     {
         await Headless.Dispatch(() =>

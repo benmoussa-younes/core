@@ -84,6 +84,10 @@ internal class NotificationHost : Grid
 
     internal bool IsTimerArmed => _timer?.IsEnabled == true;
 
+    // The delay to the earliest deadline, for the tests: a shared timer restarted
+    // on every Show would report the latest toast's duration instead.
+    internal TimeSpan? TimerInterval => _timer?.Interval;
+
     // The toasts still showing, oldest first, for the tests and the theme re-apply.
     internal IReadOnlyList<Border> ToastViews => [.. _pending.Select(toast => toast.Control)];
 

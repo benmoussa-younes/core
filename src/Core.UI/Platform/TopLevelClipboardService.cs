@@ -2,9 +2,10 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 using Avalonia.Input.Platform;
-using Avalonia.Threading;
 using Avalonia.Media.Imaging;
 using Core.Mvp.Services;
+
+using Core.UI.Hosting;
 
 namespace Core.UI.Platform;
 
@@ -30,7 +31,7 @@ public sealed class TopLevelClipboardService : IClipboardService
     {
         ArgumentNullException.ThrowIfNull(text);
         cancellationToken.ThrowIfCancellationRequested();
-        Dispatcher.UIThread.VerifyAccess();
+        UiServices.Dispatcher.VerifyAccess();
 
         if (_clipboard is null)
         {
@@ -44,7 +45,7 @@ public sealed class TopLevelClipboardService : IClipboardService
     public async ValueTask<string?> GetTextAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        Dispatcher.UIThread.VerifyAccess();
+        UiServices.Dispatcher.VerifyAccess();
 
         return _clipboard is null ? null : await _clipboard.TryGetTextAsync().ConfigureAwait(true);
     }
@@ -55,7 +56,7 @@ public sealed class TopLevelClipboardService : IClipboardService
     {
         ArgumentNullException.ThrowIfNull(png);
         cancellationToken.ThrowIfCancellationRequested();
-        Dispatcher.UIThread.VerifyAccess();
+        UiServices.Dispatcher.VerifyAccess();
 
         if (_clipboard is null)
         {
@@ -75,7 +76,7 @@ public sealed class TopLevelClipboardService : IClipboardService
     public async ValueTask<byte[]?> GetImageAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        Dispatcher.UIThread.VerifyAccess();
+        UiServices.Dispatcher.VerifyAccess();
 
         if (_clipboard is null)
         {
