@@ -17,9 +17,17 @@ namespace Core.UI.Notifications;
 /// </summary>
 internal class NotificationHost : Grid
 {
+    private const int MaxToasts = 10;
+
+    // A zero delay would re-arm the timer in a busy loop when a deadline is already
+    // past, which happens under a fake clock or a stalled dispatcher.
+    private static readonly TimeSpan MinimumTick = TimeSpan.FromMilliseconds(10);
+
     private readonly Border _banner;
     private readonly TextBlock _bannerText;
     private readonly StackPanel _toasts;
+    private readonly TimeProvider _timeProvider;
+    private readonly List<Toast> _pending = [];
     private DispatcherTimer? _timer;
     private TimeSpan _toastDuration = TimeSpan.FromSeconds(4);
     private MessageSeverity _bannerSeverity = MessageSeverity.Information;
@@ -28,7 +36,15 @@ internal class NotificationHost : Grid
     /// Initializes a new instance of the <see cref="NotificationHost"/> class.
     /// </summary>
     public NotificationHost()
+        : this(TimeProvider.System)
     {
+    }
+
+    internal NotificationHost(TimeProvider timeProvider)
+    {
+        ArgumentNullException.ThrowIfNull(timeProvider);
+
+        _timeProvider = timeProvider;
         RowDefinitions = new RowDefinitions("Auto,*");
 
         _bannerText = new TextBlock { TextWrapping = TextWrapping.Wrap, VerticalAlignment = global::Avalonia.Layout.VerticalAlignment.Center, Foreground = ThemeBrushes.Resolve("ForegroundBrush") };
@@ -56,7 +72,7 @@ internal class NotificationHost : Grid
         Children.Add(_toasts);
     }
 
-    /// <summary>Gets or sets how long a toast stays before it expires.</summary>
+    /// <summary>Gets or sets how long a toast stays before it expires; it applies to the toasts shown after the change.</summary>
     public TimeSpan ToastDuration
     {
         get => _toastDuration;
@@ -64,11 +80,6 @@ internal class NotificationHost : Grid
         {
             ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(value, TimeSpan.Zero);
             _toastDuration = value;
-
-            if (_timer is not null)
-            {
-                _timer.Interval = value;
-            }
         }
     }
 
@@ -86,11 +97,19 @@ internal class NotificationHost : Grid
     {
         ArgumentNullException.ThrowIfNull(message);
 
-        _toasts.Children.Add(CreateToast(message, severity));
+        var control = CreateToast(message, severity);
+        _toasts.Children.Add(control);
 
-        _timer ??= CreateTimer();
-        _timer.Stop();
-        _timer.Start();
+        // Each toast carries its own deadline: a shared timer restarted on every
+        // Show never fires while toasts arrive faster than the duration.
+        _pending.Add(new Toast(control, severity, _timeProvider.GetUtcNow() + _toastDuration));
+
+        while (_pending.Count > MaxToasts)
+        {
+            RemoveAt(0);
+        }
+
+        ArmTimer();
     }
 
     /// <summary>Shows a persistent banner, replacing any current one.</summary>
@@ -145,21 +164,78 @@ internal class NotificationHost : Grid
         _bannerText.Foreground = ThemeBrushes.Resolve("ForegroundBrush");
         _banner.Background = ThemeBrushes.Resolve("SurfaceRaisedBrush");
         _banner.BorderBrush = Tone(_bannerSeverity);
+
+        foreach (var toast in _pending)
+        {
+            toast.Control.Background = ThemeBrushes.Resolve("SurfaceRaisedBrush");
+            toast.Control.BorderBrush = Tone(toast.Severity);
+
+            if (toast.Control.Child is TextBlock text)
+            {
+                text.Foreground = ThemeBrushes.Resolve("ForegroundBrush");
+            }
+        }
     }
 
     /// <summary>Gets the banner surface, for tests and the theme re-apply.</summary>
     internal Border BannerView => _banner;
 
+    /// <summary>Removes every toast, whatever its deadline.</summary>
     internal void Expire()
     {
         _timer?.Stop();
         _toasts.Children.Clear();
+        _pending.Clear();
+    }
+
+    /// <summary>Removes the toasts whose deadline has passed.</summary>
+    internal void ExpireDue()
+    {
+        var now = _timeProvider.GetUtcNow();
+
+        for (var index = _pending.Count - 1; index >= 0; index--)
+        {
+            if (_pending[index].ExpiresAt <= now)
+            {
+                RemoveAt(index);
+            }
+        }
+
+        ArmTimer();
+    }
+
+    private void ArmTimer()
+    {
+        if (_pending.Count == 0)
+        {
+            _timer?.Stop();
+            return;
+        }
+
+        var delay = _pending.Min(toast => toast.ExpiresAt) - _timeProvider.GetUtcNow();
+
+        if (delay < MinimumTick)
+        {
+            delay = MinimumTick;
+        }
+
+        _timer ??= CreateTimer();
+        _timer.Stop();
+        _timer.Interval = delay;
+        _timer.Start();
+    }
+
+    private void RemoveAt(int index)
+    {
+        var toast = _pending[index];
+        _pending.RemoveAt(index);
+        _toasts.Children.Remove(toast.Control);
     }
 
     private DispatcherTimer CreateTimer()
     {
-        var timer = new DispatcherTimer { Interval = ToastDuration };
-        timer.Tick += (_, _) => Expire();
+        var timer = new DispatcherTimer();
+        timer.Tick += (_, _) => ExpireDue();
         return timer;
     }
 
@@ -175,4 +251,6 @@ internal class NotificationHost : Grid
             Child = new TextBlock { Text = message, TextWrapping = TextWrapping.Wrap, Foreground = ThemeBrushes.Resolve("ForegroundBrush") },
         };
     }
+
+    private sealed record Toast(Border Control, MessageSeverity Severity, DateTimeOffset ExpiresAt);
 }
