@@ -16,6 +16,14 @@ Core.UI.Hosting.CoreHost
 Core.UI.Hosting.CoreHost.Activated -> System.Action<byte[]!>?
 Core.UI.Hosting.CoreHost.ActivationRequested -> System.Action?
 Core.UI.Hosting.CoreHost.Attach(Core.UI.Hosting.CoreApplication! application) -> void
+Core.UI.Hosting.CoreDiagnostics
+Core.UI.Hosting.CoreDiagnostics.CrashLog.get -> Core.Diagnostics.ICrashLog!
+Core.UI.Hosting.CoreDiagnostics.Directories.get -> Core.Paths.PathSet!
+Core.UI.Hosting.CoreDiagnostics.Dispose() -> void
+Core.UI.Hosting.CoreDiagnostics.Journal.get -> Core.Diagnostics.IOperationJournal!
+Core.UI.Hosting.CoreDiagnostics.Logger.get -> Core.Diagnostics.IApplicationLogger!
+Core.UI.Hosting.CoreDiagnostics.Paths.get -> Core.Paths.ApplicationPaths!
+Core.UI.Hosting.CoreDiagnostics.Report(System.Exception! exception) -> void
 Core.UI.Hosting.CoreHost.CrashLog.get -> Core.Diagnostics.ICrashLog!
 Core.UI.Hosting.CoreHost.CreateWindow(Avalonia.Controls.WindowIcon? trayIcon = null) -> Core.UI.Chrome.CoreWindow!
 Core.UI.Hosting.CoreHost.DisposeAsync() -> System.Threading.Tasks.ValueTask
@@ -55,6 +63,8 @@ override Core.UI.Hosting.CoreHostOptions.Equals(object? obj) -> bool
 override Core.UI.Hosting.CoreHostOptions.GetHashCode() -> int
 override Core.UI.Hosting.CoreHostOptions.ToString() -> string!
 static Core.UI.Hosting.CoreHost.Create(Core.UI.Hosting.CoreHostOptions! options) -> Core.Results.Result<Core.UI.Hosting.CoreHost!>
+static Core.UI.Hosting.CoreDiagnostics.Create(Core.UI.Hosting.CoreHostOptions! options) -> Core.Results.Result<Core.UI.Hosting.CoreDiagnostics!>
+static Core.UI.Hosting.CoreDiagnostics.Create(Core.Paths.PathSet! directories, Core.UI.Hosting.CoreHostOptions! options) -> Core.Results.Result<Core.UI.Hosting.CoreDiagnostics!>
 static Core.UI.Hosting.CoreHostOptions.operator !=(Core.UI.Hosting.CoreHostOptions? left, Core.UI.Hosting.CoreHostOptions? right) -> bool
 static Core.UI.Hosting.CoreHostOptions.operator ==(Core.UI.Hosting.CoreHostOptions? left, Core.UI.Hosting.CoreHostOptions? right) -> bool
 Core.UI.Adwaita.AccentDefinition
@@ -180,6 +190,8 @@ Core.UI.Hosting.CoreApplication.ApplyAccent(string! key) -> void
 Core.UI.Hosting.CoreApplication.CoreApplication() -> void
 Core.UI.Hosting.CoreApplication.ReportUnhandledException(System.Exception! exception) -> void
 Core.UI.Hosting.CoreApplication.SetAccent(Avalonia.Media.Color accent) -> void
+Core.UI.Hosting.CoreApplication.Diagnostics.get -> Core.UI.Hosting.CoreDiagnostics?
+Core.UI.Hosting.CoreApplication.Diagnostics.set -> void
 Core.UI.Hosting.CoreApplication.UnhandledExceptionHandler.get -> System.Action<System.Exception!>?
 Core.UI.Hosting.CoreApplication.UnhandledExceptionHandler.set -> void
 Core.UI.Hosting.GraphicsBackend

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 using Core.Mvp.Services;
+using Core.UI.Hosting;
 
 namespace Core.UI.Notifications;
 
@@ -28,18 +29,26 @@ internal sealed class NotificationService : INotificationService
     /// <inheritdoc />
     public void Toast(string message, MessageSeverity severity = MessageSeverity.Information)
     {
+        ArgumentNullException.ThrowIfNull(message);
+        UiServices.Dispatcher.VerifyAccess();
+
         _host.Show(message, severity);
     }
 
     /// <inheritdoc />
     public void Banner(string message, MessageSeverity severity = MessageSeverity.Error)
     {
+        ArgumentNullException.ThrowIfNull(message);
+        UiServices.Dispatcher.VerifyAccess();
+
         _host.Banner(message, severity);
     }
 
     /// <inheritdoc />
     public void DismissBanner()
     {
+        UiServices.Dispatcher.VerifyAccess();
+
         _host.DismissBanner();
     }
 }

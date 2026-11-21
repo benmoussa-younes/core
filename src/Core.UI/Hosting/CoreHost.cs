@@ -38,9 +38,7 @@ namespace Core.UI.Hosting;
 /// </remarks>
 public sealed class CoreHost : IAsyncDisposable
 {
-    private readonly IApplicationLogger _logger;
-    private readonly IOperationJournal _journal;
-    private readonly ICrashLog _crashLog;
+    private readonly CoreDiagnostics _diagnostics;
     private readonly ISingleInstance? _singleInstance;
     private readonly IProcessRunner _processes;
     private readonly ISystemLinkLauncher _links;
@@ -57,19 +55,14 @@ public sealed class CoreHost : IAsyncDisposable
     private Task? _shutdownTask;
 
     private CoreHost(
-        ApplicationPaths paths,
-        IApplicationLogger logger,
-        IOperationJournal journal,
-        ICrashLog crashLog,
+        CoreDiagnostics diagnostics,
         ISingleInstance? singleInstance,
         IProcessRunner processes,
         ISystemLinkLauncher links,
         ISystemNotifier notifier)
     {
-        Paths = paths;
-        _logger = logger;
-        _journal = journal;
-        _crashLog = crashLog;
+        Paths = diagnostics.Paths;
+        _diagnostics = diagnostics;
         _singleInstance = singleInstance;
         _processes = processes;
         _links = links;
@@ -87,13 +80,13 @@ public sealed class CoreHost : IAsyncDisposable
     public ApplicationPaths Paths { get; }
 
     /// <summary>Gets the durable application log.</summary>
-    public IApplicationLogger Logger => _logger;
+    public IApplicationLogger Logger => _diagnostics.Logger;
 
     /// <summary>Gets the operation journal.</summary>
-    public IOperationJournal Journal => _journal;
+    public IOperationJournal Journal => _diagnostics.Journal;
 
     /// <summary>Gets the last-chance crash log.</summary>
-    public ICrashLog CrashLog => _crashLog;
+    public ICrashLog CrashLog => _diagnostics.CrashLog;
 
     /// <summary>Gets the process runner used by the platform adapters.</summary>
     public IProcessRunner Processes => _processes;
@@ -171,20 +164,8 @@ public sealed class CoreHost : IAsyncDisposable
             return Result<CoreHost>.Failure(directoryError);
         }
 
-        var paths = ApplicationPaths.Create(directories.Value, options.Vendor, options.Application);
-
-        if (paths.TryGetError(out var pathError))
-        {
-            return Result<CoreHost>.Failure(pathError);
-        }
-
-        if (options.LogMaxBytes <= 0 || options.RetainedFiles <= 0 || options.CrashMaximumLines <= 0)
-        {
-            return Result<CoreHost>.Failure(new CoreError(
-                CoreErrorCodes.HostInvalidOptions,
-                "The log size, the retained archive count and the crash line count must be positive."));
-        }
-
+        // The diagnostics own the path and the retention validation: they resolve
+        // the same <vendor>/<application> paths and report the same typed failures.
         var runtimeDirectory = directories.Value.RuntimeDirectory;
 
         if (options.SingleInstance &&
@@ -195,29 +176,18 @@ public sealed class CoreHost : IAsyncDisposable
                 "A single-instance host needs an absolute XDG_RUNTIME_DIR; disable the lock explicitly to run without one."));
         }
 
-        IApplicationLogger? logger = null;
-        IOperationJournal? journal = null;
-        ICrashLog? crashLog = null;
+        var created = CoreDiagnostics.Create(directories.Value, options);
+
+        if (created.TryGetError(out var diagnosticsError))
+        {
+            return Result<CoreHost>.Failure(diagnosticsError);
+        }
+
+        var diagnostics = created.Value;
         ISingleInstance? singleInstance = null;
 
         try
         {
-            services.PrepareStateDirectory(paths.Value.StateDirectory);
-
-            logger = services.CreateLogger(
-                paths.Value.StateFile("application.log"),
-                options.LogMaxBytes,
-                options.RetainedFiles);
-            journal = services.CreateJournal(
-                paths.Value.StateFile("operations.log"),
-                options.LogMaxBytes,
-                options.RetainedFiles);
-            crashLog = services.CreateCrashLog(
-                paths.Value.StateFile("crash.log"),
-                options.LogMaxBytes,
-                options.RetainedFiles,
-                options.CrashMaximumLines);
-
             if (options.SingleInstance)
             {
                 var user = PathComponent.Validate(Environment.UserName).ValueOr("user");
@@ -231,10 +201,7 @@ public sealed class CoreHost : IAsyncDisposable
             }
 
             return Result<CoreHost>.Success(new CoreHost(
-                paths.Value,
-                logger,
-                journal,
-                crashLog,
+                diagnostics,
                 singleInstance,
                 services.Processes,
                 services.Links,
@@ -242,7 +209,8 @@ public sealed class CoreHost : IAsyncDisposable
         }
         catch (ArgumentException exception)
         {
-            DisposeAll(logger, journal, crashLog, singleInstance);
+            diagnostics.Dispose();
+            singleInstance?.Dispose();
 
             return Result<CoreHost>.Failure(new CoreError(
                 CoreErrorCodes.HostSocketPathInvalid,
@@ -252,11 +220,12 @@ public sealed class CoreHost : IAsyncDisposable
             exception is IOException or UnauthorizedAccessException or
             PlatformNotSupportedException)
         {
-            DisposeAll(logger, journal, crashLog, singleInstance);
+            diagnostics.Dispose();
+            singleInstance?.Dispose();
 
             return Result<CoreHost>.Failure(new CoreError(
                 CoreErrorCodes.HostStateUnwritable,
-                $"The state directory '{PathRedaction.ForMessage(paths.Value.StateDirectory)}' could not be created."));
+                $"The state directory '{PathRedaction.ForMessage(diagnostics.Paths.StateDirectory)}' could not be created."));
         }
     }
 
@@ -285,14 +254,14 @@ public sealed class CoreHost : IAsyncDisposable
             exception is IOException or UnauthorizedAccessException or SocketException
                 or ArgumentException or PlatformNotSupportedException)
         {
-            _logger.Log(
+            _diagnostics.Logger.Log(
                 LogLevel.Error,
                 $"The single-instance lock could not start: {exception.GetType().Name}.");
             return false;
         }
 
         _started = true;
-        _logger.Log(LogLevel.Information, "application started");
+        _diagnostics.Logger.Log(LogLevel.Information, "application started");
         return true;
     }
 
@@ -332,7 +301,7 @@ public sealed class CoreHost : IAsyncDisposable
             {
                 // One failing flush must not skip the remaining handlers; the
                 // window still proceeds to its presenter shutdown.
-                _logger.Log(
+                _diagnostics.Logger.Log(
                     LogLevel.Error,
                     $"A quit handler failed: {exception.GetType().Name}.");
             }
@@ -357,7 +326,7 @@ public sealed class CoreHost : IAsyncDisposable
 
         Action<Exception> handler = exception =>
         {
-            _crashLog.Write(exception, "application");
+            _diagnostics.Report(exception);
             _previousApplicationHandler?.Invoke(exception);
         };
 
@@ -414,25 +383,11 @@ public sealed class CoreHost : IAsyncDisposable
                 {
                     try
                     {
-                        _journal.Dispose();
+                        _diagnostics.Dispose();
                     }
                     finally
                     {
-                        try
-                        {
-                            _logger.Dispose();
-                        }
-                        finally
-                        {
-                            try
-                            {
-                                _crashLog.Dispose();
-                            }
-                            finally
-                            {
-                                _stopping.Dispose();
-                            }
-                        }
+                        _stopping.Dispose();
                     }
                 }
             }
@@ -506,17 +461,5 @@ public sealed class CoreHost : IAsyncDisposable
         }
 
         Dispatcher.UIThread.Post(action);
-    }
-
-    private static void DisposeAll(
-        IApplicationLogger? logger,
-        IOperationJournal? journal,
-        ICrashLog? crashLog,
-        ISingleInstance? singleInstance)
-    {
-        singleInstance?.Dispose();
-        journal?.Dispose();
-        logger?.Dispose();
-        crashLog?.Dispose();
     }
 }

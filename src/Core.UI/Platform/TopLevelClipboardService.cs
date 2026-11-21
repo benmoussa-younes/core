@@ -5,6 +5,8 @@ using Avalonia.Input.Platform;
 using Avalonia.Media.Imaging;
 using Core.Mvp.Services;
 
+using Core.UI.Hosting;
+
 namespace Core.UI.Platform;
 
 /// <summary>
@@ -29,6 +31,7 @@ public sealed class TopLevelClipboardService : IClipboardService
     {
         ArgumentNullException.ThrowIfNull(text);
         cancellationToken.ThrowIfCancellationRequested();
+        UiServices.Dispatcher.VerifyAccess();
 
         if (_clipboard is null)
         {
@@ -42,6 +45,7 @@ public sealed class TopLevelClipboardService : IClipboardService
     public async ValueTask<string?> GetTextAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        UiServices.Dispatcher.VerifyAccess();
 
         return _clipboard is null ? null : await _clipboard.TryGetTextAsync().ConfigureAwait(true);
     }
@@ -52,6 +56,7 @@ public sealed class TopLevelClipboardService : IClipboardService
     {
         ArgumentNullException.ThrowIfNull(png);
         cancellationToken.ThrowIfCancellationRequested();
+        UiServices.Dispatcher.VerifyAccess();
 
         if (_clipboard is null)
         {
@@ -71,6 +76,7 @@ public sealed class TopLevelClipboardService : IClipboardService
     public async ValueTask<byte[]?> GetImageAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        UiServices.Dispatcher.VerifyAccess();
 
         if (_clipboard is null)
         {
