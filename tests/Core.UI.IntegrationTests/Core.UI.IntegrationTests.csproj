@@ -22,5 +22,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../../src/Core.UI/Core.UI.csproj" />
+    <ProjectReference Include="../../src/Core.Platform.Linux/Core.Platform.Linux.csproj" />
   </ItemGroup>
 </Project>

@@ -17,6 +17,7 @@ using Core.Diagnostics;
 using Core.Mvp.Services;
 using Core.Security;
 using Core.Mvp.Views;
+using Core.UI.Hosting;
 using Core.UI.Notifications;
 using Core.UI.Dialogs;
 using Core.UI.Platform;
@@ -1402,10 +1403,22 @@ public class CoreWindow : Window, IApplicationHost, INavigationHost, IDisposable
         }
     }
 
-    internal void ReportLifecycleFailure(string action, Exception exception) =>
+    internal void ReportLifecycleFailure(string action, Exception exception)
+    {
+        // WHY: an I/O, cancellation or disposal failure is a view error the operator
+        // can act on; a programming fault must reach the crash log. The banner stays
+        // the operator feedback in both cases.
+        if (exception is not (IOException or UnauthorizedAccessException or
+            OperationCanceledException or ObjectDisposedException) &&
+            Application.Current is CoreApplication application)
+        {
+            application.ReportUnhandledException(exception);
+        }
+
         Notifications.Banner(
             $"The view could not {action}: {SecretRedaction.Scrub(LogRedaction.SingleLine(exception.Message, 256))}",
             MessageSeverity.Error);
+    }
 
     private void OnViewBusyChanged(bool busy)
     {
