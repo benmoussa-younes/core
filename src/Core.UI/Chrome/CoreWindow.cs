@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Younes BENMOUSSA <younes.benmoussa@pm.me>
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
+using System.Runtime.CompilerServices;
 using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
@@ -66,7 +67,7 @@ public class CoreWindow : Window, IApplicationHost, INavigationHost, IDisposable
     private readonly HashSet<IViewPresenter> _activated = [];
     private readonly HashSet<IViewPresenter> _pendingActivation = [];
     private readonly HashSet<IViewPresenter> _initializedPresenters = [];
-    private readonly HashSet<IViewPresenter> _closedPresenters = [];
+    private readonly ConditionalWeakTable<IViewPresenter, object?> _closedPresenters = new();
     private readonly List<NavigationEntry> _stack = [];
     private readonly ShellMenuBinder _menuBinder;
     private NavigationEntry? _activeEntry;
@@ -352,7 +353,7 @@ public class CoreWindow : Window, IApplicationHost, INavigationHost, IDisposable
         // A completion that races the tab close is normal: the presenter is no
         // longer bound, and its last snapshot must not resurrect the entry. Keep
         // the exception for a presenter that was never bound at all.
-        if (_closedPresenters.Contains(presenter))
+        if (_closedPresenters.TryGetValue(presenter, out _))
         {
             return;
         }
@@ -721,13 +722,19 @@ public class CoreWindow : Window, IApplicationHost, INavigationHost, IDisposable
     {
         ArgumentNullException.ThrowIfNull(placement);
 
-        if (placement.Width <= 0 || placement.Height <= 0)
+        // A placement is data from a file on disk: NaN compares false against
+        // every bound, so `<= 0` alone would let it through, and a size far past
+        // the int range wraps on the pixel conversion below.
+        if (!double.IsFinite(placement.Width) ||
+            !double.IsFinite(placement.Height) ||
+            placement.Width <= 0 ||
+            placement.Height <= 0)
         {
             return;
         }
 
-        var width = placement.Width;
-        var height = placement.Height;
+        var width = Math.Min(placement.Width, MaxPlacementPixels);
+        var height = Math.Min(placement.Height, MaxPlacementPixels);
         var x = double.IsFinite(placement.X) ? placement.X : 0;
         var y = double.IsFinite(placement.Y) ? placement.Y : 0;
 
@@ -738,7 +745,7 @@ public class CoreWindow : Window, IApplicationHost, INavigationHost, IDisposable
 
         if (screens.Count > 0)
         {
-            var requested = new PixelRect((int)x, (int)y, (int)width, (int)height);
+            var requested = new PixelRect(ToPixel(x), ToPixel(y), ToPixel(width), ToPixel(height));
             var target = screens.FirstOrDefault(screen => Intersects(screen.WorkingArea, requested))
                 ?? Screens.Primary
                 ?? screens[0];
@@ -752,9 +759,16 @@ public class CoreWindow : Window, IApplicationHost, INavigationHost, IDisposable
 
         Width = width;
         Height = height;
-        Position = new PixelPoint((int)x, (int)y);
+        Position = new PixelPoint(ToPixel(x), ToPixel(y));
         WindowState = placement.Maximized ? WindowState.Maximized : WindowState.Normal;
     }
+
+    // No real window is wider than this, and staying inside the int range keeps
+    // the pixel conversion total when no screen is attached to clamp against.
+    private const double MaxPlacementPixels = 100_000;
+
+    private static int ToPixel(double value) =>
+        (int)Math.Clamp(value, -MaxPlacementPixels, MaxPlacementPixels);
 
     private static bool Intersects(PixelRect left, PixelRect right) =>
         left.X < right.Right &&
@@ -1289,7 +1303,9 @@ public class CoreWindow : Window, IApplicationHost, INavigationHost, IDisposable
     private Task ClosePresenter(IViewPresenter presenter)
     {
         _initializedPresenters.Remove(presenter);
-        _closedPresenters.Add(presenter);
+        // A weak key: the marker must not keep a closed presenter, its view and its
+        // models alive for the lifetime of the window.
+        _closedPresenters.TryAdd(presenter, null);
         _presenterTokens.Remove(presenter, out var cancellation);
         var wasActive = _activated.Remove(presenter);
         var wasPending = _pendingActivation.Remove(presenter);

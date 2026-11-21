@@ -22,7 +22,7 @@ public sealed class WindowReproTests
         // false, so the guard the code documents does not fire.
         await Headless.Dispatch(() =>
         {
-            var window = new CoreWindow(new FakeTrayService());
+            var window = new CoreWindow(new FakeTrayService()) { Width = 800, Height = 600 };
             window.Show();
 
             window.ApplyPlacement(new WindowPlacement(0, 0, double.NaN, double.NaN, false));
