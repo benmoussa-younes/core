@@ -1,72 +1,4 @@
 #nullable enable
-const Core.UI.Dialogs.LegalNotice.LicenseName = "GNU LGPL v3.0 or later" -> string!
-Core.UI.Dialogs.AboutInfo.AboutInfo(string! ProductName, string! Version, string! Notice, System.Uri! SourceUrl, string! LicenseName = "GNU LGPL v3.0 or later", System.Uri? LicenseUrl = null, Avalonia.Media.IImage? Icon = null) -> void
-static Core.UI.Dialogs.LegalNotice.Lgpl(int year, string! holder, string! email) -> string!
-Core.UI.Chrome.CoreWindow.ConfirmQuit.get -> System.Func<System.Threading.Tasks.ValueTask<bool>>?
-Core.UI.Chrome.CoreWindow.ConfirmQuit.set -> void
-Core.UI.Chrome.CoreWindow.SetTabDirty(string! id, bool dirty) -> void
-Core.UI.Chrome.CoreWindow.OpenTab(string! id, string! title, Core.Mvp.Presenters.IViewPresenter! presenter) -> void
-Core.UI.Chrome.CoreWindow.Push(string! title, string! subtitle, Core.Mvp.Presenters.IViewPresenter! presenter) -> void
-Core.UI.Chrome.CoreWindow.SetSnapshot(Core.Mvp.Presenters.IViewPresenter! presenter, Core.Mvp.Presentation.ShellSnapshot! snapshot) -> void
-Core.UI.Chrome.CoreWindow.ShutdownAsync() -> System.Threading.Tasks.ValueTask
-Core.UI.Platform.StorageProviderFilePicker.PickFolderAsync(Core.Mvp.Services.FolderPickerOptions! options, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<string?>
-Core.UI.Chrome.CoreWindow.Folders.get -> Core.Mvp.Services.IFolderPicker!
-Core.UI.Chrome.CoreWindow.Prompts.get -> Core.Mvp.Services.IPromptService!
-Core.UI.Hosting.CoreHost
-Core.UI.Hosting.CoreHost.Activated -> System.Action<byte[]!>?
-Core.UI.Hosting.CoreHost.ActivationRequested -> System.Action?
-Core.UI.Hosting.CoreHost.Attach(Core.UI.Hosting.CoreApplication! application) -> void
-Core.UI.Hosting.CoreDiagnostics
-Core.UI.Hosting.CoreDiagnostics.CrashLog.get -> Core.Diagnostics.ICrashLog!
-Core.UI.Hosting.CoreDiagnostics.Directories.get -> Core.Paths.PathSet!
-Core.UI.Hosting.CoreDiagnostics.Dispose() -> void
-Core.UI.Hosting.CoreDiagnostics.Journal.get -> Core.Diagnostics.IOperationJournal!
-Core.UI.Hosting.CoreDiagnostics.Logger.get -> Core.Diagnostics.IApplicationLogger!
-Core.UI.Hosting.CoreDiagnostics.Paths.get -> Core.Paths.ApplicationPaths!
-Core.UI.Hosting.CoreDiagnostics.Report(System.Exception! exception) -> void
-Core.UI.Hosting.CoreHost.CrashLog.get -> Core.Diagnostics.ICrashLog!
-Core.UI.Hosting.CoreHost.CreateWindow(Avalonia.Controls.WindowIcon? trayIcon = null) -> Core.UI.Chrome.CoreWindow!
-Core.UI.Hosting.CoreHost.DisposeAsync() -> System.Threading.Tasks.ValueTask
-Core.UI.Hosting.CoreHost.Journal.get -> Core.Diagnostics.IOperationJournal!
-Core.UI.Hosting.CoreHost.Links.get -> Core.Platform.ISystemLinkLauncher!
-Core.UI.Hosting.CoreHost.Logger.get -> Core.Diagnostics.IApplicationLogger!
-Core.UI.Hosting.CoreHost.Notifier.get -> Core.Notifications.ISystemNotifier!
-Core.UI.Hosting.CoreHost.Paths.get -> Core.Paths.ApplicationPaths!
-Core.UI.Hosting.CoreHost.Processes.get -> Core.Execution.IProcessRunner!
-Core.UI.Hosting.CoreHost.QuitRequested -> System.Func<System.Threading.Tasks.ValueTask>?
-Core.UI.Hosting.CoreHost.ShutdownAsync() -> System.Threading.Tasks.ValueTask
-Core.UI.Hosting.CoreHost.SingleInstance.get -> Core.Platform.ISingleInstance?
-Core.UI.Hosting.CoreHost.Stopping.get -> System.Threading.CancellationToken
-Core.UI.Hosting.CoreHost.TrayCommandInvoked -> System.Action<string!>?
-Core.UI.Hosting.CoreHost.TryStart() -> bool
-Core.UI.Hosting.CoreHost.Window.get -> Core.UI.Chrome.CoreWindow!
-Core.UI.Hosting.CoreHostOptions
-Core.UI.Hosting.CoreHostOptions.Application.get -> string!
-Core.UI.Hosting.CoreHostOptions.Application.init -> void
-Core.UI.Hosting.CoreHostOptions.CoreHostOptions(string! Vendor, string! Application, bool SingleInstance = true, long LogMaxBytes = 1048576, int RetainedFiles = 5, int CrashMaximumLines = 200, Core.Platform.CorePlatform? Platform = null) -> void
-Core.UI.Hosting.CoreHostOptions.<Clone>$() -> Core.UI.Hosting.CoreHostOptions!
-Core.UI.Hosting.CoreHostOptions.CrashMaximumLines.get -> int
-Core.UI.Hosting.CoreHostOptions.CrashMaximumLines.init -> void
-Core.UI.Hosting.CoreHostOptions.Deconstruct(out string! Vendor, out string! Application, out bool SingleInstance, out long LogMaxBytes, out int RetainedFiles, out int CrashMaximumLines, out Core.Platform.CorePlatform? Platform) -> void
-Core.UI.Hosting.CoreHostOptions.Platform.get -> Core.Platform.CorePlatform?
-Core.UI.Hosting.CoreHostOptions.Platform.init -> void
-Core.UI.Hosting.CoreHostOptions.Equals(Core.UI.Hosting.CoreHostOptions? other) -> bool
-Core.UI.Hosting.CoreHostOptions.LogMaxBytes.get -> long
-Core.UI.Hosting.CoreHostOptions.LogMaxBytes.init -> void
-Core.UI.Hosting.CoreHostOptions.RetainedFiles.get -> int
-Core.UI.Hosting.CoreHostOptions.RetainedFiles.init -> void
-Core.UI.Hosting.CoreHostOptions.SingleInstance.get -> bool
-Core.UI.Hosting.CoreHostOptions.SingleInstance.init -> void
-Core.UI.Hosting.CoreHostOptions.Vendor.get -> string!
-Core.UI.Hosting.CoreHostOptions.Vendor.init -> void
-override Core.UI.Hosting.CoreHostOptions.Equals(object? obj) -> bool
-override Core.UI.Hosting.CoreHostOptions.GetHashCode() -> int
-override Core.UI.Hosting.CoreHostOptions.ToString() -> string!
-static Core.UI.Hosting.CoreHost.Create(Core.UI.Hosting.CoreHostOptions! options) -> Core.Results.Result<Core.UI.Hosting.CoreHost!>
-static Core.UI.Hosting.CoreDiagnostics.Create(Core.UI.Hosting.CoreHostOptions! options) -> Core.Results.Result<Core.UI.Hosting.CoreDiagnostics!>
-static Core.UI.Hosting.CoreDiagnostics.Create(Core.Paths.PathSet! directories, Core.UI.Hosting.CoreHostOptions! options) -> Core.Results.Result<Core.UI.Hosting.CoreDiagnostics!>
-static Core.UI.Hosting.CoreHostOptions.operator !=(Core.UI.Hosting.CoreHostOptions? left, Core.UI.Hosting.CoreHostOptions? right) -> bool
-static Core.UI.Hosting.CoreHostOptions.operator ==(Core.UI.Hosting.CoreHostOptions? left, Core.UI.Hosting.CoreHostOptions? right) -> bool
 Core.UI.Adwaita.AccentDefinition
 Core.UI.Adwaita.AccentDefinition.<Clone>$() -> Core.UI.Adwaita.AccentDefinition!
 Core.UI.Adwaita.AccentDefinition.AccentDefinition(string! Key, string! Label) -> void
@@ -84,10 +16,11 @@ Core.UI.Chrome.AdwaitaWindow
 Core.UI.Chrome.AdwaitaWindow.AdwaitaWindow() -> void
 Core.UI.Chrome.AdwaitaWindow.ClientSideDecorations.get -> bool
 Core.UI.Chrome.AdwaitaWindow.ClientSideDecorations.set -> void
+Core.UI.Chrome.ClientDecorationSelection
 Core.UI.Chrome.CoreWindow
 Core.UI.Chrome.CoreWindow.Active.get -> Core.Mvp.Views.IView?
 Core.UI.Chrome.CoreWindow.ApplyPlacement(Core.Mvp.Models.WindowPlacement! placement) -> void
-Core.UI.Chrome.CoreWindow.CoreWindow(Core.Mvp.Services.ITrayService! tray) -> void
+Core.UI.Chrome.CoreWindow.BackNavigationRequested -> System.Action?
 Core.UI.Chrome.CoreWindow.CapturePlacement() -> Core.Mvp.Models.WindowPlacement!
 Core.UI.Chrome.CoreWindow.CloseBehavior.get -> Core.Mvp.Services.CloseBehavior
 Core.UI.Chrome.CoreWindow.CloseBehavior.set -> void
@@ -95,28 +28,40 @@ Core.UI.Chrome.CoreWindow.CloseTab(string! id) -> void
 Core.UI.Chrome.CoreWindow.CommandInvoked -> System.Action<Core.Mvp.Views.IView!, string!>?
 Core.UI.Chrome.CoreWindow.ConfirmClose.get -> System.Func<System.Threading.Tasks.ValueTask<bool>>?
 Core.UI.Chrome.CoreWindow.ConfirmClose.set -> void
+Core.UI.Chrome.CoreWindow.ConfirmQuit.get -> System.Func<System.Threading.Tasks.ValueTask<bool>>?
+Core.UI.Chrome.CoreWindow.ConfirmQuit.set -> void
+Core.UI.Chrome.CoreWindow.CoreWindow(Core.Mvp.Services.ITrayService! tray) -> void
 Core.UI.Chrome.CoreWindow.CurrentSnapshot.get -> Core.Mvp.Presentation.ShellSnapshot?
 Core.UI.Chrome.CoreWindow.Dialogs.get -> Core.Mvp.Services.IDialogService!
+Core.UI.Chrome.CoreWindow.Dispose() -> void
 Core.UI.Chrome.CoreWindow.Files.get -> Core.Mvp.Services.IFilePicker!
+Core.UI.Chrome.CoreWindow.Folders.get -> Core.Mvp.Services.IFolderPicker!
 Core.UI.Chrome.CoreWindow.HeaderIcon.get -> Avalonia.Media.IImage?
 Core.UI.Chrome.CoreWindow.HeaderIcon.set -> void
 Core.UI.Chrome.CoreWindow.HideWindow() -> void
 Core.UI.Chrome.CoreWindow.Navigation.get -> Core.Mvp.Composition.INavigationHost!
 Core.UI.Chrome.CoreWindow.Notifications.get -> Core.Mvp.Services.INotificationService!
+Core.UI.Chrome.CoreWindow.OpenTab(string! id, string! title, Core.Mvp.Presenters.IViewPresenter! presenter) -> void
 Core.UI.Chrome.CoreWindow.OpenTab(string! id, string! title, Core.Mvp.Views.IView! view) -> void
 Core.UI.Chrome.CoreWindow.Pop() -> void
 Core.UI.Chrome.CoreWindow.PrimaryMenu.get -> Avalonia.Controls.MenuFlyout!
+Core.UI.Chrome.CoreWindow.Prompts.get -> Core.Mvp.Services.IPromptService!
+Core.UI.Chrome.CoreWindow.Push(string! title, string! subtitle, Core.Mvp.Presenters.IViewPresenter! presenter) -> void
 Core.UI.Chrome.CoreWindow.Push(string! title, string! subtitle, Core.Mvp.Views.IView! view) -> void
 Core.UI.Chrome.CoreWindow.Quit() -> void
+Core.UI.Chrome.CoreWindow.QuitAsync() -> System.Threading.Tasks.ValueTask
 Core.UI.Chrome.CoreWindow.QuitRequested -> System.Func<System.Threading.Tasks.ValueTask>?
 Core.UI.Chrome.CoreWindow.SetAbout(Core.UI.Dialogs.AboutInfo? info) -> void
 Core.UI.Chrome.CoreWindow.SetAppearance(Core.Mvp.Services.IAppearanceService? service) -> void
 Core.UI.Chrome.CoreWindow.SetApplicationMenu(Core.Mvp.Presentation.CommandSet! menu) -> void
 Core.UI.Chrome.CoreWindow.SetSnapshot(Core.Mvp.Presentation.ShellSnapshot! snapshot) -> void
+Core.UI.Chrome.CoreWindow.SetSnapshot(Core.Mvp.Presenters.IViewPresenter! presenter, Core.Mvp.Presentation.ShellSnapshot! snapshot) -> void
+Core.UI.Chrome.CoreWindow.SetTabDirty(string! id, bool dirty) -> void
 Core.UI.Chrome.CoreWindow.ShowWindow() -> void
+Core.UI.Chrome.CoreWindow.ShutdownAsync() -> System.Threading.Tasks.ValueTask
 Core.UI.Chrome.CoreWindow.TabCloseRequested -> System.EventHandler<Core.UI.Chrome.TabCloseRequestedEventArgs!>?
 Core.UI.Chrome.CoreWindow.Tray.get -> Core.Mvp.Services.ITrayService!
-Core.UI.Chrome.ClientDecorationSelection
+Core.UI.Chrome.CoreWindow.WhenIdleAsync() -> System.Threading.Tasks.ValueTask
 Core.UI.Chrome.HeaderBar
 Core.UI.Chrome.HeaderBar.CenterContent.get -> Avalonia.Controls.Control?
 Core.UI.Chrome.HeaderBar.CenterContent.set -> void
@@ -162,6 +107,7 @@ Core.UI.Dialogs.AboutDialog
 Core.UI.Dialogs.AboutDialog.AboutDialog(Core.UI.Dialogs.AboutInfo! info) -> void
 Core.UI.Dialogs.AboutInfo
 Core.UI.Dialogs.AboutInfo.<Clone>$() -> Core.UI.Dialogs.AboutInfo!
+Core.UI.Dialogs.AboutInfo.AboutInfo(string! ProductName, string! Version, string! Notice, System.Uri! SourceUrl, string! LicenseName = "GNU LGPL v3.0 or later", System.Uri? LicenseUrl = null, Avalonia.Media.IImage? Icon = null) -> void
 Core.UI.Dialogs.AboutInfo.Deconstruct(out string! ProductName, out string! Version, out string! Notice, out System.Uri! SourceUrl, out string! LicenseName, out System.Uri? LicenseUrl, out Avalonia.Media.IImage? Icon) -> void
 Core.UI.Dialogs.AboutInfo.Equals(Core.UI.Dialogs.AboutInfo? other) -> bool
 Core.UI.Dialogs.AboutInfo.Icon.get -> Avalonia.Media.IImage?
@@ -187,15 +133,65 @@ Core.UI.Dialogs.LegalNotice
 Core.UI.Hosting.CoreAppBuilder
 Core.UI.Hosting.CoreApplication
 Core.UI.Hosting.CoreApplication.ApplyAccent(string! key) -> void
+Core.UI.Hosting.CoreApplication.ApplyThemePreference(Core.Mvp.Services.ThemePreference preference) -> void
 Core.UI.Hosting.CoreApplication.CoreApplication() -> void
-Core.UI.Hosting.CoreApplication.ReportUnhandledException(System.Exception! exception) -> void
-Core.UI.Hosting.CoreApplication.SetAccent(Avalonia.Media.Color accent) -> void
 Core.UI.Hosting.CoreApplication.Diagnostics.get -> Core.UI.Hosting.CoreDiagnostics?
 Core.UI.Hosting.CoreApplication.Diagnostics.set -> void
+Core.UI.Hosting.CoreApplication.ReportUnhandledException(System.Exception! exception) -> void
+Core.UI.Hosting.CoreApplication.SetAccent(Avalonia.Media.Color accent) -> void
 Core.UI.Hosting.CoreApplication.UnhandledExceptionHandler.get -> System.Action<System.Exception!>?
 Core.UI.Hosting.CoreApplication.UnhandledExceptionHandler.set -> void
+Core.UI.Hosting.CoreDiagnostics
+Core.UI.Hosting.CoreDiagnostics.CrashLog.get -> Core.Diagnostics.ICrashLog!
+Core.UI.Hosting.CoreDiagnostics.Directories.get -> Core.Paths.PathSet!
+Core.UI.Hosting.CoreDiagnostics.Dispose() -> void
+Core.UI.Hosting.CoreDiagnostics.Journal.get -> Core.Diagnostics.IOperationJournal!
+Core.UI.Hosting.CoreDiagnostics.Logger.get -> Core.Diagnostics.IApplicationLogger!
+Core.UI.Hosting.CoreDiagnostics.Paths.get -> Core.Paths.ApplicationPaths!
+Core.UI.Hosting.CoreDiagnostics.Report(System.Exception! exception) -> void
+Core.UI.Hosting.CoreHost
+Core.UI.Hosting.CoreHost.Activated -> System.Action<byte[]!>?
+Core.UI.Hosting.CoreHost.ActivationRequested -> System.Action?
+Core.UI.Hosting.CoreHost.Attach(Core.UI.Hosting.CoreApplication! application) -> void
+Core.UI.Hosting.CoreHost.CrashLog.get -> Core.Diagnostics.ICrashLog!
+Core.UI.Hosting.CoreHost.CreateWindow(Avalonia.Controls.WindowIcon? trayIcon = null) -> Core.UI.Chrome.CoreWindow!
+Core.UI.Hosting.CoreHost.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Core.UI.Hosting.CoreHost.Journal.get -> Core.Diagnostics.IOperationJournal!
+Core.UI.Hosting.CoreHost.Links.get -> Core.Platform.ISystemLinkLauncher!
+Core.UI.Hosting.CoreHost.Logger.get -> Core.Diagnostics.IApplicationLogger!
+Core.UI.Hosting.CoreHost.Notifier.get -> Core.Notifications.ISystemNotifier!
+Core.UI.Hosting.CoreHost.Paths.get -> Core.Paths.ApplicationPaths!
+Core.UI.Hosting.CoreHost.Processes.get -> Core.Execution.IProcessRunner!
+Core.UI.Hosting.CoreHost.QuitRequested -> System.Func<System.Threading.Tasks.ValueTask>?
+Core.UI.Hosting.CoreHost.ShutdownAsync() -> System.Threading.Tasks.ValueTask
+Core.UI.Hosting.CoreHost.SingleInstance.get -> Core.Platform.ISingleInstance?
+Core.UI.Hosting.CoreHost.Stopping.get -> System.Threading.CancellationToken
+Core.UI.Hosting.CoreHost.TrayCommandInvoked -> System.Action<string!>?
+Core.UI.Hosting.CoreHost.TryStart() -> bool
+Core.UI.Hosting.CoreHost.Window.get -> Core.UI.Chrome.CoreWindow!
+Core.UI.Hosting.CoreHostOptions
+Core.UI.Hosting.CoreHostOptions.<Clone>$() -> Core.UI.Hosting.CoreHostOptions!
+Core.UI.Hosting.CoreHostOptions.Application.get -> string!
+Core.UI.Hosting.CoreHostOptions.Application.init -> void
+Core.UI.Hosting.CoreHostOptions.CoreHostOptions(string! Vendor, string! Application, bool SingleInstance = true, long LogMaxBytes = 1048576, int RetainedFiles = 5, int CrashMaximumLines = 200, Core.Platform.CorePlatform? Platform = null) -> void
+Core.UI.Hosting.CoreHostOptions.CrashMaximumLines.get -> int
+Core.UI.Hosting.CoreHostOptions.CrashMaximumLines.init -> void
+Core.UI.Hosting.CoreHostOptions.Deconstruct(out string! Vendor, out string! Application, out bool SingleInstance, out long LogMaxBytes, out int RetainedFiles, out int CrashMaximumLines, out Core.Platform.CorePlatform? Platform) -> void
+Core.UI.Hosting.CoreHostOptions.Equals(Core.UI.Hosting.CoreHostOptions? other) -> bool
+Core.UI.Hosting.CoreHostOptions.LogMaxBytes.get -> long
+Core.UI.Hosting.CoreHostOptions.LogMaxBytes.init -> void
+Core.UI.Hosting.CoreHostOptions.Platform.get -> Core.Platform.CorePlatform?
+Core.UI.Hosting.CoreHostOptions.Platform.init -> void
+Core.UI.Hosting.CoreHostOptions.RetainedFiles.get -> int
+Core.UI.Hosting.CoreHostOptions.RetainedFiles.init -> void
+Core.UI.Hosting.CoreHostOptions.SingleInstance.get -> bool
+Core.UI.Hosting.CoreHostOptions.SingleInstance.init -> void
+Core.UI.Hosting.CoreHostOptions.Vendor.get -> string!
+Core.UI.Hosting.CoreHostOptions.Vendor.init -> void
 Core.UI.Hosting.GraphicsBackend
+Core.UI.Hosting.GraphicsBackend.MacOS = 3 -> Core.UI.Hosting.GraphicsBackend
 Core.UI.Hosting.GraphicsBackend.Wayland = 1 -> Core.UI.Hosting.GraphicsBackend
+Core.UI.Hosting.GraphicsBackend.Win32 = 2 -> Core.UI.Hosting.GraphicsBackend
 Core.UI.Hosting.GraphicsBackend.X11 = 0 -> Core.UI.Hosting.GraphicsBackend
 Core.UI.Hosting.PlatformSelection
 Core.UI.Hosting.ThemeOptions
@@ -210,6 +206,7 @@ Core.UI.Hosting.ThemeOptions.UiFont.get -> Avalonia.Media.FontFamily?
 Core.UI.Hosting.ThemeOptions.UiFont.init -> void
 Core.UI.Platform.StorageProviderFilePicker
 Core.UI.Platform.StorageProviderFilePicker.OpenFilesAsync(Core.Mvp.Services.FilePickerOptions! options, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<string!>!>
+Core.UI.Platform.StorageProviderFilePicker.PickFolderAsync(Core.Mvp.Services.FolderPickerOptions! options, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<string?>
 Core.UI.Platform.StorageProviderFilePicker.SaveFileAsync(Core.Mvp.Services.SaveFilePickerOptions! options, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<string?>
 Core.UI.Platform.StorageProviderFilePicker.StorageProviderFilePicker(Avalonia.Platform.Storage.IStorageProvider! provider) -> void
 Core.UI.Platform.TopLevelClipboardService
@@ -251,6 +248,7 @@ const Core.UI.Adwaita.GnomeMetrics.HeaderBarHorizontalPadding = 6 -> double
 const Core.UI.Adwaita.GnomeMetrics.HeaderBarSpacing = 6 -> double
 const Core.UI.Chrome.ClientDecorationSelection.ForceVariable = "CORE_FORCE_CSD" -> string!
 const Core.UI.Controls.FieldRow.DefaultLabelWidth = 160 -> double
+const Core.UI.Dialogs.LegalNotice.LicenseName = "GNU LGPL v3.0 or later" -> string!
 const Core.UI.Hosting.PlatformSelection.DisableWaylandVariable = "CORE_DISABLE_WAYLAND" -> string!
 const Core.UI.Hosting.PlatformSelection.WaylandDisplayVariable = "WAYLAND_DISPLAY" -> string!
 override Core.UI.Adwaita.AccentDefinition.Equals(object? obj) -> bool
@@ -265,6 +263,9 @@ override Core.UI.Dialogs.AboutInfo.ToString() -> string!
 override Core.UI.Dialogs.CoreDialog.OnPropertyChanged(Avalonia.AvaloniaPropertyChangedEventArgs! change) -> void
 override Core.UI.Hosting.CoreApplication.Initialize() -> void
 override Core.UI.Hosting.CoreApplication.OnFrameworkInitializationCompleted() -> void
+override Core.UI.Hosting.CoreHostOptions.Equals(object? obj) -> bool
+override Core.UI.Hosting.CoreHostOptions.GetHashCode() -> int
+override Core.UI.Hosting.CoreHostOptions.ToString() -> string!
 override Core.UI.Hosting.ThemeOptions.Equals(object? obj) -> bool
 override Core.UI.Hosting.ThemeOptions.GetHashCode() -> int
 override Core.UI.Hosting.ThemeOptions.ToString() -> string!
@@ -287,10 +288,16 @@ static Core.UI.Dialogs.AboutInfo.operator !=(Core.UI.Dialogs.AboutInfo? left, Co
 static Core.UI.Dialogs.AboutInfo.operator ==(Core.UI.Dialogs.AboutInfo? left, Core.UI.Dialogs.AboutInfo? right) -> bool
 static Core.UI.Dialogs.LegalNotice.Copyright(int year, string! holder, string! email) -> string!
 static Core.UI.Dialogs.LegalNotice.Gpl(int year, string! holder, string! email) -> string!
+static Core.UI.Dialogs.LegalNotice.Lgpl(int year, string! holder, string! email) -> string!
 static Core.UI.Dialogs.LegalNotice.LicenseUrl.get -> System.Uri!
 static Core.UI.Hosting.CoreAppBuilder.Configure<TApp>() -> Avalonia.AppBuilder!
 static Core.UI.Hosting.CoreAppBuilder.Configure<TApp>(Core.UI.Hosting.GraphicsBackend backend, bool allowFallback = true) -> Avalonia.AppBuilder!
 static Core.UI.Hosting.CoreAppBuilder.Configure<TApp>(string! appId) -> Avalonia.AppBuilder!
+static Core.UI.Hosting.CoreDiagnostics.Create(Core.Paths.PathSet! directories, Core.UI.Hosting.CoreHostOptions! options) -> Core.Results.Result<Core.UI.Hosting.CoreDiagnostics!>
+static Core.UI.Hosting.CoreDiagnostics.Create(Core.UI.Hosting.CoreHostOptions! options) -> Core.Results.Result<Core.UI.Hosting.CoreDiagnostics!>
+static Core.UI.Hosting.CoreHost.Create(Core.UI.Hosting.CoreHostOptions! options) -> Core.Results.Result<Core.UI.Hosting.CoreHost!>
+static Core.UI.Hosting.CoreHostOptions.operator !=(Core.UI.Hosting.CoreHostOptions? left, Core.UI.Hosting.CoreHostOptions? right) -> bool
+static Core.UI.Hosting.CoreHostOptions.operator ==(Core.UI.Hosting.CoreHostOptions? left, Core.UI.Hosting.CoreHostOptions? right) -> bool
 static Core.UI.Hosting.PlatformSelection.FromEnvironment() -> Core.UI.Hosting.GraphicsBackend
 static Core.UI.Hosting.PlatformSelection.Select(bool isLinux, string? waylandDisplay, bool waylandDisabled) -> Core.UI.Hosting.GraphicsBackend
 static Core.UI.Hosting.ThemeOptions.operator !=(Core.UI.Hosting.ThemeOptions? left, Core.UI.Hosting.ThemeOptions? right) -> bool
@@ -305,10 +312,3 @@ static readonly Core.UI.Chrome.HeaderBar.StartContentProperty -> Avalonia.Styled
 static readonly Core.UI.Chrome.HeaderBar.SubtitleProperty -> Avalonia.StyledProperty<string?>!
 static readonly Core.UI.Chrome.HeaderBar.TitleProperty -> Avalonia.StyledProperty<string?>!
 virtual Core.UI.Hosting.CoreApplication.ThemeOverrides.get -> Core.UI.Hosting.ThemeOptions?
-Core.UI.Hosting.GraphicsBackend.Win32 = 2 -> Core.UI.Hosting.GraphicsBackend
-Core.UI.Hosting.GraphicsBackend.MacOS = 3 -> Core.UI.Hosting.GraphicsBackend
-Core.UI.Chrome.CoreWindow.BackNavigationRequested -> System.Action?
-Core.UI.Chrome.CoreWindow.WhenIdleAsync() -> System.Threading.Tasks.ValueTask
-Core.UI.Chrome.CoreWindow.QuitAsync() -> System.Threading.Tasks.ValueTask
-Core.UI.Chrome.CoreWindow.Dispose() -> void
-Core.UI.Hosting.CoreApplication.ApplyThemePreference(Core.Mvp.Services.ThemePreference preference) -> void
