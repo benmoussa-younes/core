@@ -13,13 +13,18 @@ public sealed class DialogServiceTests
     [Fact]
     public async Task Confirm_passes_the_request_to_the_dialog()
     {
-        var dialog = new ConfirmDialog();
-        var service = new DialogService(dialog);
+        var result = ConfirmResult.Cancel;
+        await Headless.Dispatch(async () =>
+        {
+            var dialog = new ConfirmDialog();
+            var service = new DialogService(dialog);
 
-        var task = service.ConfirmAsync(new ConfirmRequest("Q", string.Empty, "Yes"), TestContext.Current.CancellationToken).AsTask();
-        Click(dialog.ConfirmButton);
+            var task = service.ConfirmAsync(new ConfirmRequest("Q", string.Empty, "Yes"), TestContext.Current.CancellationToken).AsTask();
+            Click(dialog.ConfirmButton);
+            result = await task;
+        });
 
-        Assert.Equal(ConfirmResult.Accept, await task);
+        Assert.Equal(ConfirmResult.Accept, result);
     }
 
     [Theory]
@@ -28,18 +33,24 @@ public sealed class DialogServiceTests
     [InlineData(ConfirmResult.Cancel, SavePromptChoice.Cancel)]
     public async Task Save_maps_every_answer(ConfirmResult answer, SavePromptChoice expected)
     {
-        var dialog = new ConfirmDialog();
-        var service = new DialogService(dialog);
-
-        var task = service.ConfirmSaveAsync("report.csv", TestContext.Current.CancellationToken).AsTask();
-        Click(answer switch
+        var result = SavePromptChoice.Cancel;
+        await Headless.Dispatch(async () =>
         {
-            ConfirmResult.Accept => dialog.ConfirmButton,
-            ConfirmResult.Alternative => dialog.AlternativeButton,
-            _ => dialog.CancelButton,
+            var dialog = new ConfirmDialog();
+            var service = new DialogService(dialog);
+
+            var task = service.ConfirmSaveAsync("report.csv", TestContext.Current.CancellationToken).AsTask();
+            Click(answer switch
+            {
+                ConfirmResult.Accept => dialog.ConfirmButton,
+                ConfirmResult.Alternative => dialog.AlternativeButton,
+                _ => dialog.CancelButton,
+            });
+
+            result = await task;
         });
 
-        Assert.Equal(expected, await task);
+        Assert.Equal(expected, result);
     }
 
     [Theory]
@@ -47,13 +58,19 @@ public sealed class DialogServiceTests
     [InlineData(ConfirmResult.Cancel, QuitChoice.Cancel)]
     public async Task Quit_maps_every_answer(ConfirmResult answer, QuitChoice expected)
     {
-        var dialog = new ConfirmDialog();
-        var service = new DialogService(dialog);
+        var result = QuitChoice.Cancel;
+        await Headless.Dispatch(async () =>
+        {
+            var dialog = new ConfirmDialog();
+            var service = new DialogService(dialog);
 
-        var task = service.ConfirmQuitAsync(TestContext.Current.CancellationToken).AsTask();
-        Click(answer == ConfirmResult.Accept ? dialog.ConfirmButton : dialog.CancelButton);
+            var task = service.ConfirmQuitAsync(TestContext.Current.CancellationToken).AsTask();
+            Click(answer == ConfirmResult.Accept ? dialog.ConfirmButton : dialog.CancelButton);
 
-        Assert.Equal(expected, await task);
+            result = await task;
+        });
+
+        Assert.Equal(expected, result);
     }
 
     [Fact]

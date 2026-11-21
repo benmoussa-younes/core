@@ -35,6 +35,10 @@ internal sealed class DialogService : IDialogService
     {
         ArgumentNullException.ThrowIfNull(request);
 
+        // UI-thread affine: fail fast rather than mutate the visual tree from a
+        // pool thread once the await below resumes.
+        Dispatcher.UIThread.VerifyAccess();
+
         return new ValueTask<ConfirmResult>(ConfirmAsyncCore(request, cancellationToken));
     }
 

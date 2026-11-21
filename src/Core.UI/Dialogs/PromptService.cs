@@ -34,6 +34,10 @@ internal sealed class PromptService : IPromptService
     {
         ArgumentNullException.ThrowIfNull(request);
 
+        // UI-thread affine: fail fast rather than mutate the visual tree from a
+        // pool thread once the await below resumes.
+        Dispatcher.UIThread.VerifyAccess();
+
         return new ValueTask<string?>(PromptAsyncCore(request, cancellationToken));
     }
 

@@ -17,7 +17,9 @@ internal sealed class DialogGate : IDisposable
     /// <returns>The lease that releases the slot.</returns>
     public async ValueTask<Lease> EnterAsync(CancellationToken cancellationToken)
     {
-        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        // Keep the caller's context: the lease holder promotes the dialog on the
+        // UI thread, and a ConfigureAwait(false) here would resume on the pool.
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(true);
         return new Lease(_gate);
     }
 

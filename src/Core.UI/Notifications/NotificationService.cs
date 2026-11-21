@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Younes BENMOUSSA <younes.benmoussa@pm.me>
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
+using Avalonia.Threading;
 using Core.Mvp.Services;
 
 namespace Core.UI.Notifications;
@@ -28,18 +29,24 @@ internal sealed class NotificationService : INotificationService
     /// <inheritdoc />
     public void Toast(string message, MessageSeverity severity = MessageSeverity.Information)
     {
+        Dispatcher.UIThread.VerifyAccess();
+
         _host.Show(message, severity);
     }
 
     /// <inheritdoc />
     public void Banner(string message, MessageSeverity severity = MessageSeverity.Error)
     {
+        Dispatcher.UIThread.VerifyAccess();
+
         _host.Banner(message, severity);
     }
 
     /// <inheritdoc />
     public void DismissBanner()
     {
+        Dispatcher.UIThread.VerifyAccess();
+
         _host.DismissBanner();
     }
 }
