@@ -164,12 +164,19 @@ internal class ConfirmDialog : Grid
 
     private void Complete(ConfirmResult result)
     {
-        IsVisible = false;
-        _endModal?.Invoke();
-
         var completion = _completion;
         _completion = null;
-        completion?.TrySetResult(result);
+
+        // Nothing is showing: a stale click, a second Escape or a dismissal that
+        // raced the answer must not release the modal layer another dialog owns.
+        if (completion is null)
+        {
+            return;
+        }
+
+        IsVisible = false;
+        _endModal?.Invoke();
+        completion.TrySetResult(result);
     }
 
     /// <summary>Dismisses an open prompt as a cancel; a no-op when none is showing.</summary>
