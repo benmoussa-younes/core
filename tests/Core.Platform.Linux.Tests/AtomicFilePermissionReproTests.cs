@@ -5,8 +5,8 @@ using Core.Platform;
 
 namespace Core.Platform.Linux.Tests;
 
-// Reproduction cases for the owner-only permission findings. Each one states the
-// guarantee the documentation makes; every case fails on the current tree.
+// Regression cases for the owner-only permission findings: each one states the
+// guarantee the documentation makes.
 public sealed class AtomicFilePermissionReproTests
 {
     private const UnixFileMode OwnerOnly =
@@ -63,9 +63,8 @@ public sealed class AtomicFilePermissionReproTests
     [Fact]
     public void EnsureDirectoryDoesNotTightenADirectoryOwnedByAnotherUser()
     {
-        // The chmod runs unconditionally on a pre-existing directory, so a caller
-        // that names a directory it does not own gets EPERM even when create-if-
-        // absent would have succeeded. /proc/sys is root-owned on every Linux host.
+        // WHY: /proc/sys is root-owned on every Linux host, so the chmod this used
+        // to run fails with EPERM even though create-if-absent would succeed.
         if (Environment.IsPrivilegedProcess)
         {
             Assert.Skip("The case needs an unprivileged process.");

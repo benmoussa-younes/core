@@ -207,14 +207,8 @@ public sealed class AtomicFileWriter : IAtomicFileWriter
         Abort();
     }
 
-    /// <summary>
-    /// Inspects the destination without following a symbolic link. A symbolic
-    /// link is refused; an existing regular file has the bits it shares with the
-    /// requested mode applied to the temporary file, so the rename carries them
-    /// to the committed artefact without ever widening it.
-    /// </summary>
-    /// <param name="error">The refusal when the destination is a symbolic link.</param>
-    /// <returns><see langword="true"/> when the commit may proceed.</returns>
+    // WHY: the rename never writes through a link, and the committed mode is the
+    // intersection so a commit cannot widen access.
     private bool TryPrepareDestination([NotNullWhen(false)] out CoreError? error)
     {
         error = null;

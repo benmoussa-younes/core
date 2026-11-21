@@ -6,7 +6,7 @@ using Core.Platform.Linux;
 
 namespace Core.Mvp.Tests;
 
-// Reproduction cases for the settings-store findings: the permission guarantees
+// Regression cases for the settings-store findings: the permission guarantees
 // JsonSettingsStore<T> documents, and the platform-port bypass in Clear.
 public sealed class SettingsStoreReproTests : IDisposable
 {
@@ -76,10 +76,9 @@ public sealed class SettingsStoreReproTests : IDisposable
     [Fact]
     public void ClearDoesNotUnlinkASymbolicLinkAtTheSettingsPath()
     {
-        // Load refuses a final symlink (noFollow) and Save refuses to replace one.
-        // Clear must not be the one operation that follows the opposite policy: it
-        // currently unlinks whatever sits at the path, including a link the store
-        // never wrote. This case encodes that symmetry for the owner to confirm.
+        // WHY: Load refuses a final link and Save refuses to replace one, so Clear
+        // must not follow the opposite policy and act on an entry the store never
+        // wrote.
         CreateStateDirectory();
         var target = Path.Combine(_directory, "target.json");
         File.WriteAllText(target, "{}");
