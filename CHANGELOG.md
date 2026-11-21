@@ -8,6 +8,14 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- `CoreDiagnostics` composes the application log, the operation journal and the
+  crash log below the XDG state directory (`<state>/<vendor>/<application>`), and
+  `CoreApplication.Diagnostics` gives a product without a host the same durable
+  sink: an unhandled exception reaches both files instead of being lost.
+  `ApplicationPaths` declares the three file names.
+
 ### Security
 
 - The application survives an exception thrown from the dispatcher: it is
