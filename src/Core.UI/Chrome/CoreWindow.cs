@@ -1405,19 +1405,24 @@ public class CoreWindow : Window, IApplicationHost, INavigationHost, IDisposable
 
     internal void ReportLifecycleFailure(string action, Exception exception)
     {
+        var message =
+            $"The view could not {action}: {SecretRedaction.Scrub(LogRedaction.SingleLine(exception.Message, 256))}";
+        var application = Application.Current as CoreApplication;
+
         // WHY: an I/O, cancellation or disposal failure is a view error the operator
-        // can act on; a programming fault must reach the crash log. The banner stays
-        // the operator feedback in both cases.
-        if (exception is not (IOException or UnauthorizedAccessException or
-            OperationCanceledException or ObjectDisposedException) &&
-            Application.Current is CoreApplication application)
+        // can act on, so it is a warning in the application log; a programming fault
+        // must reach the crash log. The banner stays the feedback in both cases.
+        if (exception is IOException or UnauthorizedAccessException or
+            OperationCanceledException or ObjectDisposedException)
         {
-            application.ReportUnhandledException(exception);
+            application?.Diagnostics?.Logger.Log(LogLevel.Warning, message);
+        }
+        else
+        {
+            application?.ReportUnhandledException(exception);
         }
 
-        Notifications.Banner(
-            $"The view could not {action}: {SecretRedaction.Scrub(LogRedaction.SingleLine(exception.Message, 256))}",
-            MessageSeverity.Error);
+        Notifications.Banner(message, MessageSeverity.Error);
     }
 
     private void OnViewBusyChanged(bool busy)

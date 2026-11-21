@@ -15,14 +15,16 @@ and this project adheres to
 - `AboutDialog` accepts an `ISystemLinkLauncher`. When it is supplied, every link
   goes through the shell's scheme validation, so the platform launcher never sees
   an unvalidated `file:` or `smb:` URL. The parameter is optional: an existing
-  construction keeps the platform navigation.
+  construction keeps the platform navigation. A relative URL is refused when the
+  dialog is constructed instead of failing inside the click handler.
 
 ### Changed
 
 - The shell routes a programming fault from a lifecycle callback to
   `CoreApplication.ReportUnhandledException`, which writes the crash log, in
   addition to the banner the operator sees. An I/O, cancellation or disposal
-  failure is only a banner, because the operator can act on it.
+  failure is a banner and a warning in the application log, because the operator
+  can act on it.
 
 ## [0.2.0] - 2026-11-21
 

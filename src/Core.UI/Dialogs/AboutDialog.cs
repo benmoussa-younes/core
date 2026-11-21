@@ -28,6 +28,20 @@ public sealed class AboutDialog : CoreDialog
     {
         ArgumentNullException.ThrowIfNull(info);
 
+        // WHY: a relative URI throws from AbsoluteUri inside the click handler, where
+        // the operator sees nothing; the construction is the right place to fail.
+        var licenseUrl = info.LicenseUrl ?? LegalNotice.LicenseUrl;
+
+        if (!info.SourceUrl.IsAbsoluteUri)
+        {
+            throw new ArgumentException("The source URL must be absolute.", nameof(info));
+        }
+
+        if (licenseUrl is { IsAbsoluteUri: false })
+        {
+            throw new ArgumentException("The licence URL must be absolute.", nameof(info));
+        }
+
         Title = string.Concat("About ", info.ProductName);
         Header.Icon = info.Icon;
         Width = 600;
@@ -41,7 +55,7 @@ public sealed class AboutDialog : CoreDialog
             Classes = { "muted" },
         };
 
-        LicenseLink = Link(info.LicenseName, info.LicenseUrl ?? LegalNotice.LicenseUrl, links);
+        LicenseLink = Link(info.LicenseName, licenseUrl, links);
         SourceLink = Link("Corresponding source", info.SourceUrl, links);
 
         var linkRow = new StackPanel

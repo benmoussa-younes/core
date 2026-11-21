@@ -46,6 +46,24 @@ public sealed class AboutDialogTests
         });
     }
 
+    [Fact]
+    public async Task A_relative_link_is_refused_at_construction()
+    {
+        await Headless.Dispatch(() =>
+        {
+            var relativeSource = new AboutInfo("Tool", "1.0", "notice", new Uri("relative/source", UriKind.Relative));
+            var relativeLicense = new AboutInfo(
+                "Tool",
+                "1.0",
+                "notice",
+                new Uri("https://example.com/source"),
+                LicenseUrl: new Uri("licence", UriKind.Relative));
+
+            Assert.Throws<ArgumentException>(() => new AboutDialog(relativeSource));
+            Assert.Throws<ArgumentException>(() => new AboutDialog(relativeLicense));
+        });
+    }
+
     private static void Click(Button button) =>
         button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
 
