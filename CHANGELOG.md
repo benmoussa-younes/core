@@ -8,6 +8,22 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-11-21
+
+### Added
+
+- `AboutDialog` accepts an `ISystemLinkLauncher`. When it is supplied, every link
+  goes through the shell's scheme validation, so the platform launcher never sees
+  an unvalidated `file:` or `smb:` URL. The parameter is optional: an existing
+  construction keeps the platform navigation.
+
+### Changed
+
+- The shell routes a programming fault from a lifecycle callback to
+  `CoreApplication.ReportUnhandledException`, which writes the crash log, in
+  addition to the banner the operator sees. An I/O, cancellation or disposal
+  failure is only a banner, because the operator can act on it.
+
 ## [0.2.0] - 2026-11-21
 
 Security and robustness fixes from the 0.1.1 audit, the diagnostics composition
@@ -146,6 +162,8 @@ First public source release.
   headers; non-commentable `.txt` files use `.license` sidecars.
 - The texts in `LICENSES/` are the official Apache, GNU, Creative Commons and
   SPDX License List texts; the project `LICENSE` embeds the official LGPL text.
+
+[0.2.1]: https://github.com/benmoussa-younes/core/releases/tag/v0.2.1
 
 [0.2.0]: https://github.com/benmoussa-younes/core/releases/tag/v0.2.0
 
