@@ -68,11 +68,21 @@ public sealed class CoreDiagnostics : IDisposable
     {
         ArgumentNullException.ThrowIfNull(options);
 
-        if (options.Platform is null)
+        // WHY: the composition and the sizes are checked before the environment is
+        // read, so a missing platform reports host.platform_required rather than an
+        // XDG failure, and the failure order matches the host's.
+        if (options.Platform?.HostServices is null)
         {
             return Result<CoreDiagnostics>.Failure(new CoreError(
                 CoreErrorCodes.HostPlatformRequired,
                 "Diagnostics need an explicit platform composition; the caller supplies CorePlatform."));
+        }
+
+        if (options.LogMaxBytes <= 0 || options.RetainedFiles <= 0 || options.CrashMaximumLines <= 0)
+        {
+            return Result<CoreDiagnostics>.Failure(new CoreError(
+                CoreErrorCodes.HostInvalidOptions,
+                "The log size, the retained archive count and the crash line count must be positive."));
         }
 
         var resolved = options.Platform.Paths.Resolve();
@@ -142,7 +152,8 @@ public sealed class CoreDiagnostics : IDisposable
                 new CoreDiagnostics(directories, paths.Value, logger, journal, crashLog));
         }
         catch (Exception exception) when (
-            exception is IOException or UnauthorizedAccessException or PlatformNotSupportedException)
+            exception is IOException or UnauthorizedAccessException or
+            PlatformNotSupportedException or ArgumentException)
         {
             DisposeAll(logger, journal, crashLog);
 
@@ -170,7 +181,7 @@ public sealed class CoreDiagnostics : IDisposable
             string.Concat(
                 "unhandled exception: ",
                 PathRedaction.Scrub(
-                    SecretRedaction.Scrub(LogRedaction.SingleLine(exception.Message, 2_048)))));
+                    LogRedaction.SingleLine(SecretRedaction.Scrub(exception.Message), 2_048))));
     }
 
     /// <inheritdoc />
@@ -203,8 +214,22 @@ public sealed class CoreDiagnostics : IDisposable
         IOperationJournal? journal,
         ICrashLog? crashLog)
     {
-        journal?.Dispose();
-        logger?.Dispose();
-        crashLog?.Dispose();
+        // WHY: the cleanup runs after a failed creation, so each sink is released
+        // even when one of them throws while being disposed.
+        try
+        {
+            journal?.Dispose();
+        }
+        finally
+        {
+            try
+            {
+                logger?.Dispose();
+            }
+            finally
+            {
+                crashLog?.Dispose();
+            }
+        }
     }
 }

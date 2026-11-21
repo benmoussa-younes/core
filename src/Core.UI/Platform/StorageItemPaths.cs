@@ -3,12 +3,11 @@
 
 namespace Core.UI.Platform;
 
-// Maps a picked storage URI to a local path, or to null when the URI does not name
-// one. A portal or GVFS can return a remote URI: smb://server/share has IsFile
+// WHY: a portal or GVFS can return a remote URI. smb://server/share has IsFile
 // false while LocalPath still reads /share, so returning it would name a local
-// directory the operator never picked. file://server/share has IsFile true but is
-// a UNC authority, whose LocalPath is \\server\share on Linux. A relative URI
-// throws from LocalPath. That is why the rule is "absolute, file, not UNC".
+// directory the operator never picked; file://server/share has IsFile true but is
+// a UNC authority, whose LocalPath is \\server\share on Linux; a relative URI
+// throws from LocalPath. The rule is therefore "absolute, file, not UNC".
 internal static class StorageItemPaths
 {
     // A file path is only local when the URI has no authority: file:///home/x.

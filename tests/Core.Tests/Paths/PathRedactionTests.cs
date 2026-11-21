@@ -40,6 +40,17 @@ public sealed class PathRedactionTests
     }
 
     [Fact]
+    public void Scrub_redacts_before_punctuation_quotes_and_an_escaped_newline()
+    {
+        // A log line escapes control characters first, so a real newline arrives as
+        // the two characters \n; a quote or a comma is just as much a boundary.
+        Assert.Equal("'~'", PathRedaction.Scrub("'/home/user'", "/home/user"));
+        Assert.Equal("~/a.txt.", PathRedaction.Scrub("/home/user/a.txt.", "/home/user"));
+        Assert.Equal("Path=~, missing", PathRedaction.Scrub("Path=/home/user, missing", "/home/user"));
+        Assert.Equal("~\\n/file.txt", PathRedaction.Scrub("/home/user\\n/file.txt", "/home/user"));
+    }
+
+    [Fact]
     public void Scrub_leaves_a_sibling_account_and_unrelated_text_alone()
     {
         Assert.Equal("/home/user2/src/file.cs", PathRedaction.Scrub("/home/user2/src/file.cs", "/home/user"));

@@ -96,6 +96,100 @@ public sealed class CoreDiagnosticsTests : IDisposable
     }
 
     [Fact]
+    public void A_uri_credential_past_the_line_cap_is_still_redacted()
+    {
+        using var diagnostics = CoreDiagnostics.Create(Options()).Value;
+        var password = new string('x', 2_100);
+
+        diagnostics.Report(new InvalidOperationException(
+            string.Concat("open https://alice:", password, "@example.com/api")));
+
+        Assert.DoesNotContain(
+            "alice:xxx",
+            File.ReadAllText(diagnostics.Paths.ApplicationLogFile),
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_control_character_in_the_state_home_falls_back_to_the_default()
+    {
+        // XdgDirectories refuses a value it cannot use and the spec default applies;
+        // the failure must not surface as an uncaught ArgumentException.
+        using var diagnostics = CoreDiagnostics.Create(OptionsWithStateHome(string.Concat(_root, "/state\0evil"))).Value;
+
+        Assert.Equal(
+            Path.Combine(_root, ".local", "state", "acme", "tool"),
+            diagnostics.Paths.StateDirectory);
+    }
+
+    [Fact]
+    public void Every_created_state_component_is_owner_only()
+    {
+        using var diagnostics = CoreDiagnostics.Create(Options()).Value;
+
+        var stateHome = Path.Combine(_root, "state");
+        var vendor = Path.Combine(stateHome, "acme");
+
+        Assert.Equal(UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute, File.GetUnixFileMode(stateHome));
+        Assert.Equal(UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute, File.GetUnixFileMode(vendor));
+        Assert.Equal(UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute, File.GetUnixFileMode(diagnostics.Paths.StateDirectory));
+    }
+
+    [Fact]
+    public void A_symlinked_state_directory_is_refused()
+    {
+        var real = Path.Combine(_root, "real");
+        Directory.CreateDirectory(real);
+        Directory.CreateDirectory(Path.Combine(_root, "state", "acme"));
+        Directory.CreateSymbolicLink(Path.Combine(_root, "state", "acme", "tool"), real);
+
+        var result = CoreDiagnostics.Create(Options());
+
+        Assert.Equal("host.state_unwritable", result.Error.Code);
+    }
+
+    [Fact]
+    public void An_unwritable_state_directory_is_a_typed_failure()
+    {
+        Directory.CreateDirectory(_root);
+        File.WriteAllText(Path.Combine(_root, "state"), "not a directory");
+
+        var result = CoreDiagnostics.Create(Options());
+
+        Assert.Equal("host.state_unwritable", result.Error.Code);
+    }
+
+    [Fact]
+    public void Dispose_is_idempotent()
+    {
+        var diagnostics = CoreDiagnostics.Create(Options()).Value;
+
+        diagnostics.Dispose();
+        diagnostics.Dispose();
+    }
+
+    [Fact]
+    public async Task The_handler_wins_over_the_diagnostics()
+    {
+        await Headless.Dispatch(() =>
+        {
+            var diagnostics = CoreDiagnostics.Create(Options()).Value;
+            var application = new DiagnosticsTestApplication { Diagnostics = diagnostics };
+            var seen = false;
+            application.UnhandledExceptionHandler = _ => seen = true;
+
+            application.ReportUnhandledException(new InvalidOperationException("handler probe"));
+
+            Assert.True(seen);
+            Assert.False(
+                File.Exists(diagnostics.CrashLog.Path) &&
+                File.ReadAllText(diagnostics.CrashLog.Path).Contains("handler probe", StringComparison.Ordinal));
+
+            diagnostics.Dispose();
+        });
+    }
+
+    [Fact]
     public void A_missing_platform_is_a_typed_failure()
     {
         var result = CoreDiagnostics.Create(new CoreHostOptions("acme", "tool"));
@@ -112,6 +206,9 @@ public sealed class CoreDiagnosticsTests : IDisposable
     }
 
     private CoreHostOptions Options() =>
+        OptionsWithStateHome(Path.Combine(_root, "state"));
+
+    private CoreHostOptions OptionsWithStateHome(string stateHome) =>
         new(
             "acme",
             "tool",
@@ -120,7 +217,7 @@ public sealed class CoreDiagnosticsTests : IDisposable
                 new XdgEnvironment(
                     _root,
                     Path.Combine(_root, "config"),
-                    Path.Combine(_root, "state"),
+                    stateHome,
                     Path.Combine(_root, "data"),
                     Path.Combine(_root, "cache"),
                     Path.Combine(_root, "run"),

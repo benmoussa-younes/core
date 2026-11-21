@@ -71,7 +71,17 @@ public static class XdgDirectories
 
     private static string? AbsoluteOrNull(string? value)
     {
-        return string.IsNullOrWhiteSpace(value) || !Path.IsPathRooted(value) ? null : value;
+        // A NUL or any other control character cannot name a directory, and the
+        // kernel stops the path at the NUL: refuse the value here, so the caller
+        // falls back to the spec default instead of throwing from CreateDirectory.
+        if (string.IsNullOrWhiteSpace(value) ||
+            !Path.IsPathRooted(value) ||
+            value.Any(char.IsControl))
+        {
+            return null;
+        }
+
+        return value;
     }
 
     private static string[] ParseDirectories(string? value, params string[] defaults)

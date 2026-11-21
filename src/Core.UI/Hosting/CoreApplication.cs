@@ -49,7 +49,8 @@ public abstract class CoreApplication : Application
     /// <summary>
     /// Gets or sets the last-chance handler for an exception that escaped the UI
     /// loop. When it is <see langword="null"/>, <see cref="ReportUnhandledException"/>
-    /// writes to <see cref="Console.Error"/>.
+    /// writes to <see cref="Diagnostics"/> when one is set, and to
+    /// <see cref="Console.Error"/> otherwise.
     /// </summary>
     public Action<Exception>? UnhandledExceptionHandler { get; set; }
 
@@ -64,6 +65,10 @@ public abstract class CoreApplication : Application
     /// <c>CoreDiagnostics.Create(options).Value</c> here, so the files land in its
     /// XDG state directory instead of being lost. Both write the same redacted
     /// entry; the console is the last resort when neither is set.
+    /// <para>
+    /// The application does not own the instance: dispose it from the product's
+    /// quit path, after the last failure it can report.
+    /// </para>
     /// </remarks>
     public CoreDiagnostics? Diagnostics { get; set; }
 
@@ -101,7 +106,8 @@ public abstract class CoreApplication : Application
 
     /// <summary>
     /// Reports an exception that escaped the application to the last-chance handler,
-    /// or to <see cref="Console.Error"/> when none is set. The process-level hooks
+    /// to <see cref="Diagnostics"/> when no handler is set, or to
+    /// <see cref="Console.Error"/> when neither is. The process-level hooks
     /// (<see cref="AppDomain.UnhandledException"/>,
     /// <see cref="TaskScheduler.UnobservedTaskException"/> and Avalonia's
     /// <c>Dispatcher.UnhandledException</c>) route here.
@@ -126,7 +132,7 @@ public abstract class CoreApplication : Application
             // control characters, and stderr is still a durable sink for a service.
             Console.Error.WriteLine(
                 PathRedaction.Scrub(
-                    SecretRedaction.Scrub(LogRedaction.SingleLine(exception.ToString(), 2_048))));
+                    LogRedaction.SingleLine(SecretRedaction.Scrub(exception.ToString()), 2_048)));
         }
     }
 

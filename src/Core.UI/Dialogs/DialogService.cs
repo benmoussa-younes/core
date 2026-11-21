@@ -107,11 +107,23 @@ internal sealed class DialogService : IDialogService
                 var dismissed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
                 dismissal = dismissed.Task;
 
-                Dispatcher.UIThread.Post(() =>
+                void Close()
                 {
                     _dialog.Dismiss(task);
                     dismissed.TrySetResult();
-                });
+                }
+
+                // WHY: the await below waits for this dismissal, so a cancellation
+                // raised on the UI thread must run it inline; a Post is only for a
+                // cancellation raised on another thread.
+                if (Dispatcher.UIThread.CheckAccess())
+                {
+                    Close();
+                }
+                else
+                {
+                    Dispatcher.UIThread.Post(Close);
+                }
 
                 cancelled.TrySetResult(ConfirmResult.Cancel);
             });

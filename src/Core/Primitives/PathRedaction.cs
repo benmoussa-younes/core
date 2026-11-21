@@ -99,8 +99,10 @@ public static class PathRedaction
             builder.Append(text, index, found - index);
             var end = found + prefix.Length;
 
-            // Only a complete component: /home/user must not rewrite /home/user2.
-            if (end == text.Length || text[end] == '/')
+            // Only when the prefix ends a path component: /home/user must not
+            // rewrite /home/user2, while a following quote, punctuation or an
+            // escaped newline is a boundary and the account name must go.
+            if (end == text.Length || !IsComponentCharacter(text[end]))
             {
                 builder.Append('~');
                 index = end;
@@ -113,4 +115,7 @@ public static class PathRedaction
 
         return builder.ToString();
     }
+
+    private static bool IsComponentCharacter(char value) =>
+        char.IsLetterOrDigit(value) || value is '_' or '-';
 }
