@@ -39,7 +39,7 @@ internal sealed class DialogService : IDialogService
         // pool thread once the await below resumes.
         UiServices.Dispatcher.VerifyAccess();
 
-        return new ValueTask<ConfirmResult>(ConfirmAsyncCore(request, cancellationToken));
+        return ConfirmAsyncCore(request, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -74,76 +74,11 @@ internal sealed class DialogService : IDialogService
         return answer == ConfirmResult.Accept ? QuitChoice.Quit : QuitChoice.Cancel;
     }
 
-    private async Task<ConfirmResult> ConfirmAsyncCore(ConfirmRequest request, CancellationToken cancellationToken)
-    {
-        if (cancellationToken.IsCancellationRequested)
-        {
-            return ConfirmResult.Cancel;
-        }
-
-        DialogGate.Lease lease;
-
-        try
-        {
-            lease = await _gate.EnterAsync(cancellationToken).ConfigureAwait(true);
-        }
-        catch (OperationCanceledException)
-        {
-            return ConfirmResult.Cancel;
-        }
-
-        using (lease)
-        {
-            var task = _dialog.ShowAsync(request);
-            var cancelled = new TaskCompletionSource<ConfirmResult>(TaskCreationOptions.RunContinuationsAsynchronously);
-            Task? dismissal = null;
-
-            // The confirmation is not itself cancellable. On cancellation, answer
-            // Cancel, dismiss the dialog on the UI thread, and wait for that
-            // dismissal before releasing the gate: otherwise the next caller can
-            // see the old dialog still open and hit InvalidOperationException.
-            using var registration = cancellationToken.Register(() =>
-            {
-                var dismissed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-                dismissal = dismissed.Task;
-
-                void Close()
-                {
-                    _dialog.Dismiss(task);
-                    dismissed.TrySetResult();
-                }
-
-                // WHY: the await below waits for this dismissal, so a cancellation
-                // raised on the UI thread must run it inline; a Post is only for a
-                // cancellation raised on another thread.
-                if (UiServices.Dispatcher.CheckAccess())
-                {
-                    Close();
-                }
-                else if (UiServices.Dispatcher.IsAvailable)
-                {
-                    UiServices.Dispatcher.Post(Close);
-                }
-                else
-                {
-                    // WHY: the dispatcher has started shutting down, so a posted
-                    // dismissal never runs and the await below would never return;
-                    // the dialog dies with the loop.
-                    dismissed.TrySetResult();
-                }
-
-                cancelled.TrySetResult(ConfirmResult.Cancel);
-            });
-
-            var completed = await Task.WhenAny(task, cancelled.Task).ConfigureAwait(true);
-            var result = completed == task ? await task.ConfigureAwait(true) : ConfirmResult.Cancel;
-
-            if (completed != task && dismissal is not null)
-            {
-                await dismissal.ConfigureAwait(true);
-            }
-
-            return result;
-        }
-    }
+    private ValueTask<ConfirmResult> ConfirmAsyncCore(ConfirmRequest request, CancellationToken cancellationToken) =>
+        DialogSession.RunAsync(
+            _gate,
+            () => _dialog.ShowAsync(request),
+            task => _dialog.Dismiss(task),
+            ConfirmResult.Cancel,
+            cancellationToken);
 }

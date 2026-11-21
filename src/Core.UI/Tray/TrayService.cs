@@ -5,6 +5,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Core.Mvp.Presentation;
 using Core.Mvp.Services;
+using Core.UI.Chrome;
 using Core.UI.Hosting;
 
 namespace Core.UI.Tray;
@@ -19,6 +20,7 @@ public sealed class TrayService : ITrayService, IDisposable
     private readonly WindowIcon? _icon;
     private Action<string> _activated;
     private TrayIcon? _tray;
+    private IReadOnlyList<AppCommand>? _rendered;
     private int _disposed;
 
     /// <summary>
@@ -61,12 +63,24 @@ public sealed class TrayService : ITrayService, IDisposable
         var tray = _tray ??= new TrayIcon();
 
         tray.Icon = _icon;
+
+        // A product republishes its commands on every state change; rebuilding the
+        // NativeMenu and its items churns the DBus menu for an unchanged set.
+        if (!string.Equals(tray.ToolTipText, toolTip, StringComparison.Ordinal) ||
+            !ActionBar.SameCommands(_rendered, menu.Commands))
+        {
+            tray.Menu = BuildMenu(menu, id => _activated(id));
+            _rendered = menu.Commands;
+        }
+
         tray.ToolTipText = toolTip;
-        tray.Menu = BuildMenu(menu, id => _activated(id));
         tray.IsVisible = true;
 
         Register(tray);
     }
+
+    // The current native menu, for the tests and for the reuse check.
+    internal NativeMenu? Menu => _tray?.Menu;
 
     /// <inheritdoc />
     public void Hide()

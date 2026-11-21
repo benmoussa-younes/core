@@ -38,75 +38,14 @@ internal sealed class PromptService : IPromptService
         // pool thread once the await below resumes.
         UiServices.Dispatcher.VerifyAccess();
 
-        return new ValueTask<string?>(PromptAsyncCore(request, cancellationToken));
+        return PromptAsyncCore(request, cancellationToken);
     }
 
-    private async Task<string?> PromptAsyncCore(PromptRequest request, CancellationToken cancellationToken)
-    {
-        if (cancellationToken.IsCancellationRequested)
-        {
-            return null;
-        }
-
-        DialogGate.Lease lease;
-
-        try
-        {
-            lease = await _gate.EnterAsync(cancellationToken).ConfigureAwait(true);
-        }
-        catch (OperationCanceledException)
-        {
-            return null;
-        }
-
-        using (lease)
-        {
-            var task = _dialog.ShowAsync(request);
-            var cancelled = new TaskCompletionSource<string?>(TaskCreationOptions.RunContinuationsAsynchronously);
-            Task? dismissal = null;
-
-            using var registration = cancellationToken.Register(() =>
-            {
-                var dismissed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-                dismissal = dismissed.Task;
-
-                void Close()
-                {
-                    _dialog.Dismiss(task);
-                    dismissed.TrySetResult();
-                }
-
-                // WHY: the await below waits for this dismissal, so a cancellation
-                // raised on the UI thread must run it inline; a Post is only for a
-                // cancellation raised on another thread.
-                if (UiServices.Dispatcher.CheckAccess())
-                {
-                    Close();
-                }
-                else if (UiServices.Dispatcher.IsAvailable)
-                {
-                    UiServices.Dispatcher.Post(Close);
-                }
-                else
-                {
-                    // WHY: the dispatcher has started shutting down, so a posted
-                    // dismissal never runs and the await below would never return;
-                    // the dialog dies with the loop.
-                    dismissed.TrySetResult();
-                }
-
-                cancelled.TrySetResult(null);
-            });
-
-            var completed = await Task.WhenAny(task, cancelled.Task).ConfigureAwait(true);
-            var result = completed == task ? await task.ConfigureAwait(true) : null;
-
-            if (completed != task && dismissal is not null)
-            {
-                await dismissal.ConfigureAwait(true);
-            }
-
-            return result;
-        }
-    }
+    private ValueTask<string?> PromptAsyncCore(PromptRequest request, CancellationToken cancellationToken) =>
+        DialogSession.RunAsync(
+            _gate,
+            () => _dialog.ShowAsync(request),
+            task => _dialog.Dismiss(task),
+            null,
+            cancellationToken);
 }

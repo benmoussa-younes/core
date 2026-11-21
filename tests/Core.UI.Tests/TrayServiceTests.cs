@@ -170,4 +170,23 @@ public sealed class TrayServiceTests
             Assert.Empty(TrayIcon.GetIcons(Application.Current!)!);
         });
     }
+
+    [Fact]
+    public async Task Show_reuses_the_menu_when_the_commands_are_unchanged()
+    {
+        await Headless.Dispatch(() =>
+        {
+            using var tray = new TrayService(icon: null, activated: _ => { });
+
+            tray.Show("Core", new CommandSet([new AppCommand("quit", "Quit")]));
+            var first = tray.Menu;
+            tray.Show("Core", new CommandSet([new AppCommand("quit", "Quit")]));
+
+            Assert.Same(first, tray.Menu);
+
+            tray.Show("Core", new CommandSet([new AppCommand("quit", "Close")]));
+
+            Assert.NotSame(first, tray.Menu);
+        });
+    }
 }
