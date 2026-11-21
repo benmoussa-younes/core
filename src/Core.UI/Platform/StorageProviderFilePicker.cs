@@ -3,7 +3,6 @@
 
 using Avalonia.Platform.Storage;
 using Core.Mvp.Services;
-
 using Core.UI.Hosting;
 
 namespace Core.UI.Platform;

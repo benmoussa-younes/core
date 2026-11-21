@@ -118,21 +118,50 @@ public abstract class CoreApplication : Application
     {
         ArgumentNullException.ThrowIfNull(exception);
 
-        if (UnhandledExceptionHandler is { } handler)
+        // WHY: this is the last chance. A handler or a sink that throws must not take
+        // the process down after the failure was already being reported.
+        try
         {
-            handler(exception);
-        }
-        else if (Diagnostics is { } diagnostics)
-        {
-            diagnostics.Report(exception);
-        }
-        else
-        {
+            if (UnhandledExceptionHandler is { } handler)
+            {
+                handler(exception);
+                return;
+            }
+
+            if (Diagnostics is { } diagnostics)
+            {
+                diagnostics.Report(exception);
+                return;
+            }
+
             // Same redaction as CrashLog.Write: a message can carry the home path and
             // control characters, and stderr is still a durable sink for a service.
             Console.Error.WriteLine(
-                PathRedaction.Scrub(
-                    LogRedaction.SingleLine(SecretRedaction.Scrub(exception.ToString()), 2_048)));
+                LogRedaction.SingleLine(
+                    PathRedaction.Scrub(SecretRedaction.Scrub(exception.ToString())), 2_048));
+        }
+        catch (Exception reportFailure)
+        {
+            TryWriteReportFailure(exception, reportFailure);
+        }
+    }
+
+    private static void TryWriteReportFailure(Exception original, Exception reportFailure)
+    {
+        try
+        {
+            Console.Error.WriteLine(
+                LogRedaction.SingleLine(
+                    string.Concat(
+                        "unhandled exception could not be reported (",
+                        reportFailure.GetType().Name,
+                        "); original failure: ",
+                        original.GetType().Name),
+                    512));
+        }
+        catch (Exception)
+        {
+            // The last chance has no fallback left: a closed or broken console.
         }
     }
 

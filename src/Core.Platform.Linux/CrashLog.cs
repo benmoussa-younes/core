@@ -76,7 +76,7 @@ public sealed class CrashLog : ICrashLog
         {
             _file.WriteLine(context is null
                 ? string.Concat(timestamp, " [crash]")
-                : string.Concat(timestamp, " [crash] ", _redact(LogRedaction.SingleLine(SecretRedaction.Scrub(context), 256))));
+                : string.Concat(timestamp, " [crash] ", LogRedaction.SingleLine(_redact(SecretRedaction.Scrub(context)), 256)));
 
             var lines = exception.ToString().Split('\n');
             var written = 0;
@@ -88,7 +88,7 @@ public sealed class CrashLog : ICrashLog
                     break;
                 }
 
-                _file.WriteLine(_redact(LogRedaction.SingleLine(SecretRedaction.Scrub(line.TrimEnd('\r')), 2_048)));
+                _file.WriteLine(LogRedaction.SingleLine(_redact(SecretRedaction.Scrub(line.TrimEnd('\r'))), 2_048));
                 written++;
             }
         }

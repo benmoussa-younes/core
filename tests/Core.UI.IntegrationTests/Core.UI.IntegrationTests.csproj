@@ -6,8 +6,9 @@
     <RootNamespace>Core.UI.IntegrationTests</RootNamespace>
     <IsPackable>false</IsPackable>
     <OutputType>Exe</OutputType>
-    <!-- A real window and a real dispatcher: excluded from Core.slnx so the
-         headless gate never needs a display; the CI job runs it under Xvfb. -->
+    <!-- A real window and a real dispatcher. The project is in Core.slnx, but every
+         case is a GuiFact skipped unless CORE_GUI_TESTS=1, so the headless gate
+         never needs a display; the CI job runs it under Xvfb. -->
     <IsAotCompatible>false</IsAotCompatible>
   </PropertyGroup>
   <ItemGroup>

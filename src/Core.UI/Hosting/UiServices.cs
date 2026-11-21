@@ -28,7 +28,8 @@ internal sealed class AvaloniaUiDispatcher : IUiDispatcher
     private AvaloniaUiDispatcher()
     {
         // WHY: Avalonia exposes the shutdown as an event, not a state, and the flag
-        // has to be readable from any thread a cancellation callback runs on.
+        // has to be readable from any thread a cancellation callback runs on. The
+        // subscription is process-lifetime: Instance is the only one.
         Dispatcher.UIThread.ShutdownStarted += (_, _) => _shuttingDown = true;
     }
 

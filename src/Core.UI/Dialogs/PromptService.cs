@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 using Core.Mvp.Services;
-
 using Core.UI.Hosting;
 
 namespace Core.UI.Dialogs;

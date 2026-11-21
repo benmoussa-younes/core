@@ -317,21 +317,25 @@ public sealed class CoreHost : IAsyncDisposable
     public void Attach(CoreApplication application)
     {
         ArgumentNullException.ThrowIfNull(application);
-        ObjectDisposedException.ThrowIf(Volatile.Read(ref _disposed) != 0, this);
 
-        Detach();
-
-        _attachedApplication = application;
-        _previousApplicationHandler = application.UnhandledExceptionHandler;
-
-        Action<Exception> handler = exception =>
+        lock (_shutdownGate)
         {
-            _diagnostics.Report(exception);
-            _previousApplicationHandler?.Invoke(exception);
-        };
+            ObjectDisposedException.ThrowIf(Volatile.Read(ref _disposed) != 0, this);
 
-        _applicationHandler = handler;
-        application.UnhandledExceptionHandler = handler;
+            Detach();
+
+            _attachedApplication = application;
+            _previousApplicationHandler = application.UnhandledExceptionHandler;
+
+            Action<Exception> handler = exception =>
+            {
+                _diagnostics.Report(exception);
+                _previousApplicationHandler?.Invoke(exception);
+            };
+
+            _applicationHandler = handler;
+            application.UnhandledExceptionHandler = handler;
+        }
     }
 
     /// <summary>
@@ -344,14 +348,21 @@ public sealed class CoreHost : IAsyncDisposable
     {
         lock (_shutdownGate)
         {
-            return new ValueTask(_shutdownTask ??= ShutdownCoreAsync());
+            if (_shutdownTask is null)
+            {
+                // WHY: the flag is set under the gate Attach takes, so a concurrent
+                // Attach cannot install a handler that captures a diagnostics this
+                // shutdown then disposes.
+                Interlocked.Exchange(ref _disposed, 1);
+                _shutdownTask = ShutdownCoreAsync();
+            }
+
+            return new ValueTask(_shutdownTask);
         }
     }
 
     private async Task ShutdownCoreAsync()
     {
-        Interlocked.Exchange(ref _disposed, 1);
-
         try
         {
             _stopping.Cancel();

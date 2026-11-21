@@ -25,7 +25,6 @@ if (!OperatingSystem.IsLinux())
 }
 
 var state = args[0];
-Directory.CreateDirectory(state);
 
 AppBuilder.Configure<ProbeApp>()
     .UseHeadless(new AvaloniaHeadlessPlatformOptions())

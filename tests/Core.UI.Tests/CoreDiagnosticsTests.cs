@@ -111,6 +111,23 @@ public sealed class CoreDiagnosticsTests : IDisposable
     }
 
     [Fact]
+    public void A_home_path_cut_by_the_line_cap_leaves_no_fragment()
+    {
+        // The home is redacted before the 2048-character cap, so a path that starts
+        // just before the cut cannot leave its first characters in the log.
+        using var diagnostics = CoreDiagnostics.Create(Options()).Value;
+        var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        var padding = new string('a', 2_040);
+
+        diagnostics.Report(new InvalidOperationException(string.Concat(padding, home, "/secret")));
+
+        Assert.DoesNotContain(
+            home[..8],
+            File.ReadAllText(diagnostics.Paths.ApplicationLogFile),
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void A_control_character_in_the_state_home_falls_back_to_the_default()
     {
         // XdgDirectories refuses a value it cannot use and the spec default applies;

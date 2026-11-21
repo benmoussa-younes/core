@@ -4,7 +4,6 @@
 using Avalonia.Input.Platform;
 using Avalonia.Media.Imaging;
 using Core.Mvp.Services;
-
 using Core.UI.Hosting;
 
 namespace Core.UI.Platform;

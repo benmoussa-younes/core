@@ -99,6 +99,23 @@ public sealed class UnhandledExceptionTests
         Assert.Throws<ArgumentNullException>(() => new TestApplication().ReportUnhandledException(null!));
     }
 
+    [Fact]
+    public async Task A_handler_that_throws_does_not_take_the_report_down()
+    {
+        await Headless.Dispatch(() =>
+        {
+            var application = new TestApplication
+            {
+                UnhandledExceptionHandler = _ => throw new InvalidOperationException("handler"),
+            };
+
+            var failure = Record.Exception(
+                () => application.ReportUnhandledException(new InvalidOperationException("boom")));
+
+            Assert.Null(failure);
+        });
+    }
+
     private sealed class TestApplication : CoreApplication
     {
         protected override string ApplicationId => "core-unhandled-test";

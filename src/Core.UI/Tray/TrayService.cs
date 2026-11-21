@@ -5,7 +5,6 @@ using Avalonia;
 using Avalonia.Controls;
 using Core.Mvp.Presentation;
 using Core.Mvp.Services;
-
 using Core.UI.Hosting;
 
 namespace Core.UI.Tray;
