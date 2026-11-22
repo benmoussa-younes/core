@@ -7,8 +7,10 @@ import "../modules/repo.scs" as repo
 # It checks the published tree (no docs, the markdown allowlist, one root
 # AGENTS.md, short nested AGENTS.md allowed, no agent or editor files, no
 # internal host or personal path, the
-# version, an empty PublicAPI.Shipped, the LGPL files) and runs the build, the
-# tests and `reuse lint`. It writes nothing and needs the Scripts interpreter on PATH.
+# version, an empty PublicAPI.Shipped, the LGPL files, the comment form), runs the
+# linter's own checks, then the build, the tests and `reuse lint`. A failed build
+# stops the test step, so no green test result can come from stale binaries. It
+# writes nothing tracked and needs the Scripts interpreter on PATH.
 
 function read_text(base: string, relative: string) -> string {
     match filesystem.read_file("{base}/{relative}".to_path()) {
@@ -230,11 +232,69 @@ match process.run(process.request("grep", ["-rInE", "--exclude-dir=.git", "--exc
     }
 }
 
+match process.run(process.request("tools/scripts/binaries/lint-comments", []).with_working_directory(root)) {
+    ok(completed) => {
+        if completed.exit_code == 0 {
+            io.write_standard_output_line("PASS comment form")
+        } else {
+            for line in completed.standard_output.lines() {
+                if line != "" {
+                    io.write_standard_error_line(line)
+                }
+            }
+            for line in completed.standard_error.lines() {
+                if line != "" {
+                    io.write_standard_error_line(line)
+                }
+            }
+            io.write_standard_error_line("FAIL comment form")
+            success = false
+        }
+    }
+    error(failure) => {
+        io.write_standard_error_line("FAIL comment form: {failure.kind}")
+        success = false
+    }
+}
+
+match process.run(process.request("tools/scripts/binaries/test-lint-comments", []).with_working_directory(root)) {
+    ok(completed) => {
+        if completed.exit_code == 0 {
+            io.write_standard_output_line("PASS comment checks")
+        } else {
+            for line in completed.standard_output.lines() {
+                if line != "" {
+                    io.write_standard_error_line(line)
+                }
+            }
+            for line in completed.standard_error.lines() {
+                if line != "" {
+                    io.write_standard_error_line(line)
+                }
+            }
+            io.write_standard_error_line("FAIL comment checks")
+            success = false
+        }
+    }
+    error(failure) => {
+        io.write_standard_error_line("FAIL comment checks: {failure.kind}")
+        success = false
+    }
+}
+
+let mutable build_ok = false
 match process.run(process.request("dotnet", ["build", "-c", "Release"]).with_working_directory(root)) {
     ok(completed) => {
         if completed.exit_code == 0 {
             io.write_standard_output_line("PASS build")
+            build_ok = true
         } else {
+            for line in completed.standard_output.lines() {
+                let lower = line.lowercased()
+                if lower.contains("error") or lower.contains("erreur") {
+                    io.write_standard_error_line(line)
+                }
+            }
             io.write_standard_error_line("FAIL build: exit {completed.exit_code} {completed.standard_error.trim_whitespace()}")
             success = false
         }
@@ -245,18 +305,23 @@ match process.run(process.request("dotnet", ["build", "-c", "Release"]).with_wor
     }
 }
 
-match process.run(process.request("dotnet", ["test", "-c", "Release", "--no-build"]).with_working_directory(root)) {
-    ok(completed) => {
-        if completed.exit_code == 0 {
-            io.write_standard_output_line("PASS tests")
-        } else {
-            io.write_standard_error_line("FAIL tests: exit {completed.exit_code} {completed.standard_error.trim_whitespace()}")
+if not build_ok {
+    io.write_standard_error_line("FAIL tests: the build did not succeed")
+    success = false
+} else {
+    match process.run(process.request("dotnet", ["test", "-c", "Release", "--no-build"]).with_working_directory(root)) {
+        ok(completed) => {
+            if completed.exit_code == 0 {
+                io.write_standard_output_line("PASS tests")
+            } else {
+                io.write_standard_error_line("FAIL tests: exit {completed.exit_code} {completed.standard_error.trim_whitespace()}")
+                success = false
+            }
+        }
+        error(failure) => {
+            io.write_standard_error_line("FAIL tests: {failure.kind}")
             success = false
         }
-    }
-    error(failure) => {
-        io.write_standard_error_line("FAIL tests: {failure.kind}")
-        success = false
     }
 }
 

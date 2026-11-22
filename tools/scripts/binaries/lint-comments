@@ -1,0 +1,355 @@
+#!/usr/bin/env -S scripts run
+import "../modules/verdict" as verdict
+# lint-comments — refuse a comment added since the base that does not carry its form.
+#
+#   tools/scripts/binaries/lint-comments [--base <rev>] [<repository>]
+#
+# It reads the added lines of `git diff <from> --unified=0`, where <from> is the
+# merge base of the base and HEAD and the working tree is included, so a pull
+# request is judged and the released lines are grandfathered. The base is `main`
+# when it exists, else the first parent of HEAD, else HEAD; `--base` overrides it.
+#
+# A .cs line whose first non-space characters are `//` (but not `///`) is refused
+# unless it carries `// WHY:`; an added `///` line is refused when the declaration
+# it documents is private (PRIVATE-DOC). A .scs file or an extensionless scripts
+# binary under tools/scripts/ refuses an inline `#` after code unless it carries
+# `# WHY:`; a full-line `#` comment is allowed.
+#
+# It writes nothing and needs no privilege.
+
+let mutable success = true
+let mutable explicit_base = ""
+let mutable location = "."
+let arguments = process.arguments()
+let mutable index = 0
+while index < arguments.length() {
+    let argument = arguments[index]
+    if argument == "--base" and index + 1 < arguments.length() {
+        index = index + 1
+        explicit_base = arguments[index]
+    } else {
+        location = argument
+    }
+    index = index + 1
+}
+
+function git_succeeds(location: string, arguments: list<string>) -> boolean {
+    let mutable argv: list<string> = ["-C", location]
+    for argument in arguments {
+        argv.append(argument)
+    }
+    match process.run(process.request("git", argv)) {
+        ok(completed) => {
+            return completed.exit_code == 0
+        }
+        error(_) => {
+            return false
+        }
+    }
+}
+
+function git_output(location: string, arguments: list<string>) -> string {
+    let mutable argv: list<string> = ["-C", location]
+    for argument in arguments {
+        argv.append(argument)
+    }
+    match process.run(process.request("git", argv)) {
+        ok(completed) => {
+            if completed.exit_code == 0 {
+                return completed.standard_output
+            }
+            return ""
+        }
+        error(_) => {
+            return ""
+        }
+    }
+}
+
+# The added line numbers of each changed file, in diff order.
+function added_lines(diff: string) -> map<string, list<integer>> {
+    let mutable added: map<string, list<integer>> = {}
+    let mutable file = ""
+    let mutable next = 0
+    for line in diff.lines() {
+        if line.starts_with("+++ ") {
+            file = line.strip_prefix("+++ ").strip_prefix("b/")
+            continue
+        }
+        if line.starts_with("@@ ") {
+            match line.capture_groups(r"^@@ -\S+ \+(\d+)") {
+                ok(groups) => {
+                    match groups[1].parse_integer() {
+                        ok(number) => {
+                            next = number
+                        }
+                        error(_) => {
+                            next = 0
+                        }
+                    }
+                }
+                error(_) => {
+                    next = 0
+                }
+            }
+            continue
+        }
+        if file == "" or line.starts_with("--- ") {
+            continue
+        }
+        if line.starts_with("+") {
+            let mutable numbers: list<integer> = []
+            if added.contains_key(file) {
+                numbers = added[file]
+            }
+            numbers.append(next)
+            added[file] = numbers
+            next = next + 1
+        } else if line.starts_with(" ") {
+            next = next + 1
+        }
+    }
+    return added
+}
+
+function is_scripts_source(rel: string) -> boolean {
+    if rel.ends_with(".scs") {
+        return true
+    }
+    if not rel.starts_with("tools/scripts/") {
+        return false
+    }
+    let name = rel.split("/")[rel.split("/").length() - 1]
+    return not name.contains(".")
+}
+
+function leading_spaces(line: string) -> string {
+    let mutable prefix = ""
+    for character in line.characters() {
+        if character != " " and character != "\t" {
+            break
+        }
+        prefix = "{prefix}{character}"
+    }
+    return prefix
+}
+
+# An inline `#` is a `#` outside a string literal, not the first non-space
+# character. A model name such as `deepseek-flash#low` is not a comment, and a
+# `#` inside a quoted string never starts one.
+function has_inline_hash(line: string) -> boolean {
+    let stripped = line.strip_prefix(leading_spaces(line))
+    if stripped.starts_with("#") {
+        return false
+    }
+    let characters = line.characters()
+    let mutable in_string = false
+    let mutable escaped = false
+    let mutable index = 0
+    while index < characters.length() {
+        let character = characters[index]
+        if escaped {
+            escaped = false
+        } else if in_string and character == "\\" {
+            escaped = true
+        } else if character == "\"" {
+            in_string = not in_string
+        } else if character == "#" and not in_string {
+            return true
+        }
+        index = index + 1
+    }
+    return false
+}
+
+# A declaration line names a type, a member or a local: it carries a parameter
+# or argument list (a signature, a member access, a call whose opening brace is
+# on its own line) or assigns a value.
+function is_declaration(text: string) -> boolean {
+    if text.starts_with("///") {
+        return false
+    }
+    if text.contains("(") and not text.contains(");") {
+        return true
+    }
+    if text.contains(")") and not text.contains("(") {
+        return true
+    }
+    return text.ends_with("\{") or text.ends_with("\}") or (text.ends_with(";") and text.contains("="))
+}
+
+# "private" when one of the two lines after the `///` line is a declaration
+# naming `private`, "public" otherwise: the summary documents the declaration
+# that follows it, and a doc comment never documents another doc comment.
+function find_declaration(root: path, rel: string, line: integer) -> string {
+    let mutable content = ""
+    match filesystem.read_file(root / rel) {
+        ok(text) => {
+            content = text
+        }
+        error(_) => {
+            return ""
+        }
+    }
+    let lines = content.lines()
+    let mutable probe = line
+    while probe < lines.length() and probe <= line + 2 {
+        if is_private_declaration(lines[probe]) {
+            return "private"
+        }
+        probe = probe + 1
+    }
+    return "public"
+}
+
+# The declaration a summary documents: a line that is not a comment, is not
+# blank, reads as a declaration and names `private`.
+function is_private_declaration(raw: string) -> boolean {
+    let text = raw.trim_whitespace()
+    if text == "" or text.starts_with("//") {
+        return false
+    }
+    return is_declaration(text) and text.contains("private")
+}
+
+# An untracked file is entirely added, so every line of it is judged.
+function all_lines(repository: path, rel: string) -> list<integer> {
+    let mutable content = ""
+    match filesystem.read_file(repository / rel) {
+        ok(text) => {
+            content = text
+        }
+        error(_) => {}
+    }
+    let mutable numbers: list<integer> = []
+    let mutable number = 1
+    let count = content.lines().length()
+    while number <= count {
+        numbers.append(number)
+        number = number + 1
+    }
+    return numbers
+}
+
+# One defect per added line that carries a comment. The body is a function so a
+# `return` leaves this pass only, never the whole script: a top-level `match`
+# arm is not a block for `return`, `break` or `continue`.
+function defects_of(repository: path, rel: string, numbers: list<integer>) -> list<string> {
+    let mutable defects: list<string> = []
+    let mutable content = ""
+    match filesystem.read_file(repository / rel) {
+        ok(text) => {
+            content = text
+        }
+        error(_) => {}
+    }
+    let lines = content.lines()
+    for number in numbers {
+        if number < 1 or number > lines.length() {
+            continue
+        }
+        let line = lines[number - 1]
+        let text = line.trim_whitespace()
+        if not rel.ends_with(".cs") {
+            if is_scripts_source(rel) and has_inline_hash(line) and not line.contains("# WHY:") {
+                defects.append("{rel}:{number}: INLINE")
+            }
+            continue
+        }
+        if text.starts_with("///") {
+            let declaration = find_declaration(repository, rel, number)
+            if declaration.contains("private") {
+                defects.append("{rel}:{number}: PRIVATE-DOC")
+            }
+            continue
+        }
+        if text.starts_with("//") and not line.contains("// WHY:") {
+            defects.append("{rel}:{number}: NARRATION")
+        }
+    }
+    return defects
+}
+
+let top_level = git_output(location, ["rev-parse", "--show-toplevel"]).trim_whitespace()
+let mutable repository_location = location
+if top_level != "" {
+    repository_location = top_level
+}
+let repository: path = repository_location.to_path()
+
+let mutable base = explicit_base
+if base == "" {
+    if git_succeeds(location, ["rev-parse", "--verify", "--quiet", "main"]) {
+        base = "main"
+    } else if git_succeeds(location, ["rev-parse", "--verify", "--quiet", "HEAD^"]) {
+        base = "HEAD^"
+    } else {
+        base = "HEAD"
+    }
+}
+# A checkout of the base itself still judges the commit that landed, not an
+# empty tree; an explicit `--base HEAD` keeps the working tree only.
+if base != "HEAD" and git_succeeds(location, ["rev-parse", "--verify", "--quiet", "HEAD^"]) {
+    let head = git_output(location, ["rev-parse", "HEAD"]).trim_whitespace()
+    let resolved = git_output(location, ["rev-parse", base]).trim_whitespace()
+    if head != "" and head == resolved {
+        base = "HEAD^"
+    }
+}
+
+let mutable from = base
+let merge_base = git_output(location, ["merge-base", base, "HEAD"]).trim_whitespace()
+if merge_base != "" {
+    from = merge_base
+}
+
+let git_arguments: list<string> = ["-C", location, "diff", from, "--unified=0"]
+match process.run(process.request("git", git_arguments)) {
+    ok(completed) => {
+        if completed.exit_code != 0 {
+            io.write_standard_error_line(completed.standard_error)
+            io.write_standard_output_line("FAIL git diff {from}: exit {completed.exit_code}")
+            success = false
+        } else {
+            let added = added_lines(completed.standard_output)
+            for rel in added.keys() {
+                for defect in defects_of(repository, rel, added[rel]) {
+                    io.write_standard_output_line("COMMENT {defect}")
+                    success = false
+                }
+            }
+        }
+    }
+    error(_) => {
+        io.write_standard_output_line("FAIL git diff {from}: cannot run git")
+        success = false
+    }
+}
+
+match process.run(process.request("git", ["-C", location, "ls-files", "--others", "--exclude-standard", "--full-name"])) {
+    ok(completed) => {
+        if completed.exit_code != 0 {
+            io.write_standard_error_line(completed.standard_error)
+            io.write_standard_output_line("FAIL git ls-files: exit {completed.exit_code}")
+            success = false
+        } else {
+            for line in completed.standard_output.lines() {
+                let rel = line.trim_whitespace()
+                if rel == "" {
+                    continue
+                }
+                for defect in defects_of(repository, rel, all_lines(repository, rel)) {
+                    io.write_standard_output_line("COMMENT {defect}")
+                    success = false
+                }
+            }
+        }
+    }
+    error(_) => {
+        io.write_standard_output_line("FAIL git ls-files: cannot run git")
+        success = false
+    }
+}
+
+io.write_standard_output_line(verdict.line(success))
+process.exit_with_code(verdict.code(success))

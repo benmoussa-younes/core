@@ -1,0 +1,6 @@
+# One assertion shape for the test binaries: expected exit code and expected
+# text in the combined output.
+
+public function case_ok(exit_code: integer, expected_exit: integer, output: string, expected_text: string) -> boolean {
+    return exit_code == expected_exit and output.contains(expected_text)
+}

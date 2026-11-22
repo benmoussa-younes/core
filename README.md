@@ -28,20 +28,22 @@ the first adapter; .NET 10, NativeAOT-compatible and trim-safe.
 dotnet build -c Release
 dotnet test -c Release
 reuse lint
-tools/scripts/binaries/gate.scs          # fast gate: build, tests, architecture
+tools/scripts/binaries/lint-comments   # comment form of the lines added since the base
+tools/scripts/binaries/gate.scs          # fast gate: build, tests, comment form, architecture
 tools/scripts/binaries/gate.scs --perf   # manual/nightly AOT budgets (hyperfine, jq)
 ```
 
-The gate needs a Git checkout (it uses `git ls-files`), the root `AGENTS.md`
-and the Scripts interpreter on `PATH` (`scripts run`); it is not a
-source-tarball tool.
+The gate needs a Git checkout (it uses `git ls-files` and the diff against the
+base), the root `AGENTS.md` and the Scripts interpreter on `PATH` (`scripts
+run`); it is not a source-tarball tool. It builds before it tests, so a red
+build fails the test step instead of running the previous binaries.
 
 ## Release
 
 A `v*` tag runs `.github/workflows/release.yml`: it builds, tests, checks the
 licence metadata, verifies that the tag matches `VersionPrefix`, and attaches a
-source tarball plus its SHA-256 to the GitHub release. Core 0.2.1 is source-only:
-no NuGet package is published.
+source tarball plus its SHA-256 to the GitHub release. Core is source-only: no
+NuGet package is published.
 
 ## Diagnostics
 

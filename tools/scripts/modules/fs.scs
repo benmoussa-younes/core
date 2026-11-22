@@ -1,0 +1,24 @@
+# File helpers shared by the binaries and the tests. A failure is a boolean,
+# never a silent default: the caller decides what a missing file means.
+
+public function write_text(content: string, path: string) -> boolean {
+    match filesystem.write_file_overwrite(content, path.to_path()) {
+        ok(_) => {
+            return true
+        }
+        error(_) => {
+            return false
+        }
+    }
+}
+
+public function read_text(path: string) -> string {
+    match filesystem.read_file(path.to_path()) {
+        ok(content) => {
+            return content
+        }
+        error(_) => {
+            return ""
+        }
+    }
+}
