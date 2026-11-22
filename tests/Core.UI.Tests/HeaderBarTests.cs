@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 using Avalonia;
+using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Core.UI.Chrome;
@@ -60,6 +61,84 @@ public sealed class HeaderBarTests
         bar.IsDirty = false;
 
         Assert.False(DirtyDot(bar).IsVisible);
+    }
+
+    [Fact]
+    public void The_dirty_marker_announces_the_state_on_the_title()
+    {
+        var bar = new HeaderBar { Title = "Files" };
+
+        bar.IsDirty = true;
+
+        Assert.Equal("Files, unsaved changes", AutomationProperties.GetName(TitleBlock(bar)));
+
+        bar.Title = "Renamed";
+
+        Assert.Equal("Renamed, unsaved changes", AutomationProperties.GetName(TitleBlock(bar)));
+
+        bar.IsDirty = false;
+
+        Assert.Null(AutomationProperties.GetName(TitleBlock(bar)));
+    }
+
+    [Fact]
+    public async Task The_dirty_dot_follows_the_primary_brush_resource()
+    {
+        await Headless.Dispatch(() =>
+        {
+            var bar = new HeaderBar { Title = "Files" };
+            var window = new Window { Width = 400, Height = 100, Content = bar };
+
+            window.Show();
+            window.UpdateLayout();
+
+            var resources = Application.Current!.Resources;
+            var previous = resources["PrimaryBrush"];
+
+            try
+            {
+                resources["PrimaryBrush"] = new SolidColorBrush(Colors.Red);
+                window.UpdateLayout();
+
+                var background = Assert.IsAssignableFrom<ISolidColorBrush>(DirtyDot(bar).Background);
+                Assert.Equal(Colors.Red, background.Color);
+            }
+            finally
+            {
+                resources["PrimaryBrush"] = previous;
+            }
+
+            window.Close();
+        });
+    }
+
+    [Fact]
+    public async Task Toggling_the_dirty_dot_does_not_move_the_title()
+    {
+        await Headless.Dispatch(() =>
+        {
+            var bar = new HeaderBar { Title = "Files" };
+            var window = new Window { Width = 400, Height = 100, Content = bar };
+
+            window.Show();
+            window.UpdateLayout();
+
+            var before = TitleBlock(bar).TranslatePoint(default, bar);
+            Assert.NotNull(before);
+
+            bar.IsDirty = true;
+            window.UpdateLayout();
+            var dirty = TitleBlock(bar).TranslatePoint(default, bar);
+
+            bar.IsDirty = false;
+            window.UpdateLayout();
+            var clean = TitleBlock(bar).TranslatePoint(default, bar);
+
+            Assert.Equal(before.Value.X, dirty!.Value.X);
+            Assert.Equal(before.Value.X, clean!.Value.X);
+
+            window.Close();
+        });
     }
 
     [Fact]
@@ -150,7 +229,7 @@ public sealed class HeaderBarTests
         Assert.IsType<Image>(IdentityPanel(bar).Children[0]);
 
     private static Border DirtyDot(HeaderBar bar) =>
-        Assert.IsType<Border>(IdentityPanel(bar).Children[1]);
+        Assert.IsType<Border>(Assert.IsType<Panel>(IdentityPanel(bar).Children[1]).Children[0]);
 
     private static StackPanel TitlePanel(HeaderBar bar) =>
         Assert.IsType<StackPanel>(IdentityPanel(bar).Children[2]);

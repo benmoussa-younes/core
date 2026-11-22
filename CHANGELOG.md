@@ -12,9 +12,9 @@ and this project adheres to
 
 ### Added
 
-- `HeaderBar.IsDirty` shows a dot before the title. A shell without tabs uses it
-  so the unsaved-changes marker is not lost, and the dot follows the active view
-  even when a page is pushed over a tab. `ClearChrome` removes it.
+- `HeaderBar.IsDirty` shows a dot before the title; a view with a tab keeps the
+  marker on the tab, and the header carries it for a view without one. The dot
+  follows the theme and the accent, and `ClearChrome` removes it.
 
 ## [0.2.2] - 2026-11-21
 

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 using Avalonia;
+using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Controls.Presenters;
 using Avalonia.Controls.Primitives;
@@ -88,15 +89,30 @@ public class HeaderBar : Border
         VerticalAlignment = global::Avalonia.Layout.VerticalAlignment.Center,
     };
 
-    private readonly Border _dirty = new()
+    private const double DirtyDotDiameter = 8;
+    private const double DirtyDotGap = 6;
+    private const double DirtySlotWidth = DirtyDotDiameter + DirtyDotGap;
+
+    private readonly Border _dirtyDot = new()
     {
-        Width = 8,
-        Height = 8,
-        CornerRadius = new CornerRadius(4),
-        Background = ThemeBrushes.Resolve("PrimaryBrush"),
-        Margin = new Thickness(0, 0, 6, 0),
+        Width = DirtyDotDiameter,
+        Height = DirtyDotDiameter,
+        CornerRadius = new CornerRadius(DirtyDotDiameter / 2),
+        HorizontalAlignment = global::Avalonia.Layout.HorizontalAlignment.Left,
         VerticalAlignment = global::Avalonia.Layout.VerticalAlignment.Center,
         IsVisible = false,
+    };
+
+    private readonly Panel _dirtySlot = new()
+    {
+        Width = DirtySlotWidth,
+        VerticalAlignment = global::Avalonia.Layout.VerticalAlignment.Center,
+    };
+
+    private readonly Panel _dirtyBalance = new()
+    {
+        Width = DirtySlotWidth,
+        IsHitTestVisible = false,
     };
 
     private readonly StackPanel _titles = new()
@@ -147,11 +163,18 @@ public class HeaderBar : Border
         BorderBrush = ThemeBrushes.Resolve("BorderBrush");
         BorderThickness = new Thickness(0, 0, 0, 1);
 
+        _dirtySlot.Children.Add(_dirtyDot);
+        // WHY: a live accent or theme switch replaces the resource, so the dot binds instead of resolving once.
+        ThemeResources.Bind(_dirtyDot, Border.BackgroundProperty, "PrimaryBrush");
+        ToolTip.SetTip(_dirtyDot, "Unsaved changes");
+
         _titles.Children.Add(_title);
         _titles.Children.Add(_subtitle);
         _identity.Children.Add(_icon);
-        _identity.Children.Add(_dirty);
+        _identity.Children.Add(_dirtySlot);
         _identity.Children.Add(_titles);
+        // WHY: the balanced slot keeps the title on the bar's centre whether the dot is shown or not.
+        _identity.Children.Add(_dirtyBalance);
         _center.Children.Add(_identity);
         _center.Children.Add(_centerContent);
 
@@ -220,8 +243,8 @@ public class HeaderBar : Border
     }
 
     /// <summary>
-    /// Gets or sets whether the active view has unsaved changes. The bar shows a
-    /// dot before the title, so a shell without tabs keeps the marker visible.
+    /// Gets or sets whether the bar shows an unsaved-changes dot before the title.
+    /// The dot keeps a reserved slot, so showing it does not move the title.
     /// </summary>
     public bool IsDirty
     {
@@ -249,10 +272,11 @@ public class HeaderBar : Border
         if (change.Property == TitleProperty)
         {
             _title.Text = Title;
+            UpdateDirtyMarker();
         }
         else if (change.Property == IsDirtyProperty)
         {
-            _dirty.IsVisible = IsDirty;
+            UpdateDirtyMarker();
         }
         else if (change.Property == SubtitleProperty)
         {
@@ -346,6 +370,22 @@ public class HeaderBar : Border
         {
             slot.Children.Add(content);
         }
+    }
+
+    private void UpdateDirtyMarker()
+    {
+        _dirtyDot.IsVisible = IsDirty;
+
+        if (!IsDirty)
+        {
+            _title.ClearValue(AutomationProperties.NameProperty);
+            return;
+        }
+
+        // WHY: a Border has no automation peer, so the title carries the state a screen reader reads.
+        AutomationProperties.SetName(
+            _title,
+            string.IsNullOrEmpty(Title) ? "Unsaved changes" : $"{Title}, unsaved changes");
     }
 
     /// <summary>Re-resolves the brushes set once, so a live theme switch is reflected.</summary>
