@@ -36,7 +36,10 @@ tools/scripts/binaries/gate.scs --perf   # manual/nightly AOT budgets (hyperfine
 The gate needs a Git checkout (it uses `git ls-files` and the diff against the
 base), the root `AGENTS.md` and the Scripts interpreter on `PATH` (`scripts
 run`); it is not a source-tarball tool. It builds before it tests, so a red
-build fails the test step instead of running the previous binaries.
+build fails the test step instead of running the previous binaries. The `CI`
+workflow installs the Scripts interpreter (pinned version and SHA-256) and
+`reuse`, then runs the same gate; the `desktop` job runs the GUI integration
+suite under Xvfb.
 
 ## Release
 

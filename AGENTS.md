@@ -18,7 +18,8 @@ tools/scripts/binaries/gate.scs          # one VERDICT line, exit 0/1
 The gate needs Git, this file and the Scripts interpreter on `PATH` (`scripts
 run`); it does not change tracked files. It checks the comment form of the lines
 added since the base, builds before it tests, and fails the tests when the build
-fails.
+fails. The `CI` workflow installs the interpreter from its pinned release and
+runs the same gate.
 
 ## Conventions
 
