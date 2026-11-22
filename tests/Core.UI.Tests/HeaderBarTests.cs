@@ -88,25 +88,17 @@ public sealed class HeaderBarTests
         {
             var bar = new HeaderBar { Title = "Files" };
             var window = new Window { Width = 400, Height = 100, Content = bar };
+            window.Resources["PrimaryBrush"] = new SolidColorBrush(Colors.Green);
 
             window.Show();
             window.UpdateLayout();
 
-            var resources = Application.Current!.Resources;
-            var previous = resources["PrimaryBrush"];
+            Assert.Equal(Colors.Green, DotColor(bar));
 
-            try
-            {
-                resources["PrimaryBrush"] = new SolidColorBrush(Colors.Red);
-                window.UpdateLayout();
+            window.Resources["PrimaryBrush"] = new SolidColorBrush(Colors.Red);
+            window.UpdateLayout();
 
-                var background = Assert.IsAssignableFrom<ISolidColorBrush>(DirtyDot(bar).Background);
-                Assert.Equal(Colors.Red, background.Color);
-            }
-            finally
-            {
-                resources["PrimaryBrush"] = previous;
-            }
+            Assert.Equal(Colors.Red, DotColor(bar));
 
             window.Close();
         });
@@ -230,6 +222,9 @@ public sealed class HeaderBarTests
 
     private static Border DirtyDot(HeaderBar bar) =>
         Assert.IsType<Border>(Assert.IsType<Panel>(IdentityPanel(bar).Children[1]).Children[0]);
+
+    private static Color DotColor(HeaderBar bar) =>
+        Assert.IsAssignableFrom<ISolidColorBrush>(DirtyDot(bar).Background).Color;
 
     private static StackPanel TitlePanel(HeaderBar bar) =>
         Assert.IsType<StackPanel>(IdentityPanel(bar).Children[2]);
