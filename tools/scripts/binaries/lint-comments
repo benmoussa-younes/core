@@ -7,7 +7,8 @@ import "../modules/verdict" as verdict
 # It reads the added lines of `git diff <from> --unified=0`, where <from> is the
 # merge base of the base and HEAD and the working tree is included, so a pull
 # request is judged and the released lines are grandfathered. The base is `main`
-# when it exists, else the first parent of HEAD, else HEAD; `--base` overrides it.
+# when it exists, else the first parent of HEAD, else HEAD; a checkout of the base
+# itself judges the commit that landed, and `--base` overrides the choice.
 #
 # A .cs line whose first non-space characters are `//` (but not `///`) is refused
 # unless it carries `// WHY:`; an added `///` line is refused when the declaration
