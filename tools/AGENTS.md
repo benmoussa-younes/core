@@ -3,7 +3,8 @@
 
 # tools
 
-- `tools/scripts/binaries/gate.scs` is read-only: it must not change tracked files.
+- `tools/scripts/binaries/gate.scs` is read-only for tracked files: it writes its
+  test TRX under the ignored `TestResults/` and nothing else.
 - `tools/scripts/binaries/lint-comments [--base <rev>] [<repository>]` judges the
   lines added since the base: `// WHY:` for a C# line comment, `# WHY:` for an
   inline scripts comment, and a doc comment only on public API. It reads the diff

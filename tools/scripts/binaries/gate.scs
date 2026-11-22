@@ -8,9 +8,10 @@ import "../modules/repo.scs" as repo
 # AGENTS.md, short nested AGENTS.md allowed, no agent or editor files, no
 # internal host or personal path, the
 # version, an empty PublicAPI.Shipped, the LGPL files, the comment form), runs the
-# linter's own checks, then the build, the tests and `reuse lint`. A failed build
-# stops the test step, so no green test result can come from stale binaries. It
-# writes nothing tracked and needs the Scripts interpreter on PATH.
+# linter's own checks, then the build, the tests (a TRX under the ignored
+# TestResults/) and `reuse lint`. A failed build stops the test step, so no green
+# test result can come from stale binaries. It writes nothing tracked and needs
+# the Scripts interpreter on PATH.
 
 function read_text(base: string, relative: string) -> string {
     match filesystem.read_file("{base}/{relative}".to_path()) {
@@ -309,11 +310,22 @@ if not build_ok {
     io.write_standard_error_line("FAIL tests: the build did not succeed")
     success = false
 } else {
-    match process.run(process.request("dotnet", ["test", "-c", "Release", "--no-build"]).with_working_directory(root)) {
+    match process.run(process.request("dotnet", ["test", "-c", "Release", "--no-build", "--logger", "trx;LogFileName=core-gate.trx", "--results-directory", "TestResults"]).with_working_directory(root)) {
         ok(completed) => {
             if completed.exit_code == 0 {
                 io.write_standard_output_line("PASS tests")
             } else {
+                let failure_lines = completed.standard_output.lines()
+                let mutable failure_start = failure_lines.length() - 80
+                if failure_start < 0 {
+                    failure_start = 0
+                }
+                while failure_start < failure_lines.length() {
+                    if failure_lines[failure_start] != "" {
+                        io.write_standard_error_line(failure_lines[failure_start])
+                    }
+                    failure_start = failure_start + 1
+                }
                 io.write_standard_error_line("FAIL tests: exit {completed.exit_code} {completed.standard_error.trim_whitespace()}")
                 success = false
             }

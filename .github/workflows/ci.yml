@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 Younes BENMOUSSA <younes.benmoussa@pm.me>
+# SPDX-License-Identifier: LGPL-3.0-or-later
 name: CI
 
 on:
@@ -13,20 +15,40 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
-      - uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
+      - name: Checkout
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          # The comment linter judges the commits since the base, so the merge
+          # commit's first parent must be present.
+          fetch-depth: 0
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
         with:
           dotnet-version: 10.0.x
           dotnet-quality: ga
-      - name: Licence
-        run: pipx run reuse==5.0.2 lint
-      - name: Build
-        run: dotnet build -c Release
-      - name: Test
-        run: >
-          dotnet test -c Release --no-build
-          --logger "trx;LogFileName=test-results.trx"
-          --results-directory TestResults
+
+      # The gate is a Scripts binary: the interpreter comes from the pinned
+      # release, verified by its SHA-256, and `reuse` from pipx. The gate runs
+      # the build, the tests and `reuse lint` itself.
+      - name: Install the toolchain
+        env:
+          SCRIPTS_VERSION: 0.1.2
+          SCRIPTS_SHA256: db1b23ffa5c3baea6294f9b1f2f36a0d3b8dd9dd8646ffe95dc3dc9c9bb9214f
+        run: |
+          pipx install --force reuse==5.0.2
+          curl -fsSL -o "$RUNNER_TEMP/scripts.tar.gz" \
+            "https://github.com/benmoussa-younes/scripts/releases/download/v${SCRIPTS_VERSION}/scripts_${SCRIPTS_VERSION}_linux-x64.tar.gz"
+          echo "${SCRIPTS_SHA256}  $RUNNER_TEMP/scripts.tar.gz" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/scripts.tar.gz" -C "$RUNNER_TEMP"
+          mkdir -p "$HOME/.local/bin"
+          install -m 755 "$RUNNER_TEMP/scripts-${SCRIPTS_VERSION}/scripts" "$HOME/.local/bin/scripts"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          "$HOME/.local/bin/scripts" --version
+
+      - name: Gate
+        run: tools/scripts/binaries/gate.scs
+
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6

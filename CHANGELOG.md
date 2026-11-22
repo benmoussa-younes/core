@@ -8,6 +8,12 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Changed
+
+- CI installs the Scripts interpreter from its pinned release and runs the same
+  gate as the maintainer, so the comment form, the architecture checks and the
+  build/test ordering apply to every pull request.
+
 ## [0.2.3] - 2026-11-22
 
 ### Added

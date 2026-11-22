@@ -8,11 +8,11 @@ import "../modules/verdict" as verdict
 #
 #   tools/scripts/binaries/test-lint-comments
 #
-# It builds a git fixture under /tmp/opencode with one .cs file, one
-# extensionless scripts binary and one .scs module at the base commit, copies the
-# real linter and the verdict module it imports into it, then applies one change
-# per case. The base lines are paraphrases on purpose: they are grandfathered,
-# which the clean tree case proves. No network, no image, no model.
+# It builds a git fixture under /tmp/opencode, one per run, with one .cs file,
+# one extensionless scripts binary and one .scs module at the base commit, copies
+# the real linter and the verdict module it imports into it, then applies one
+# change per case. The base lines are paraphrases on purpose: they are
+# grandfathered, which the clean tree case proves. No network, no image, no model.
 #
 # Check with `scripts check` (not --deny-warnings): the linter path is computed,
 # which raises SCRIPTS-LINT-0004 by design.
@@ -23,8 +23,12 @@ function repo_root() -> string {
     return repo.root_from(process.script_path())
 }
 
+function fixture_base() -> string {
+    return "/tmp/opencode/lint-comments-test-{process.identifier()}"
+}
+
 function fixture() -> string {
-    return "/tmp/opencode/lint-comments-test/root"
+    return "{fixture_base()}/root"
 }
 
 function linter() -> string {
@@ -69,7 +73,7 @@ function git_in(directory: string, arguments: list<string>) -> boolean {
 
 # A clean fixture: one git repository whose HEAD holds the base files.
 function reset_fixture() -> boolean {
-    match process.run(process.request("rm", ["-rf", "/tmp/opencode/lint-comments-test"])) {
+    match process.run(process.request("rm", ["-rf", fixture_base()])) {
         ok(_) => {}
         error(_) => {}
     }
