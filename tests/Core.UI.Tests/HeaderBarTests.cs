@@ -46,6 +46,23 @@ public sealed class HeaderBarTests
     }
 
     [Fact]
+    public void The_dirty_marker_is_shown_only_when_set()
+    {
+        var bar = new HeaderBar { Title = "Files" };
+
+        Assert.False(bar.IsDirty);
+        Assert.False(DirtyDot(bar).IsVisible);
+
+        bar.IsDirty = true;
+
+        Assert.True(DirtyDot(bar).IsVisible);
+
+        bar.IsDirty = false;
+
+        Assert.False(DirtyDot(bar).IsVisible);
+    }
+
+    [Fact]
     public void Center_content_replaces_the_title()
     {
         var bar = new HeaderBar { Title = "Files", Subtitle = "3 items" };
@@ -132,8 +149,11 @@ public sealed class HeaderBarTests
     private static Image IconBlock(HeaderBar bar) =>
         Assert.IsType<Image>(IdentityPanel(bar).Children[0]);
 
+    private static Border DirtyDot(HeaderBar bar) =>
+        Assert.IsType<Border>(IdentityPanel(bar).Children[1]);
+
     private static StackPanel TitlePanel(HeaderBar bar) =>
-        Assert.IsType<StackPanel>(IdentityPanel(bar).Children[1]);
+        Assert.IsType<StackPanel>(IdentityPanel(bar).Children[2]);
 
     private static TextBlock TitleBlock(HeaderBar bar) =>
         Assert.IsType<TextBlock>(TitlePanel(bar).Children[0]);

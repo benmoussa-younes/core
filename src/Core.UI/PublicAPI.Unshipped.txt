@@ -70,6 +70,8 @@ Core.UI.Chrome.HeaderBar.EndContent.set -> void
 Core.UI.Chrome.HeaderBar.HeaderBar() -> void
 Core.UI.Chrome.HeaderBar.Icon.get -> Avalonia.Media.IImage?
 Core.UI.Chrome.HeaderBar.Icon.set -> void
+Core.UI.Chrome.HeaderBar.IsDirty.get -> bool
+Core.UI.Chrome.HeaderBar.IsDirty.set -> void
 Core.UI.Chrome.HeaderBar.StartContent.get -> Avalonia.Controls.Control?
 Core.UI.Chrome.HeaderBar.StartContent.set -> void
 Core.UI.Chrome.HeaderBar.Subtitle.get -> string?
@@ -310,6 +312,7 @@ static readonly Core.UI.Chrome.AdwaitaWindow.ClientSideDecorationsProperty -> Av
 static readonly Core.UI.Chrome.HeaderBar.CenterContentProperty -> Avalonia.StyledProperty<Avalonia.Controls.Control?>!
 static readonly Core.UI.Chrome.HeaderBar.EndContentProperty -> Avalonia.StyledProperty<Avalonia.Controls.Control?>!
 static readonly Core.UI.Chrome.HeaderBar.IconProperty -> Avalonia.StyledProperty<Avalonia.Media.IImage?>!
+static readonly Core.UI.Chrome.HeaderBar.IsDirtyProperty -> Avalonia.StyledProperty<bool>!
 static readonly Core.UI.Chrome.HeaderBar.StartContentProperty -> Avalonia.StyledProperty<Avalonia.Controls.Control?>!
 static readonly Core.UI.Chrome.HeaderBar.SubtitleProperty -> Avalonia.StyledProperty<string?>!
 static readonly Core.UI.Chrome.HeaderBar.TitleProperty -> Avalonia.StyledProperty<string?>!

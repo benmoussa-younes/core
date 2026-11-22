@@ -8,6 +8,14 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-11-22
+
+### Added
+
+- `HeaderBar.IsDirty` shows a dot before the title. A shell without tabs uses it
+  so the unsaved-changes marker is not lost, and the dot follows the active view
+  even when a page is pushed over a tab. `ClearChrome` removes it.
+
 ## [0.2.2] - 2026-11-21
 
 ### Added

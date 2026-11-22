@@ -155,7 +155,7 @@ if not report("no agent or editor files", agent_entries.length() == 0, agent_ent
 }
 
 let props = read_text(base, "Directory.Build.props")
-let version = "0.2.2"
+let version = "0.2.3"
 if not report("version {version}", props.contains(">{version}</VersionPrefix>"), "Directory.Build.props") {
     success = false
 }

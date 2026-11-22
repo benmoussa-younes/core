@@ -49,6 +49,10 @@ public class HeaderBar : Border
     public static readonly StyledProperty<Control?> EndContentProperty =
         AvaloniaProperty.Register<HeaderBar, Control?>(nameof(EndContent));
 
+    /// <summary>Identifies the <see cref="IsDirty"/> property.</summary>
+    public static readonly StyledProperty<bool> IsDirtyProperty =
+        AvaloniaProperty.Register<HeaderBar, bool>(nameof(IsDirty));
+
     /// <summary>Identifies the <see cref="Icon"/> property.</summary>
     public static readonly StyledProperty<IImage?> IconProperty =
         AvaloniaProperty.Register<HeaderBar, IImage?>(nameof(Icon));
@@ -82,6 +86,17 @@ public class HeaderBar : Border
         Margin = new Thickness(0, 0, 8, 0),
         IsVisible = false,
         VerticalAlignment = global::Avalonia.Layout.VerticalAlignment.Center,
+    };
+
+    private readonly Border _dirty = new()
+    {
+        Width = 8,
+        Height = 8,
+        CornerRadius = new CornerRadius(4),
+        Background = ThemeBrushes.Resolve("PrimaryBrush"),
+        Margin = new Thickness(0, 0, 6, 0),
+        VerticalAlignment = global::Avalonia.Layout.VerticalAlignment.Center,
+        IsVisible = false,
     };
 
     private readonly StackPanel _titles = new()
@@ -135,6 +150,7 @@ public class HeaderBar : Border
         _titles.Children.Add(_title);
         _titles.Children.Add(_subtitle);
         _identity.Children.Add(_icon);
+        _identity.Children.Add(_dirty);
         _identity.Children.Add(_titles);
         _center.Children.Add(_identity);
         _center.Children.Add(_centerContent);
@@ -204,6 +220,16 @@ public class HeaderBar : Border
     }
 
     /// <summary>
+    /// Gets or sets whether the active view has unsaved changes. The bar shows a
+    /// dot before the title, so a shell without tabs keeps the marker visible.
+    /// </summary>
+    public bool IsDirty
+    {
+        get => GetValue(IsDirtyProperty);
+        set => SetValue(IsDirtyProperty, value);
+    }
+
+    /// <summary>
     /// Gets or sets the icon shown before the title; it is hidden when
     /// <see langword="null"/>. A product supplies its window icon here as well as
     /// through <see cref="Window.Icon"/>, because the shell uses client-side
@@ -223,6 +249,10 @@ public class HeaderBar : Border
         if (change.Property == TitleProperty)
         {
             _title.Text = Title;
+        }
+        else if (change.Property == IsDirtyProperty)
+        {
+            _dirty.IsVisible = IsDirty;
         }
         else if (change.Property == SubtitleProperty)
         {

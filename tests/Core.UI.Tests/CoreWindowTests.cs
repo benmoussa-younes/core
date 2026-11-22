@@ -504,6 +504,34 @@ public sealed class CoreWindowTests
     }
 
     [Fact]
+    public async Task The_header_dirty_marker_follows_the_active_view()
+    {
+        await Headless.Dispatch(() =>
+        {
+            var window = Create();
+            var master = new FakeView();
+            var detail = new FakeView();
+
+            window.Show();
+            window.OpenTab("master", "Master", master);
+            window.SetSnapshot(new ShellSnapshot("Master", "list", CommandSet.Empty) { IsDirty = true });
+
+            Assert.True(window.Header.IsDirty);
+
+            window.Push("Detail", "one item", detail);
+            window.SetSnapshot(new ShellSnapshot("Detail", "one item", CommandSet.Empty));
+
+            Assert.False(window.Header.IsDirty);
+
+            ClickAt(window, window.BackButton);
+
+            Assert.True(window.Header.IsDirty);
+
+            window.Close();
+        });
+    }
+
+    [Fact]
     public async Task Switching_tabs_restores_each_snapshot()
     {
         await Headless.Dispatch(() =>
