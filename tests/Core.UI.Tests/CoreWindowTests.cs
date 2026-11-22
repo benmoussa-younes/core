@@ -504,6 +504,102 @@ public sealed class CoreWindowTests
     }
 
     [Fact]
+    public async Task A_stacked_page_shows_the_dirty_marker_in_the_header()
+    {
+        await Headless.Dispatch(() =>
+        {
+            var window = Create();
+            var page = new FakeView();
+            var detail = new FakeView();
+
+            window.Show();
+            window.Push("Page", "first", page);
+            window.SetSnapshot(new ShellSnapshot("Page", "first", CommandSet.Empty) { IsDirty = true });
+
+            Assert.True(window.Header.IsDirty);
+
+            window.Push("Detail", "one item", detail);
+
+            Assert.False(window.Header.IsDirty);
+
+            ClickAt(window, window.BackButton);
+
+            Assert.True(window.Header.IsDirty);
+
+            window.Close();
+        });
+    }
+
+    [Fact]
+    public async Task A_tabbed_view_keeps_the_dirty_marker_on_its_tab()
+    {
+        await Headless.Dispatch(() =>
+        {
+            var window = Create();
+            var view = new FakeView();
+
+            window.Show();
+            window.OpenTab("master", "Master", view);
+            window.SetSnapshot(new ShellSnapshot("Master", "list", CommandSet.Empty) { IsDirty = true });
+
+            Assert.True(window.Tabs.IsDirty("master"));
+            Assert.False(window.Header.IsDirty);
+
+            window.Close();
+        });
+    }
+
+    [Fact]
+    public async Task A_pushed_page_over_a_tab_reports_its_own_marker()
+    {
+        await Headless.Dispatch(() =>
+        {
+            var window = Create();
+            var master = new FakeView();
+            var detail = new FakeView();
+
+            window.Show();
+            window.OpenTab("master", "Master", master);
+            window.SetSnapshot(new ShellSnapshot("Master", "list", CommandSet.Empty) { IsDirty = true });
+
+            window.Push("Detail", "one item", detail);
+            window.SetSnapshot(new ShellSnapshot("Detail", "one item", CommandSet.Empty) { IsDirty = true });
+
+            Assert.True(window.Header.IsDirty);
+
+            ClickAt(window, window.BackButton);
+
+            Assert.False(window.Header.IsDirty);
+            Assert.True(window.Tabs.IsDirty("master"));
+
+            window.Close();
+        });
+    }
+
+    [Fact]
+    public async Task Clearing_the_chrome_removes_the_header_marker()
+    {
+        await Headless.Dispatch(() =>
+        {
+            var window = Create();
+            var page = new FakeView();
+
+            window.Show();
+            window.Push("Page", "first", page);
+            window.SetSnapshot(new ShellSnapshot("Page", "first", CommandSet.Empty) { IsDirty = true });
+
+            Assert.True(window.Header.IsDirty);
+
+            window.OpenTab("other", "Other", new FakeView());
+
+            Assert.Null(window.CurrentSnapshot);
+            Assert.False(window.Header.IsDirty);
+
+            window.Close();
+        });
+    }
+
+    [Fact]
     public async Task Switching_tabs_restores_each_snapshot()
     {
         await Headless.Dispatch(() =>

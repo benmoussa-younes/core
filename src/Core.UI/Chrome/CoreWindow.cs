@@ -1202,6 +1202,7 @@ public class CoreWindow : Window, IApplicationHost, INavigationHost, IDisposable
         CurrentSnapshot = null;
         _header.Title = string.Empty;
         _header.Subtitle = string.Empty;
+        _header.IsDirty = false;
         _actions.Commands = null;
         _toolbar.IsVisible = false;
         _snapshotCanGoBack = false;
@@ -1450,6 +1451,8 @@ public class CoreWindow : Window, IApplicationHost, INavigationHost, IDisposable
     {
         _header.Title = snapshot.Title;
         _header.Subtitle = snapshot.Subtitle;
+        // WHY: a tab already carries the marker, so the header only stands in for a view without one.
+        _header.IsDirty = snapshot.IsDirty && _activeEntry is { TabId: null };
         _actions.Commands = snapshot.Commands;
         _toolbar.IsVisible = snapshot.Commands.Commands.Count > 0;
         _snapshotCanGoBack = snapshot.CanGoBack;

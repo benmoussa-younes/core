@@ -8,6 +8,21 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-11-22
+
+### Added
+
+- `HeaderBar.IsDirty` shows a dot before the title; a view with a tab keeps the
+  marker on the tab, and the header carries it for a view without one. The dot
+  follows the theme and the accent, and `ClearChrome` removes it.
+
+### Changed
+
+- The gate runs `lint-comments` on the lines added since the base and
+  `test-lint-comments` on a git fixture, and a failed build stops the test step
+  instead of running it on the previous binaries. A build failure now reports the
+  compiler error lines.
+
 ## [0.2.2] - 2026-11-21
 
 ### Added

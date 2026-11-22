@@ -249,6 +249,32 @@ public sealed class PresenterLifecycleTests
     }
 
     [Fact]
+    public async Task A_background_stacked_page_does_not_set_the_header_marker()
+    {
+        await Headless.Dispatch(() =>
+        {
+            var window = Create();
+            var first = new TrackingPresenter();
+            var second = new TrackingPresenter();
+
+            window.Show();
+            window.Push("One", "first", first);
+            window.Push("Two", "second", second);
+
+            window.SetSnapshot(first, new ShellSnapshot("One", "first", CommandSet.Empty) { IsDirty = true });
+
+            Assert.False(window.Header.IsDirty);
+
+            window.Pop();
+
+            Assert.True(window.Header.IsDirty);
+
+            window.Close();
+            window.ShutdownAsync().AsTask().GetAwaiter().GetResult();
+        });
+    }
+
+    [Fact]
     public async Task Activating_a_view_without_a_snapshot_clears_the_previous_chrome()
     {
         await Headless.Dispatch(() =>

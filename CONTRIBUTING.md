@@ -26,12 +26,15 @@ complying with the licences when you redistribute or modify the code.
 dotnet build -c Release
 dotnet test -c Release
 reuse lint
+tools/scripts/binaries/lint-comments
 scripts run tools/scripts/binaries/gate.scs
 ```
 
-The gate runs the build, the tests, `reuse lint`, the architecture checks and
-the portable-layer guard. It expects a Git checkout (it uses `git ls-files`) and
-the root `AGENTS.md`.
+The gate runs the build, the tests, `reuse lint`, the architecture checks, the
+portable-layer guard and `lint-comments`. It expects a Git checkout (it uses
+`git ls-files` and the diff against the base) and the root `AGENTS.md`. It builds
+before it tests, so a red build cannot pass the test step on the previous
+binaries.
 
 ## Maintainer rules
 

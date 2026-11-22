@@ -1,0 +1,228 @@
+#!/usr/bin/env -S scripts run
+import "../modules/fs" as fs
+import "../modules/repo" as repo
+import "../modules/testkit" as testkit
+import "../modules/verdict" as verdict
+# test-lint-comments — prove that lint-comments judges the added lines of the
+# working tree and of the commits since the base, and nothing else.
+#
+#   tools/scripts/binaries/test-lint-comments
+#
+# It builds a git fixture under /tmp/opencode with one .cs file, one
+# extensionless scripts binary and one .scs module at the base commit, copies the
+# real linter and the verdict module it imports into it, then applies one change
+# per case. The base lines are paraphrases on purpose: they are grandfathered,
+# which the clean tree case proves. No network, no image, no model.
+#
+# Check with `scripts check` (not --deny-warnings): the linter path is computed,
+# which raises SCRIPTS-LINT-0004 by design.
+
+let mutable success = true
+
+function repo_root() -> string {
+    return repo.root_from(process.script_path())
+}
+
+function fixture() -> string {
+    return "/tmp/opencode/lint-comments-test/root"
+}
+
+function linter() -> string {
+    return "{fixture()}/tools/scripts/binaries/lint-comments"
+}
+
+function base_program() -> string {
+    return "public class Counter \{\n    private int total;\n\n    /// <summary>Adds one.</summary>\n    public void Add() \{\n        // a paraphrase that shipped before the rule\n        total = total + 1;\n    \}\n\}\n"
+}
+
+function base_binary() -> string {
+    return "#!/usr/bin/env -S scripts run\n# a paraphrase that shipped before the rule\nlet value = 1\nio.write_standard_output_line(\"probe\")\n"
+}
+
+function base_module() -> string {
+    return "# a paraphrase that shipped before the rule\npublic function probe_value() -> integer \{\n    return 1\n\}\n"
+}
+
+function git(arguments: list<string>) -> boolean {
+    return git_in(fixture(), arguments)
+}
+
+function git_in(directory: string, arguments: list<string>) -> boolean {
+    let mutable argv: list<string> = ["-C", directory]
+    for argument in arguments {
+        argv.append(argument)
+    }
+    match process.run(process.request("git", argv)) {
+        ok(completed) => {
+            if completed.exit_code != 0 {
+                io.write_standard_error_line("FAIL git {arguments.join(" ")}: {completed.standard_error}")
+                return false
+            }
+            return true
+        }
+        error(failure) => {
+            io.write_standard_error_line("FAIL git {arguments.join(" ")}: {failure.kind}: {failure.message}")
+            return false
+        }
+    }
+}
+
+# A clean fixture: one git repository whose HEAD holds the base files.
+function reset_fixture() -> boolean {
+    match process.run(process.request("rm", ["-rf", "/tmp/opencode/lint-comments-test"])) {
+        ok(_) => {}
+        error(_) => {}
+    }
+    let dirs: list<string> = [
+        "{fixture()}/tools/scripts/binaries",
+        "{fixture()}/tools/scripts/modules",
+        "{fixture()}/src",
+    ]
+    let mutable made = true
+    for directory in dirs {
+        made = make_directory(directory) and made
+    }
+    made = copy_file("tools/scripts/binaries/lint-comments", "tools/scripts/binaries/lint-comments") and made
+    made = copy_file("tools/scripts/modules/verdict.scs", "tools/scripts/modules/verdict.scs") and made
+    made = fs.write_text(base_program(), "{fixture()}/src/Counter.cs") and made
+    made = fs.write_text(base_binary(), "{fixture()}/tools/scripts/binaries/probe") and made
+    made = fs.write_text(base_module(), "{fixture()}/tools/scripts/modules/probe.scs") and made
+    made = git(["init", "-q"]) and made
+    made = git(["config", "user.email", "test@example.invalid"]) and made
+    made = git(["config", "user.name", "lint-comments test"]) and made
+    # A global commit.gpgsign would make the fixture depend on a key it must not need.
+    made = git(["config", "commit.gpgsign", "false"]) and made
+    made = git(["add", "."]) and made
+    made = git(["commit", "-q", "-m", "base"]) and made
+    return made
+}
+
+function make_directory(directory: string) -> boolean {
+    match process.run(process.request("mkdir", ["-p", directory])) {
+        ok(completed) => {
+            return completed.exit_code == 0
+        }
+        error(_) => {
+            return false
+        }
+    }
+}
+
+function copy_file(rel: string, destination: string) -> boolean {
+    match process.run(process.request("cp", ["{repo_root()}/{rel}", "{fixture()}/{destination}"])) {
+        ok(completed) => {
+            return completed.exit_code == 0
+        }
+        error(_) => {
+            return false
+        }
+    }
+}
+
+# The change of one case: the file, the exact lines appended to it, the expected
+# exit code and a text the output must carry.
+function case_append(label: string, rel: string, added: string, expected_exit: integer, expected_text: string) -> boolean {
+    let path = "{fixture()}/{rel}"
+    if not fs.write_text("{fs.read_text(path)}{added}\n", path) {
+        io.write_standard_error_line("FAIL {label}: fixture not written")
+        return false
+    }
+    return check_lint(label, expected_exit, expected_text)
+}
+
+function check_lint(label: string, expected_exit: integer, expected_text: string) -> boolean {
+    return check_lint_arguments(label, [], expected_exit, expected_text)
+}
+
+function check_lint_arguments(label: string, arguments: list<string>, expected_exit: integer, expected_text: string) -> boolean {
+    match process.run(process.request(linter(), arguments).with_working_directory("{fixture()}".to_path())) {
+        ok(completed) => {
+            let output = "{completed.standard_output}{completed.standard_error}"
+            if testkit.case_ok(completed.exit_code, expected_exit, output, expected_text) {
+                io.write_standard_output_line("PASS {label}")
+                return true
+            }
+            io.write_standard_error_line("FAIL {label}: exit {completed.exit_code}, expected {expected_exit}; missing '{expected_text}'")
+            io.write_standard_error_line(output)
+            return false
+        }
+        error(failure) => {
+            io.write_standard_error_line("FAIL {label}: {failure.kind}: {failure.message}")
+            return false
+        }
+    }
+}
+
+# --- case 1: a clean tree passes, the base paraphrases are grandfathered ----
+
+success = reset_fixture() and success
+success = check_lint("clean tree passes", 0, "VERDICT: PASS") and success
+
+# --- case 2: an added `//` paraphrase is refused ----------------------------
+
+success = reset_fixture() and success
+success = case_append("cs paraphrase refused", "src/Counter.cs", "// increments the counter", 1, "COMMENT src/Counter.cs:10:") and success
+
+# --- case 3: an added `// WHY:` line passes --------------------------------
+
+success = reset_fixture() and success
+success = case_append("cs WHY passes", "src/Counter.cs", "// WHY: the counter starts at zero by contract", 0, "VERDICT: PASS") and success
+
+# --- case 4: an inline `#` after code is refused ---------------------------
+
+success = reset_fixture() and success
+success = case_append("inline hash refused", "tools/scripts/binaries/probe", "let other = 2 # increments", 1, "COMMENT tools/scripts/binaries/probe:5:") and success
+
+# --- case 5: an inline `# WHY:` passes ------------------------------------
+
+success = reset_fixture() and success
+success = case_append("inline WHY passes", "tools/scripts/binaries/probe", "let other = 2 # WHY: the probe needs a second value", 0, "VERDICT: PASS") and success
+
+# --- case 5b: a `#` inside a string is not a comment -----------------------
+
+success = case_append("hash inside a string passes", "tools/scripts/binaries/probe", "let model = \"deepseek-flash#low\"", 0, "VERDICT: PASS") and success
+
+# --- case 5c: a `.scs` inline `#` after code is refused --------------------
+
+success = reset_fixture() and success
+success = case_append("scs inline hash refused", "tools/scripts/modules/probe.scs", "let other = 2 # increments", 1, "COMMENT tools/scripts/modules/probe.scs:5:") and success
+
+# --- case 5d: a `.scs` inline `# WHY:` passes -----------------------------
+
+success = reset_fixture() and success
+success = case_append("scs inline WHY passes", "tools/scripts/modules/probe.scs", "let other = 2 # WHY: the probe needs a second value", 0, "VERDICT: PASS") and success
+
+# --- case 6: a `///` on a private member is refused -----------------------
+
+success = case_append("private doc refused", "src/Counter.cs", "    /// <summary>The total.</summary>\n    private int Count() \{\n        return total;\n    \}", 1, "PRIVATE-DOC") and success
+
+# --- case 7: a `///` on a public type passes ------------------------------
+
+success = reset_fixture() and success
+success = case_append("public doc passes", "src/Counter.cs", "/// <summary>A counter.</summary>\npublic class Meter \{\n    public int Value;\n\}", 0, "VERDICT: PASS") and success
+
+# --- case 8: a full-line `#` comment is allowed ---------------------------
+
+success = case_append("full-line comment passes", "tools/scripts/binaries/probe", "# a header\nio.write_standard_output_line(\"done\")", 0, "VERDICT: PASS") and success
+
+# --- case 9: a committed change since the base is judged ------------------
+
+success = reset_fixture() and success
+let committed_path = "{fixture()}/src/Counter.cs"
+if not fs.write_text("{fs.read_text(committed_path)}// committed paraphrase\n", committed_path) {
+    io.write_standard_error_line("FAIL committed paraphrase: fixture not written")
+    success = false
+} else {
+    let mutable committed = git(["add", "."])
+    if committed {
+        committed = git(["commit", "-q", "-m", "change"])
+    }
+    if committed {
+        success = check_lint_arguments("committed paraphrase refused", ["--base", "HEAD^"], 1, "COMMENT src/Counter.cs:") and success
+    } else {
+        success = false
+    }
+}
+
+io.write_standard_output_line(verdict.line(success))
+process.exit_with_code(verdict.code(success))

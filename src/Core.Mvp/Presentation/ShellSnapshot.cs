@@ -22,8 +22,9 @@ public sealed record ShellSnapshot(
 {
     /// <summary>
     /// Gets a value indicating whether the active document has unsaved changes.
-    /// The shell renders the marker on its tab; the presenter keeps the title
-    /// clean instead of appending a character to it.
+    /// The shell renders the marker on the view's tab when it has one and on the
+    /// header bar otherwise; the presenter keeps the title clean instead of
+    /// appending a character to it.
     /// </summary>
     public bool IsDirty { get; init; }
 
