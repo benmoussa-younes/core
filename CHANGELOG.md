@@ -16,6 +16,9 @@ and this project adheres to
   socket is refused with `LinuxErrno.NotConnected`, a socket without peer
   credentials with `ProtocolNotAvailable`, and `LinuxErrno` names both
   (107, 92). `SingleInstanceLock` uses the same helper.
+- `UnixLockedMemory.Lock(byte[])` pins a caller buffer and calls `mlock`;
+  `Dispose` zeroes it before `munlock`, and a refused lock returns a
+  `CoreError("unix.mlock")`.
 
 ### Changed
 
