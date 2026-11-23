@@ -22,6 +22,18 @@ the first adapter; .NET 10, NativeAOT-compatible and trim-safe.
 - .NET SDK 10 (`global.json`)
 - Linux
 
+## Install
+
+Core is source-only: a product references the projects it needs by
+`ProjectReference`, from a sibling checkout or a submodule pinned to a tag; no
+NuGet package is published.
+
+## Usage
+
+A product composes the assemblies it needs: `CoreHost` resolves the application
+paths and the platform, `CoreAppBuilder.Configure<App>("id")` starts an Avalonia
+UI. `core-consumer` owns the composition and the pin.
+
 ## Build and test
 
 ```sh
@@ -93,6 +105,12 @@ third-party components are listed in [`THIRD-PARTY`](THIRD-PARTY). The
 documentation is CC BY-SA 4.0. The Scripts interpreter is a toolchain
 prerequisite, not a vendored dependency: it is installed separately and read
 from `PATH`.
+
+## Forking
+
+A fork is welcome. You maintain it: the licence grants use, study, change and
+redistribution, and the software is delivered **as is**, without warranty or
+support beyond the licence.
 
 ## Contributing and security
 
