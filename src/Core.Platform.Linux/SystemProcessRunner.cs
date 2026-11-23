@@ -15,8 +15,9 @@ namespace Core.Platform.Linux;
 
 /// <summary>
 /// The real process runner. It starts the executable directly with an argument
-/// vector: <c>UseShellExecute</c> is false, no shell is spawned, and no
-/// privilege-escalation program is ever invoked here.
+/// vector: <c>UseShellExecute</c> is false, no shell is spawned, and the runner
+/// never wraps a call in a privilege-escalation program; an explicit absolute
+/// path is used as given (see remarks).
 /// </summary>
 /// <remarks>
 /// A bare executable name is resolved against a fixed list of trusted system

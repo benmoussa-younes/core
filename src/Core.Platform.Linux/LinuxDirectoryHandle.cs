@@ -3,7 +3,6 @@
 
 using System.Buffers;
 using System.Runtime.InteropServices;
-using System.Text;
 using Core.Primitives;
 using Core.Results;
 
@@ -61,21 +60,11 @@ public sealed class LinuxDirectoryHandle : IDirectoryHandle
     {
         ArgumentNullException.ThrowIfNull(path);
 
-        var byteCount = Encoding.UTF8.GetByteCount(path);
-
-        if (byteCount == int.MaxValue)
-        {
-            throw new ArgumentException("The path is too long to encode.", nameof(path));
-        }
-
-        var rented = ArrayPool<byte>.Shared.Rent(byteCount + 1);
+        var rented = LinuxPathEncoding.Rent(path, out var length);
 
         try
         {
-            var written = Encoding.UTF8.GetBytes(path, rented);
-            rented[written] = 0;
-
-            if (TryOpen(Interop.AtCurrentWorkingDirectory, rented.AsSpan(0, written + 1), noFollow: false, out var handle))
+            if (TryOpen(Interop.AtCurrentWorkingDirectory, rented.AsSpan(0, length), noFollow: false, out var handle))
             {
                 return Result<LinuxDirectoryHandle>.Success(handle!);
             }

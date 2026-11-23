@@ -10,8 +10,8 @@ namespace Core.Execution;
 /// </summary>
 /// <param name="FileName">
 /// The executable. A bare name is resolved against the trusted system
-/// directories, never against <c>PATH</c>; a name that contains a separator is
-/// used as given.
+/// directories, never against <c>PATH</c>; an absolute path is used as given and
+/// a relative path that contains a separator is refused.
 /// </param>
 /// <param name="Arguments">The arguments, passed as a vector.</param>
 /// <param name="StandardInput">Text to write to the process standard input, or <see langword="null"/>.</param>
