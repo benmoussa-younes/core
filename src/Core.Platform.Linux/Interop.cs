@@ -39,6 +39,9 @@ internal static unsafe partial class Interop
     /// <summary>Open read-only (<c>O_RDONLY</c>).</summary>
     internal const int OpenReadOnly = 0;
 
+    /// <summary>Open read-write (<c>O_RDWR</c>).</summary>
+    internal const int OpenReadWrite = 2;
+
     /// <summary>Open with close-on-exec (<c>O_CLOEXEC</c>).</summary>
     internal const int OpenCloseOnExec = 0x80000;
 
@@ -50,6 +53,9 @@ internal static unsafe partial class Interop
 
     /// <summary>Do not block on opening a special file (<c>O_NONBLOCK</c>).</summary>
     internal const int OpenNonBlock = 0x800;
+
+    /// <summary>Do not make the opened terminal the controlling terminal (<c>O_NOCTTY</c>).</summary>
+    internal const int OpenNoControlTerminal = 0x100;
 
     /// <summary>The basic stat mask: type, mode, links, ownership, times, inode, size and blocks (<c>STATX_BASIC_STATS</c>).</summary>
     internal const uint StatxBasicStats = 0x07ff;
@@ -132,4 +138,22 @@ internal static unsafe partial class Interop
 
     [LibraryImport("libc", EntryPoint = "umask")]
     internal static partial uint Umask(uint mask);
+
+    [LibraryImport("libc", EntryPoint = "tcgetattr", SetLastError = true)]
+    internal static partial int TcGetAttr(int descriptor, byte* attributes);
+
+    [LibraryImport("libc", EntryPoint = "tcsetattr", SetLastError = true)]
+    internal static partial int TcSetAttr(int descriptor, int action, byte* attributes);
+
+    [LibraryImport("libc", EntryPoint = "posix_openpt", SetLastError = true)]
+    internal static partial int PosixOpenPt(int flags);
+
+    [LibraryImport("libc", EntryPoint = "grantpt", SetLastError = true)]
+    internal static partial int GrantPt(int descriptor);
+
+    [LibraryImport("libc", EntryPoint = "unlockpt", SetLastError = true)]
+    internal static partial int UnlockPt(int descriptor);
+
+    [LibraryImport("libc", EntryPoint = "ptsname_r", SetLastError = true)]
+    internal static partial int PtsNameR(int descriptor, byte* buffer, nuint length);
 }

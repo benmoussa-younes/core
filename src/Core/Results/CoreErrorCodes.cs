@@ -132,6 +132,9 @@ public static class CoreErrorCodes
     /// <summary>A memory lock (<c>mlock</c>) was refused by the kernel.</summary>
     public const string UnixMemoryLockFailed = "unix.mlock";
 
+    /// <summary>A terminal attribute read or write failed.</summary>
+    public const string UnixTerminalFailed = "unix.termios";
+
     /// <summary>A required validation field is empty.</summary>
     public const string ValidationRequired = "validation.required";
 

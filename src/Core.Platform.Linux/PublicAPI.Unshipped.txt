@@ -62,6 +62,7 @@ Core.Platform.Linux.LinuxErrno.NameTooLong = 36 -> Core.Platform.Linux.LinuxErrn
 Core.Platform.Linux.LinuxErrno.NoEntry = 2 -> Core.Platform.Linux.LinuxErrno
 Core.Platform.Linux.LinuxErrno.NoSpaceLeft = 28 -> Core.Platform.Linux.LinuxErrno
 Core.Platform.Linux.LinuxErrno.None = 0 -> Core.Platform.Linux.LinuxErrno
+Core.Platform.Linux.LinuxErrno.NotATty = 25 -> Core.Platform.Linux.LinuxErrno
 Core.Platform.Linux.LinuxErrno.NotConnected = 107 -> Core.Platform.Linux.LinuxErrno
 Core.Platform.Linux.LinuxErrno.NotDirectory = 20 -> Core.Platform.Linux.LinuxErrno
 Core.Platform.Linux.LinuxErrno.OperationNotPermitted = 1 -> Core.Platform.Linux.LinuxErrno
@@ -189,6 +190,7 @@ override Core.Platform.Linux.UnixPeerCredentials.GetHashCode() -> int
 static Core.Platform.Linux.UnixPeerCredentials.operator !=(Core.Platform.Linux.UnixPeerCredentials left, Core.Platform.Linux.UnixPeerCredentials right) -> bool
 static Core.Platform.Linux.UnixPeerCredentials.operator ==(Core.Platform.Linux.UnixPeerCredentials left, Core.Platform.Linux.UnixPeerCredentials right) -> bool
 Core.Platform.Linux.UnixSocket
+Core.Platform.Linux.UnixTerminalEcho
 Core.Platform.Linux.XdgDirectories
 Core.Platform.Linux.XdgEnvironment
 Core.Platform.Linux.XdgEnvironment.CacheHome.get -> string?
@@ -277,3 +279,6 @@ static Core.Platform.Linux.UnixProcessMask.TryRead(out System.IO.UnixFileMode ma
 static Core.Platform.Linux.UnixResourceLimit.operator !=(Core.Platform.Linux.UnixResourceLimit left, Core.Platform.Linux.UnixResourceLimit right) -> bool
 static Core.Platform.Linux.UnixResourceLimit.operator ==(Core.Platform.Linux.UnixResourceLimit left, Core.Platform.Linux.UnixResourceLimit right) -> bool
 static Core.Platform.Linux.UnixResourceLimit.Unlimited.get -> Core.Platform.Linux.UnixResourceLimit
+Core.Platform.Linux.UnixTerminalEcho.Dispose() -> void
+static Core.Platform.Linux.UnixTerminalEcho.Disable(int descriptor) -> Core.Results.Result<Core.Platform.Linux.UnixTerminalEcho!>
+static Core.Platform.Linux.UnixTerminalEcho.TryGetEcho(int descriptor, out bool enabled) -> bool
