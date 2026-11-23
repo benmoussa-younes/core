@@ -8,6 +8,15 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- `UnixPeerCredentials` and `UnixSocket.TryGetPeerCredentials` read the peer
+  identity of a connected Unix domain socket (`SO_PEERCRED`) through the BCL,
+  so the peer-credentials path adds no libc import; a listening or unconnected
+  socket is refused with `LinuxErrno.NotConnected`, a socket without peer
+  credentials with `ProtocolNotAvailable`, and `LinuxErrno` names both
+  (107, 92). `SingleInstanceLock` uses the same helper.
+
 ### Changed
 
 - CI installs the Scripts interpreter from its pinned release and runs the same
