@@ -175,20 +175,46 @@ match process.run(process.request("dotnet", ["msbuild", "src/Core/Core.csproj", 
         success = false
     }
 }
-let props = read_text(base, "Directory.Build.props")
-let mutable declared = false
-for line in props.lines() {
-    match line.capture_groups(r"<VersionPrefix[^>]*>([^<]+)</VersionPrefix>") {
-        ok(groups) => {
-            if version != "" and groups[1].trim_whitespace() == version {
-                declared = true
+function declares_version(text: string, expected: string) -> boolean {
+    let mutable in_comment = false
+    for line in text.lines() {
+        let mutable pieces: list<string> = []
+        let mutable rest = line
+        while rest != "" {
+            if in_comment {
+                let parts = rest.split("-->")
+                if parts.length() >= 2 {
+                    rest = parts[1]
+                    in_comment = false
+                } else {
+                    rest = ""
+                }
+            } else {
+                let parts = rest.split("<!--")
+                pieces.append(parts[0])
+                if parts.length() >= 2 {
+                    rest = parts[1]
+                    in_comment = true
+                } else {
+                    rest = ""
+                }
             }
         }
-        error(_) => {
+        match pieces.join("").capture_groups(r"<VersionPrefix[^>]*>([^<]+)</VersionPrefix>") {
+            ok(groups) => {
+                if groups[1].trim_whitespace() == expected {
+                    return true
+                }
+            }
+            error(_) => {
+            }
         }
     }
+    return false
 }
-if not report("version {version}", declared, "Directory.Build.props") {
+
+let props = read_text(base, "Directory.Build.props")
+if not report("version {version}", version != "" and declares_version(props, version), "Directory.Build.props") {
     success = false
 }
 
