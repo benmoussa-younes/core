@@ -2,6 +2,7 @@ using Core.Platform.Linux;
 
 namespace Core.Platform.Linux.Tests;
 
+[Collection("process-limits")]
 public sealed class UnixProcessControlTests
 {
     [Fact]
