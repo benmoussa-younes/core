@@ -25,7 +25,9 @@ namespace Core.Platform.Linux;
 /// <c>notify-send</c> with a rogue binary. The output is captured up to
 /// <see cref="ProcessRequest.MaxOutputBytes"/> and the remainder is drained, so a
 /// chatty child cannot block on a full pipe or exhaust memory. A run that exceeds
-/// <see cref="ProcessRequest.Timeout"/> is killed as a process tree.
+/// <see cref="ProcessRequest.Timeout"/> is killed as a process tree. The runner is
+/// a trusted-caller API: an explicit absolute path and the caller's environment
+/// overlay are honoured, so an untrusted input must not reach them.
 /// </remarks>
 [SupportedOSPlatform("linux")]
 public sealed class SystemProcessRunner : IProcessRunner

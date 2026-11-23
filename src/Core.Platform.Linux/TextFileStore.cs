@@ -43,10 +43,13 @@ public sealed class TextFileStore
     /// <summary>Gets the maximum file size read or written.</summary>
     public long MaximumBytes { get; }
 
-    /// <summary>Reads one text file.</summary>
+    /// <summary>Reads one text file, following a final symbolic link.</summary>
     /// <param name="path">The file path.</param>
     /// <returns>The document, or a failure with code <c>io.unreadable</c>,
     /// <c>text.too_large</c> or <c>text.invalid_utf8</c>.</returns>
+    /// <remarks>An editor opens the target the user named; the write path refuses a
+    /// symbolic-link destination. A caller that must not follow a link uses
+    /// <see cref="ReadNoFollow"/>.</remarks>
     /// <exception cref="ArgumentException"><paramref name="path"/> is empty or whitespace.</exception>
     public Result<TextDocument> Read(string path) => ReadCore<OperatingSystemFileChunkReader>(path, noFollow: false);
 

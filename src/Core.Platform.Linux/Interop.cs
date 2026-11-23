@@ -139,6 +139,9 @@ internal static unsafe partial class Interop
     [LibraryImport("libc", EntryPoint = "umask")]
     internal static partial uint Umask(uint mask);
 
+    [LibraryImport("libc", EntryPoint = "mkfifo", SetLastError = true)]
+    internal static partial int MkFifo(byte* path, uint mode);
+
     [LibraryImport("libc", EntryPoint = "tcgetattr", SetLastError = true)]
     internal static partial int TcGetAttr(int descriptor, byte* attributes);
 

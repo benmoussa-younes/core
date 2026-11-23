@@ -551,6 +551,12 @@ public static class LinuxFileSystem
         }
 
         var byteCount = Encoding.UTF8.GetByteCount(path);
+
+        if (byteCount == int.MaxValue)
+        {
+            throw new ArgumentException("The path is too long to encode.", nameof(path));
+        }
+
         var rented = ArrayPool<byte>.Shared.Rent(byteCount + 1);
 
         var written = Encoding.UTF8.GetBytes(path, rented);
