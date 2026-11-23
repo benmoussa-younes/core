@@ -168,6 +168,10 @@ Core.Platform.Linux.TextFileStore.ReadNoFollow(string! path) -> Core.Results.Res
 Core.Platform.Linux.TextFileStore.TextFileStore(long maximumBytes = 268435456) -> void
 Core.Platform.Linux.TextFileStore.Write(string! path, Core.Text.TextDocument! document) -> Core.Results.Result<string!>
 Core.Platform.Linux.TextFileStore.Write(string! path, string! text, Core.Text.LineEnding lineEnding = Core.Text.LineEnding.LineFeed, bool writeBom = false) -> Core.Results.Result<string!>
+Core.Platform.Linux.UnixLockedMemory
+Core.Platform.Linux.UnixLockedMemory.Dispose() -> void
+Core.Platform.Linux.UnixLockedMemory.Length.get -> int
+Core.Platform.Linux.UnixLockedMemory.Span.get -> System.Span<byte>
 Core.Platform.Linux.UnixPeerCredentials
 Core.Platform.Linux.UnixPeerCredentials.Deconstruct(out int ProcessId, out uint UserId, out uint GroupId) -> void
 Core.Platform.Linux.UnixPeerCredentials.Equals(Core.Platform.Linux.UnixPeerCredentials other) -> bool
@@ -223,6 +227,7 @@ static Core.Platform.Linux.LinuxPlatform.Create(Core.Platform.IPathResolver! pat
 static Core.Platform.Linux.RecoveryStore.Clear(string! documentPath) -> Core.Results.Result<bool>
 static Core.Platform.Linux.RecoveryStore.PathFor(string! documentPath) -> string!
 static Core.Platform.Linux.SingleInstanceLock.DefaultSocketPath(string! applicationName) -> string!
+static Core.Platform.Linux.UnixLockedMemory.Lock(byte[]! buffer) -> Core.Results.Result<Core.Platform.Linux.UnixLockedMemory!>
 static Core.Platform.Linux.UnixSocket.TryGetPeerCredentials(System.Net.Sockets.Socket! socket, out Core.Platform.Linux.UnixPeerCredentials credentials, out Core.Platform.Linux.LinuxErrno error) -> bool
 static Core.Platform.Linux.XdgDirectories.Create(Core.Platform.Linux.XdgEnvironment environment) -> Core.Results.Result<Core.Paths.PathSet!>
 static Core.Platform.Linux.XdgDirectories.FromEnvironment() -> Core.Results.Result<Core.Paths.PathSet!>

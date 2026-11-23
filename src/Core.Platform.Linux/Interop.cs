@@ -114,4 +114,16 @@ internal static unsafe partial class Interop
 
     [LibraryImport("libc", EntryPoint = "madvise", SetLastError = true)]
     internal static partial int MAdvise(void* address, nuint length, int advice);
+
+    [LibraryImport("libc", EntryPoint = "mlock", SetLastError = true)]
+    internal static partial int MLock(void* address, nuint length);
+
+    [LibraryImport("libc", EntryPoint = "munlock", SetLastError = true)]
+    internal static partial int MUnlock(void* address, nuint length);
+
+    [LibraryImport("libc", EntryPoint = "getrlimit", SetLastError = true)]
+    internal static partial int GetRLimit(int resource, byte* limit);
+
+    [LibraryImport("libc", EntryPoint = "setrlimit", SetLastError = true)]
+    internal static partial int SetRLimit(int resource, byte* limit);
 }

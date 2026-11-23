@@ -11,6 +11,7 @@ internal static class SelfTest
         var failures = 0;
         failures += Check("peer credentials of a connected Unix socket", PeerCredentialsOfAConnectedUnixSocket());
         failures += Check("no peer on a listening socket", NoPeerOnAListeningSocket());
+        failures += Check("locked memory round trip", LockedMemoryRoundTrip());
         Console.WriteLine(failures == 0 ? "SELF-TEST PASS" : $"SELF-TEST FAIL ({failures})");
         return failures == 0 ? 0 : 1;
     }
@@ -53,6 +54,27 @@ internal static class SelfTest
         {
             directory.Delete(recursive: true);
         }
+    }
+
+    private static bool LockedMemoryRoundTrip()
+    {
+        var buffer = new byte[64];
+        var locked = UnixLockedMemory.Lock(buffer);
+        if (!locked.IsSuccess)
+        {
+            return false;
+        }
+
+        using (var memory = locked.Value)
+        {
+            memory.Span[0] = 42;
+            if (buffer[0] != 42)
+            {
+                return false;
+            }
+        }
+
+        return buffer.All(value => value == 0);
     }
 
     private static bool NoPeerOnAListeningSocket()

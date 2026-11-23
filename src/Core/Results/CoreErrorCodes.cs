@@ -129,6 +129,9 @@ public static class CoreErrorCodes
     /// <summary>A text file could not be written.</summary>
     public const string TextUnwritable = "text.unwritable";
 
+    /// <summary>A memory lock (<c>mlock</c>) was refused by the kernel.</summary>
+    public const string UnixMemoryLockFailed = "unix.mlock";
+
     /// <summary>A required validation field is empty.</summary>
     public const string ValidationRequired = "validation.required";
 
