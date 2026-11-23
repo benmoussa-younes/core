@@ -38,7 +38,8 @@ function report(name: string, passed: boolean, detail: string) -> boolean {
 # enough for a loaded machine but tight enough to catch a catastrophic regression.
 # It needs hyperfine and jq; the fast gate does not.
 # The same mode publishes the AOT Unix probe first and runs its `--self-test`,
-# so a checkout without experiments/ still proves the native surface.
+# so a checkout without experiments/ still proves the native surface; the GUI
+# benchmarks print SKIP when that local experiment is absent.
 function run_perf(name: string, flag: string, count: string, budget_seconds: float) -> boolean {
     let binary = "/tmp/core-gate-perf/Core.UI.Shell"
     let timing = "/tmp/core-gate-perf-{name}.json"
@@ -406,34 +407,53 @@ if perf_mode {
         }
     }
 
-    match process.run(process.request("dotnet", ["publish", "experiments/Core.UI.Shell/Core.UI.Shell.csproj", "-c", "Release", "-r", "linux-x64", "-p:PublishAot=true", "-p:StripSymbols=false", "-o", "/tmp/core-gate-perf"]).with_working_directory(root)) {
-        ok(completed) => {
-            if completed.exit_code == 0 {
-                io.write_standard_output_line("PASS perf publish")
-            } else {
-                io.write_standard_error_line("FAIL perf publish: exit {completed.exit_code} {completed.standard_error.trim_whitespace()}")
+    if read_text(base, "experiments/Core.UI.Shell/Core.UI.Shell.csproj") != "" {
+        match process.run(process.request("dotnet", ["publish", "experiments/Core.UI.Shell/Core.UI.Shell.csproj", "-c", "Release", "-r", "linux-x64", "-p:PublishAot=true", "-p:StripSymbols=false", "-o", "/tmp/core-gate-perf"]).with_working_directory(root)) {
+            ok(completed) => {
+                # WHY: ILC warnings are not MSBuild warnings, so this count is the only check.
+                let mutable ilc_lines = 0
+                for line in completed.standard_output.lines() {
+                    if line.contains("ILC:") or line.contains("ILC :") {
+                        ilc_lines = ilc_lines + 1
+                    }
+                }
+                for line in completed.standard_error.lines() {
+                    if line.contains("ILC:") or line.contains("ILC :") {
+                        ilc_lines = ilc_lines + 1
+                    }
+                }
+                if completed.exit_code != 0 {
+                    io.write_standard_error_line("FAIL perf publish: exit {completed.exit_code} {completed.standard_error.trim_whitespace()}")
+                    success = false
+                } else if ilc_lines > 0 {
+                    io.write_standard_error_line("FAIL perf publish: {ilc_lines} ILC lines")
+                    success = false
+                } else {
+                    io.write_standard_output_line("PASS perf publish")
+                }
+            }
+            error(failure) => {
+                io.write_standard_error_line("FAIL perf publish: {failure.kind}")
                 success = false
             }
         }
-        error(failure) => {
-            io.write_standard_error_line("FAIL perf publish: {failure.kind}")
-            success = false
-        }
-    }
 
-    if success {
-        if not run_perf("walk", "--walk", "20", 0.25) {
-            success = false
+        if success {
+            if not run_perf("walk", "--walk", "20", 0.25) {
+                success = false
+            }
+            if not run_perf("csv", "--csv", "20", 0.10) {
+                success = false
+            }
+            if not run_perf("data-model", "--data-model", "20", 0.10) {
+                success = false
+            }
+            if not run_perf("records", "--records", "20", 0.20) {
+                success = false
+            }
         }
-        if not run_perf("csv", "--csv", "20", 0.10) {
-            success = false
-        }
-        if not run_perf("data-model", "--data-model", "20", 0.10) {
-            success = false
-        }
-        if not run_perf("records", "--records", "20", 0.20) {
-            success = false
-        }
+    } else {
+        io.write_standard_output_line("SKIP perf benchmarks: experiments/Core.UI.Shell is absent")
     }
 }
 

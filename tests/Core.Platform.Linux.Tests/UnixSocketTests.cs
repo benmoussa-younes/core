@@ -43,6 +43,16 @@ public sealed class UnixSocketTests
     }
 
     [Fact]
+    public void PeerCredentialsAreRefusedOnAnUnconnectedUnixSocket()
+    {
+        using var socket = new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified);
+
+        Assert.False(UnixSocket.TryGetPeerCredentials(socket, out var credentials, out var error));
+        Assert.Equal(default, credentials);
+        Assert.Equal(LinuxErrno.NotConnected, error);
+    }
+
+    [Fact]
     public void PeerCredentialsAreRefusedOnAConnectedInternetSocket()
     {
         using var listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);

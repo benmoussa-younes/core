@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net.Sockets;
 using Core.Platform.Linux;
 
@@ -40,11 +41,13 @@ internal static class SelfTest
             client.Connect(new UnixDomainSocketEndPoint(socketPath));
             using var server = listener.Accept();
 
+            var (userId, groupId) = ReadEffectiveIds();
+
             return UnixSocket.TryGetPeerCredentials(server, out var credentials, out var error) &&
                 error == LinuxErrno.None &&
                 credentials.ProcessId == Environment.ProcessId &&
-                credentials.UserId != uint.MaxValue &&
-                credentials.GroupId != uint.MaxValue;
+                credentials.UserId == userId &&
+                credentials.GroupId == groupId;
         }
         finally
         {
@@ -70,5 +73,31 @@ internal static class SelfTest
         {
             directory.Delete(recursive: true);
         }
+    }
+
+    private static (uint UserId, uint GroupId) ReadEffectiveIds()
+    {
+        uint userId = uint.MaxValue;
+        uint groupId = uint.MaxValue;
+
+        foreach (var line in File.ReadLines("/proc/self/status"))
+        {
+            var fields = line.Split('\t');
+            if (fields.Length < 3)
+            {
+                continue;
+            }
+
+            if (fields[0] == "Uid:")
+            {
+                userId = uint.Parse(fields[2], CultureInfo.InvariantCulture);
+            }
+            else if (fields[0] == "Gid:")
+            {
+                groupId = uint.Parse(fields[2], CultureInfo.InvariantCulture);
+            }
+        }
+
+        return (userId, groupId);
     }
 }
