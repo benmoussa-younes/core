@@ -16,8 +16,11 @@ internal static partial class SelfTest
         failures += Check("dumpable round trip", DumpableRoundTrip());
         failures += Check("thread name round trip", ThreadNameRoundTrip());
         failures += Check("resource limit read", ResourceLimitRead());
+        failures += Check("resource limit write", ResourceLimitWrite());
         failures += Check("mask scope", MaskScope());
         failures += Check("terminal echo round trip", TerminalEchoRoundTrip());
+        failures += Check("descriptor round trip", DescriptorRoundTrip());
+        failures += Check("per-message credentials", PerMessageCredentials());
         failures += Check("no new privileges", NoNewPrivileges());
         Console.WriteLine(failures == 0 ? "SELF-TEST PASS" : $"SELF-TEST FAIL ({failures})");
         return failures == 0 ? 0 : 1;
@@ -142,6 +145,22 @@ internal static partial class SelfTest
             limit.Hard >= limit.Soft;
     }
 
+    private static bool ResourceLimitWrite()
+    {
+        if (!UnixProcessLimits.TryGet(UnixResource.NoFile, out var original, out _) || original.Soft == 0)
+        {
+            return false;
+        }
+
+        var changed = original with { Soft = original.Soft - 1 };
+        var applied = UnixProcessLimits.TrySet(UnixResource.NoFile, changed, out _) &&
+            UnixProcessLimits.TryGet(UnixResource.NoFile, out var read, out _) &&
+            read == changed;
+
+        _ = UnixProcessLimits.TrySet(UnixResource.NoFile, original, out _);
+        return applied;
+    }
+
     private static bool MaskScope()
     {
         if (!UnixProcessMask.TryRead(out var original))
@@ -167,6 +186,95 @@ internal static partial class SelfTest
         return UnixProcessControl.TrySetNoNewPrivileges(out _) &&
             UnixProcessControl.TryGetNoNewPrivileges(out var enabled, out _) &&
             enabled;
+    }
+
+    private static bool DescriptorRoundTrip()
+    {
+        var (sender, receiver, directory) = CreateConnectedPair();
+
+        try
+        {
+            using var handle = File.OpenHandle("/dev/null", FileMode.Open, FileAccess.Read);
+            var source = (int)handle.DangerousGetHandle();
+
+            if (!UnixSocket.TrySend(sender, "x"u8, [source], out _, out _))
+            {
+                return false;
+            }
+
+            var payload = new byte[16];
+            Span<int> received = stackalloc int[1];
+
+            if (!UnixSocket.TryReceive(receiver, payload, received, out var message, out _) ||
+                message.Length != 1 ||
+                message.DescriptorCount != 1)
+            {
+                return false;
+            }
+
+            _ = Close(received[0]);
+            return true;
+        }
+        finally
+        {
+            sender.Dispose();
+            receiver.Dispose();
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    private static bool PerMessageCredentials()
+    {
+        var (sender, receiver, directory) = CreateConnectedPair();
+
+        try
+        {
+            if (!UnixSocket.TrySetPassCredentials(receiver, true, out _))
+            {
+                return false;
+            }
+
+            if (!UnixSocket.TrySend(sender, "x"u8, [], out _, out _))
+            {
+                return false;
+            }
+
+            var payload = new byte[16];
+            Span<int> none = [];
+
+            if (!UnixSocket.TryReceive(receiver, payload, none, out _, out var credentials, out _) ||
+                credentials is null)
+            {
+                return false;
+            }
+
+            var (userId, groupId) = ReadEffectiveIds();
+            return credentials.Value.ProcessId == Environment.ProcessId &&
+                credentials.Value.UserId == userId &&
+                credentials.Value.GroupId == groupId;
+        }
+        finally
+        {
+            sender.Dispose();
+            receiver.Dispose();
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    private static (Socket Sender, Socket Receiver, string Directory) CreateConnectedPair()
+    {
+        var directory = Directory.CreateTempSubdirectory("core-unix-probe-").FullName;
+        var path = Path.Combine(directory, "pair.sock");
+
+        var listener = new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified);
+        listener.Bind(new UnixDomainSocketEndPoint(path));
+        listener.Listen(1);
+
+        var sender = new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified);
+        sender.Connect(new UnixDomainSocketEndPoint(path));
+        var receiver = listener.Accept();
+        listener.Dispose();
+        return (sender, receiver, directory);
     }
 
     private static bool TerminalEchoRoundTrip()

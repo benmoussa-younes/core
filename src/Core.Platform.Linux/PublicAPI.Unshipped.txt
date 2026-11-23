@@ -281,4 +281,25 @@ static Core.Platform.Linux.UnixResourceLimit.operator ==(Core.Platform.Linux.Uni
 static Core.Platform.Linux.UnixResourceLimit.Unlimited.get -> Core.Platform.Linux.UnixResourceLimit
 Core.Platform.Linux.UnixTerminalEcho.Dispose() -> void
 static Core.Platform.Linux.UnixTerminalEcho.Disable(int descriptor) -> Core.Results.Result<Core.Platform.Linux.UnixTerminalEcho!>
+Core.Platform.Linux.LinuxErrno.MessageTooLong = 90 -> Core.Platform.Linux.LinuxErrno
+Core.Platform.Linux.UnixMessage
+Core.Platform.Linux.UnixMessage.Deconstruct(out int Length, out int DescriptorCount, out bool Truncated) -> void
+Core.Platform.Linux.UnixMessage.DescriptorCount.get -> int
+Core.Platform.Linux.UnixMessage.DescriptorCount.init -> void
+Core.Platform.Linux.UnixMessage.Equals(Core.Platform.Linux.UnixMessage other) -> bool
+Core.Platform.Linux.UnixMessage.Length.get -> int
+Core.Platform.Linux.UnixMessage.Length.init -> void
+Core.Platform.Linux.UnixMessage.Truncated.get -> bool
+Core.Platform.Linux.UnixMessage.Truncated.init -> void
+Core.Platform.Linux.UnixMessage.UnixMessage() -> void
+Core.Platform.Linux.UnixMessage.UnixMessage(int Length, int DescriptorCount, bool Truncated) -> void
+~override Core.Platform.Linux.UnixMessage.Equals(object obj) -> bool
+override Core.Platform.Linux.UnixMessage.GetHashCode() -> int
+~override Core.Platform.Linux.UnixMessage.ToString() -> string
+static Core.Platform.Linux.UnixMessage.operator !=(Core.Platform.Linux.UnixMessage left, Core.Platform.Linux.UnixMessage right) -> bool
+static Core.Platform.Linux.UnixMessage.operator ==(Core.Platform.Linux.UnixMessage left, Core.Platform.Linux.UnixMessage right) -> bool
+static Core.Platform.Linux.UnixSocket.TryReceive(System.Net.Sockets.Socket! socket, System.Span<byte> payload, System.Span<int> descriptors, out Core.Platform.Linux.UnixMessage message, out Core.Platform.Linux.LinuxErrno error) -> bool
+static Core.Platform.Linux.UnixSocket.TryReceive(System.Net.Sockets.Socket! socket, System.Span<byte> payload, System.Span<int> descriptors, out Core.Platform.Linux.UnixMessage message, out Core.Platform.Linux.UnixPeerCredentials? credentials, out Core.Platform.Linux.LinuxErrno error) -> bool
+static Core.Platform.Linux.UnixSocket.TrySend(System.Net.Sockets.Socket! socket, System.ReadOnlySpan<byte> payload, System.ReadOnlySpan<int> descriptors, out int sent, out Core.Platform.Linux.LinuxErrno error) -> bool
+static Core.Platform.Linux.UnixSocket.TrySetPassCredentials(System.Net.Sockets.Socket! socket, bool enabled, out Core.Platform.Linux.LinuxErrno error) -> bool
 static Core.Platform.Linux.UnixTerminalEcho.TryGetEcho(int descriptor, out bool enabled, out Core.Platform.Linux.LinuxErrno error) -> bool

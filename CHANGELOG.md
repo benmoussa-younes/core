@@ -25,6 +25,21 @@ and this project adheres to
 - `UnixTerminalEcho.Disable(int)` turns terminal echo off and restores the
   previous attributes on dispose; `TryGetEcho` reads the flag without changing
   it, and a non-terminal descriptor is refused with `NotATty` (25).
+- `UnixSocket.TrySend`/`TryReceive` attach and receive file descriptors
+  (`SCM_RIGHTS`, `MSG_CMSG_CLOEXEC`), `TrySetPassCredentials` enables the
+  per-message sender credentials, and a truncated control buffer fails with
+  `MessageTooLong` after closing every descriptor it installed.
+
+### Security
+
+- The Unix surface keeps secrets out of swap (`UnixLockedMemory` zeroes before
+  `munlock`), lets a process turn off dumpable and tracing (`UnixProcessControl`)
+  and set its no-new-privileges flag, exposes the kernel resource limits
+  (`UnixProcessLimits`), hides a passphrase with terminal echo control, receives
+  descriptors close-on-exec, and never leaks a descriptor on a refused or
+  truncated message. `UnixMaskScope` applies the caller's mask and restores it
+  (the tests use 0077). `SO_PEERCRED` identifies a connected peer and refuses a
+  listening socket.
 
 ### Changed
 
