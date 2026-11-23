@@ -1,0 +1,14 @@
+<!-- SPDX-FileCopyrightText: 2026 Younes BENMOUSSA <younes.benmoussa@pm.me> -->
+<!-- SPDX-License-Identifier: LGPL-3.0-or-later -->
+
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Core.Unix.Probe</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsAotCompatible>true</IsAotCompatible>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/Core.Platform.Linux/Core.Platform.Linux.csproj" />
+  </ItemGroup>
+</Project>
