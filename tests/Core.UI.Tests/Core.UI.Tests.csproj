@@ -29,7 +29,8 @@
   </ItemGroup>
   <Target Name="CopyCrashProbe" AfterTargets="Build">
     <ItemGroup>
-      <CrashProbeFiles Include="$(MSBuildThisFileDirectory)../Core.UI.CrashProbe/bin/$(Configuration)/$(TargetFramework)/**/*" />
+      <CrashProbeFiles Include="$(MSBuildThisFileDirectory)../Core.UI.CrashProbe/bin/$(Configuration)/$(TargetFramework)/$(RuntimeIdentifier)/**/*" Condition="'$(RuntimeIdentifier)' != ''" />
+      <CrashProbeFiles Include="$(MSBuildThisFileDirectory)../Core.UI.CrashProbe/bin/$(Configuration)/$(TargetFramework)/**/*" Condition="'$(RuntimeIdentifier)' == ''" />
     </ItemGroup>
     <Copy SourceFiles="@(CrashProbeFiles)" DestinationFiles="@(CrashProbeFiles->'$(OutDir)crash-probe/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
   </Target>
