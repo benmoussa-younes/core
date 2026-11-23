@@ -41,28 +41,39 @@ public static class UnixProcessMask
             return false;
         }
 
-        foreach (var line in File.ReadLines("/proc/self/status"))
+        try
         {
-            if (!line.StartsWith("Umask:", StringComparison.Ordinal))
+            foreach (var line in File.ReadLines("/proc/self/status"))
             {
-                continue;
-            }
+                if (!line.StartsWith("Umask:", StringComparison.Ordinal))
+                {
+                    continue;
+                }
 
-            var text = line["Umask:".Length..].Trim();
+                var text = line["Umask:".Length..].Trim();
 
-            try
-            {
-                mask = (UnixFileMode)(Convert.ToUInt32(text, 8) & PermissionBits);
-                return true;
+                try
+                {
+                    mask = (UnixFileMode)(Convert.ToUInt32(text, 8) & PermissionBits);
+                    return true;
+                }
+                catch (FormatException)
+                {
+                    return false;
+                }
+                catch (OverflowException)
+                {
+                    return false;
+                }
             }
-            catch (FormatException)
-            {
-                return false;
-            }
-            catch (OverflowException)
-            {
-                return false;
-            }
+        }
+        catch (IOException)
+        {
+            return false;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return false;
         }
 
         return false;
