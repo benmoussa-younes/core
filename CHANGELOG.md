@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-23
+
 ### Added
 
 - `UnixPeerCredentials` and `UnixSocket.TryGetPeerCredentials` read the peer
@@ -49,12 +51,15 @@ and this project adheres to
   gate as the maintainer, so the comment form, the architecture checks and the
   build/test ordering apply to every pull request.
 - The gate reads the version from `Directory.Build.props` and checks every
-  evaluated `PackageReference` against `THIRD-PARTY`; the build restores from
-  committed lock files and requires signed packages, and CI publishes the Unix
-  probe with its ILC count and native self-test.
+  evaluated `PackageReference` against `THIRD-PARTY`; the restore requires signed
+  packages, and CI publishes the Unix probe with its ILC count and native
+  self-test.
 - Avalonia 12.2.0, xunit.v3.mtp-off 4.0.3, xunit.runner.visualstudio 4.0.1,
   Microsoft.NET.Test.Sdk 18.12.0, Microsoft.CodeAnalysis.PublicApiAnalyzers
   5.6.0 and coverlet.collector 10.1.1.
+- The file system and directory handles refuse a path that contains a NUL or is
+  too large to encode; the text store and the process runner state their
+  follow-link and trusted-caller contracts.
 
 ## [0.2.3] - 2026-11-22
 
