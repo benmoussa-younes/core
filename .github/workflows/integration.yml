@@ -4,6 +4,7 @@ name: GUI integration
 
 on:
   pull_request:
+  merge_group:
   workflow_dispatch:
 
 permissions:

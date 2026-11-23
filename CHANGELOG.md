@@ -32,6 +32,8 @@ and this project adheres to
 
 ### Security
 
+- NuGet restores require a package signature trusted by the configured nuget.org
+  repository or Microsoft author certificates.
 - The Unix surface keeps secrets out of swap (`UnixLockedMemory` zeroes before
   `munlock`), lets a process turn off dumpable and tracing (`UnixProcessControl`)
   and set its no-new-privileges flag, exposes the kernel resource limits
@@ -46,6 +48,13 @@ and this project adheres to
 - CI installs the Scripts interpreter from its pinned release and runs the same
   gate as the maintainer, so the comment form, the architecture checks and the
   build/test ordering apply to every pull request.
+- The gate reads the version from `Directory.Build.props` and checks every
+  evaluated `PackageReference` against `THIRD-PARTY`; the build restores from
+  committed lock files and requires signed packages, and CI publishes the Unix
+  probe with its ILC count and native self-test.
+- Avalonia 12.2.0, xunit.v3.mtp-off 4.0.3, xunit.runner.visualstudio 4.0.1,
+  Microsoft.NET.Test.Sdk 18.12.0, Microsoft.CodeAnalysis.PublicApiAnalyzers
+  5.6.0 and coverlet.collector 10.1.1.
 
 ## [0.2.3] - 2026-11-22
 
