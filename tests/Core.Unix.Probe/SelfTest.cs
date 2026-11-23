@@ -12,6 +12,11 @@ internal static class SelfTest
         failures += Check("peer credentials of a connected Unix socket", PeerCredentialsOfAConnectedUnixSocket());
         failures += Check("no peer on a listening socket", NoPeerOnAListeningSocket());
         failures += Check("locked memory round trip", LockedMemoryRoundTrip());
+        failures += Check("dumpable round trip", DumpableRoundTrip());
+        failures += Check("thread name round trip", ThreadNameRoundTrip());
+        failures += Check("resource limit read", ResourceLimitRead());
+        failures += Check("mask scope", MaskScope());
+        failures += Check("no new privileges", NoNewPrivileges());
         Console.WriteLine(failures == 0 ? "SELF-TEST PASS" : $"SELF-TEST FAIL ({failures})");
         return failures == 0 ? 0 : 1;
     }
@@ -95,6 +100,71 @@ internal static class SelfTest
         {
             directory.Delete(recursive: true);
         }
+    }
+
+    private static bool DumpableRoundTrip()
+    {
+        if (!UnixProcessControl.TryGetDumpable(out var original, out _))
+        {
+            return false;
+        }
+
+        if (!UnixProcessControl.TrySetDumpable(!original, out _))
+        {
+            return false;
+        }
+
+        var changed = UnixProcessControl.TryGetDumpable(out var value, out _) && value == !original;
+        _ = UnixProcessControl.TrySetDumpable(original, out _);
+        return changed;
+    }
+
+    private static bool ThreadNameRoundTrip()
+    {
+        if (!UnixProcessControl.TryGetName(out var original, out _))
+        {
+            return false;
+        }
+
+        var ok = UnixProcessControl.TrySetName("core-probe", out _) &&
+            UnixProcessControl.TryGetName(out var name, out _) &&
+            name == "core-probe";
+
+        _ = UnixProcessControl.TrySetName(original, out _);
+        return ok;
+    }
+
+    private static bool ResourceLimitRead()
+    {
+        return UnixProcessLimits.TryGet(UnixResource.NoFile, out var limit, out _) &&
+            limit.Hard >= limit.Soft;
+    }
+
+    private static bool MaskScope()
+    {
+        if (!UnixProcessMask.TryRead(out var original))
+        {
+            return false;
+        }
+
+        var mask = UnixFileMode.GroupRead | UnixFileMode.GroupWrite | UnixFileMode.GroupExecute |
+            UnixFileMode.OtherRead | UnixFileMode.OtherWrite | UnixFileMode.OtherExecute;
+
+        var applied = false;
+
+        using (UnixMaskScope.Enter(mask))
+        {
+            applied = UnixProcessMask.TryRead(out var current) && current == mask;
+        }
+
+        return applied && UnixProcessMask.TryRead(out var restored) && restored == original;
+    }
+
+    private static bool NoNewPrivileges()
+    {
+        return UnixProcessControl.TrySetNoNewPrivileges(out _) &&
+            UnixProcessControl.TryGetNoNewPrivileges(out var enabled, out _) &&
+            enabled;
     }
 
     private static (uint UserId, uint GroupId) ReadEffectiveIds()

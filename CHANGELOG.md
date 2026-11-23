@@ -19,6 +19,9 @@ and this project adheres to
 - `UnixLockedMemory.Lock(byte[])` pins a caller buffer and calls `mlock`;
   `Dispose` zeroes it before `munlock`, and a refused lock returns a
   `CoreError("unix.mlock")`.
+- `UnixProcessControl` sets the dumpable and no-new-privileges flags and the
+  thread name; `UnixProcessLimits` reads and writes the kernel resource limits;
+  `UnixMaskScope` applies a process `umask` and restores it.
 
 ### Changed
 

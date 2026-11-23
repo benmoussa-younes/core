@@ -234,3 +234,46 @@ static Core.Platform.Linux.XdgDirectories.FromEnvironment() -> Core.Results.Resu
 static readonly Core.Platform.Linux.SystemProcessRunner.DefaultTimeout -> System.TimeSpan
 virtual Core.Platform.Linux.RawFileHandler.Invoke(System.ReadOnlySpan<byte> relativePath, int directoryDescriptor, System.ReadOnlySpan<byte> name, Core.IO.Files.FileIdentity identity) -> void
 virtual Core.Platform.Linux.RawFileSkipHandler.Invoke(System.ReadOnlySpan<byte> relativePath, Core.IO.Walking.WalkSkipReason reason) -> void
+Core.Platform.Linux.UnixMaskScope
+Core.Platform.Linux.UnixMaskScope.Dispose() -> void
+Core.Platform.Linux.UnixMaskScope.Previous.get -> System.IO.UnixFileMode
+Core.Platform.Linux.UnixMaskScope.UnixMaskScope() -> void
+Core.Platform.Linux.UnixProcessControl
+Core.Platform.Linux.UnixProcessLimits
+Core.Platform.Linux.UnixProcessMask
+Core.Platform.Linux.UnixResource
+Core.Platform.Linux.UnixResource.AddressSpace = 9 -> Core.Platform.Linux.UnixResource
+Core.Platform.Linux.UnixResource.Core = 4 -> Core.Platform.Linux.UnixResource
+Core.Platform.Linux.UnixResource.Cpu = 0 -> Core.Platform.Linux.UnixResource
+Core.Platform.Linux.UnixResource.Data = 2 -> Core.Platform.Linux.UnixResource
+Core.Platform.Linux.UnixResource.FileSize = 1 -> Core.Platform.Linux.UnixResource
+Core.Platform.Linux.UnixResource.MemLock = 8 -> Core.Platform.Linux.UnixResource
+Core.Platform.Linux.UnixResource.NoFile = 7 -> Core.Platform.Linux.UnixResource
+Core.Platform.Linux.UnixResource.Processes = 6 -> Core.Platform.Linux.UnixResource
+Core.Platform.Linux.UnixResource.Stack = 3 -> Core.Platform.Linux.UnixResource
+Core.Platform.Linux.UnixResourceLimit
+Core.Platform.Linux.UnixResourceLimit.Deconstruct(out ulong Soft, out ulong Hard) -> void
+Core.Platform.Linux.UnixResourceLimit.Equals(Core.Platform.Linux.UnixResourceLimit other) -> bool
+Core.Platform.Linux.UnixResourceLimit.Hard.get -> ulong
+Core.Platform.Linux.UnixResourceLimit.Hard.init -> void
+Core.Platform.Linux.UnixResourceLimit.Soft.get -> ulong
+Core.Platform.Linux.UnixResourceLimit.Soft.init -> void
+Core.Platform.Linux.UnixResourceLimit.UnixResourceLimit() -> void
+Core.Platform.Linux.UnixResourceLimit.UnixResourceLimit(ulong Soft, ulong Hard) -> void
+~override Core.Platform.Linux.UnixResourceLimit.Equals(object obj) -> bool
+override Core.Platform.Linux.UnixResourceLimit.GetHashCode() -> int
+~override Core.Platform.Linux.UnixResourceLimit.ToString() -> string
+static Core.Platform.Linux.UnixMaskScope.Enter(System.IO.UnixFileMode mask) -> Core.Platform.Linux.UnixMaskScope
+static Core.Platform.Linux.UnixProcessControl.TryGetDumpable(out bool dumpable, out Core.Platform.Linux.LinuxErrno error) -> bool
+static Core.Platform.Linux.UnixProcessControl.TryGetName(out string! name, out Core.Platform.Linux.LinuxErrno error) -> bool
+static Core.Platform.Linux.UnixProcessControl.TryGetNoNewPrivileges(out bool enabled, out Core.Platform.Linux.LinuxErrno error) -> bool
+static Core.Platform.Linux.UnixProcessControl.TrySetDumpable(bool dumpable, out Core.Platform.Linux.LinuxErrno error) -> bool
+static Core.Platform.Linux.UnixProcessControl.TrySetName(string! name, out Core.Platform.Linux.LinuxErrno error) -> bool
+static Core.Platform.Linux.UnixProcessControl.TrySetNoNewPrivileges(out Core.Platform.Linux.LinuxErrno error) -> bool
+static Core.Platform.Linux.UnixProcessLimits.TryGet(Core.Platform.Linux.UnixResource resource, out Core.Platform.Linux.UnixResourceLimit limit, out Core.Platform.Linux.LinuxErrno error) -> bool
+static Core.Platform.Linux.UnixProcessLimits.TrySet(Core.Platform.Linux.UnixResource resource, Core.Platform.Linux.UnixResourceLimit limit, out Core.Platform.Linux.LinuxErrno error) -> bool
+static Core.Platform.Linux.UnixProcessMask.Replace(System.IO.UnixFileMode mask) -> System.IO.UnixFileMode
+static Core.Platform.Linux.UnixProcessMask.TryRead(out System.IO.UnixFileMode mask) -> bool
+static Core.Platform.Linux.UnixResourceLimit.operator !=(Core.Platform.Linux.UnixResourceLimit left, Core.Platform.Linux.UnixResourceLimit right) -> bool
+static Core.Platform.Linux.UnixResourceLimit.operator ==(Core.Platform.Linux.UnixResourceLimit left, Core.Platform.Linux.UnixResourceLimit right) -> bool
+static Core.Platform.Linux.UnixResourceLimit.Unlimited.get -> Core.Platform.Linux.UnixResourceLimit

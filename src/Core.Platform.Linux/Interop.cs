@@ -126,4 +126,10 @@ internal static unsafe partial class Interop
 
     [LibraryImport("libc", EntryPoint = "setrlimit", SetLastError = true)]
     internal static partial int SetRLimit(int resource, byte* limit);
+
+    [LibraryImport("libc", EntryPoint = "prctl", SetLastError = true)]
+    internal static partial int Prctl(int option, ulong argument2, ulong argument3, ulong argument4, ulong argument5);
+
+    [LibraryImport("libc", EntryPoint = "umask")]
+    internal static partial uint Umask(uint mask);
 }
