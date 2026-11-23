@@ -475,30 +475,11 @@ public sealed class SingleInstanceLock : ISingleInstance
         }
     }
 
-    private static unsafe bool HasSameUser(Socket connection)
+    private static bool HasSameUser(Socket connection)
     {
-        // struct ucred: pid_t pid; uid_t uid; gid_t gid;
-        const int UcredSize = 12;
-        const int UidOffset = 4;
-        const int SolSocket = 1;
-        const int PeerCredentials = 17;
-
-        var buffer = stackalloc byte[UcredSize];
-        var length = (uint)UcredSize;
-
-        if (Interop.GetSockOpt(
-                (int)connection.Handle,
-                SolSocket,
-                PeerCredentials,
-                buffer,
-                &length) != 0 ||
-            length < UcredSize)
-        {
-            return false;
-        }
-
-        var uid = *(uint*)(buffer + UidOffset);
-        return uid == Interop.GetEuid();
+        // WHY: SO_PEERCRED makes the same-user rule explicit against an inherited directory.
+        return UnixSocket.TryGetPeerCredentials(connection, out var peer, out _) &&
+            peer.UserId == Interop.GetEuid();
     }
 
     private static async Task<ReadOnlyMemory<byte>> ReadPayloadAsync(Socket connection, CancellationToken cancellationToken)

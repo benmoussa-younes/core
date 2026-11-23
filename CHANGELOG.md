@@ -8,6 +8,14 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- `UnixPeerCredentials` and `UnixSocket.TryGetPeerCredentials` read the peer
+  identity of a Unix domain socket (`SO_PEERCRED`) through the BCL, without a
+  libc call; a socket without a peer fails with
+  `LinuxErrno.ProtocolNotAvailable`, and `LinuxErrno` names `ENOPROTOOPT` (92).
+  `SingleInstanceLock` uses the same helper.
+
 ### Changed
 
 - CI installs the Scripts interpreter from its pinned release and runs the same

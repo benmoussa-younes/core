@@ -72,9 +72,6 @@ internal static unsafe partial class Interop
     [LibraryImport("libc", EntryPoint = "geteuid")]
     internal static partial uint GetEuid();
 
-    [LibraryImport("libc", EntryPoint = "getsockopt", SetLastError = true)]
-    internal static partial int GetSockOpt(int socket, int level, int option, byte* value, uint* length);
-
     [LibraryImport("libc", EntryPoint = "fstat", SetLastError = true)]
     internal static partial int FStat(int descriptor, byte* status);
 

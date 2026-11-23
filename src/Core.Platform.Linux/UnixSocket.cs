@@ -1,0 +1,79 @@
+using System.Net.Sockets;
+using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
+
+namespace Core.Platform.Linux;
+
+/// <summary>
+/// The peer-identity surface of a Unix domain socket: the credentials the
+/// kernel reports for the process at the other end (<c>SO_PEERCRED</c>).
+/// </summary>
+/// <remarks>
+/// The call reads the option through the BCL and never calls libc. A socket with
+/// no peer reports the invalid credentials (<c>uid</c> = <see cref="uint.MaxValue"/>)
+/// instead of failing; an older kernel refuses the option. Both cases return
+/// <see langword="false"/> with <see cref="LinuxErrno.ProtocolNotAvailable"/>.
+/// </remarks>
+[SupportedOSPlatform("linux")]
+public static class UnixSocket
+{
+    private const int SocketLevel = 1;
+    private const int PeerCredentialsOption = 17;
+    private const int CredentialsSize = 12;
+
+    /// <summary>
+    /// Reads the credentials of the peer connected to a Unix domain socket.
+    /// </summary>
+    /// <param name="socket">The connected socket.</param>
+    /// <param name="credentials">The peer's identifiers when the call succeeds; the default value otherwise.</param>
+    /// <param name="error">The <c>errno</c> when the call fails; <see cref="LinuxErrno.None"/> otherwise.</param>
+    /// <returns><see langword="true"/> when the kernel reported the peer's credentials.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="socket"/> is <see langword="null"/>.</exception>
+    public static bool TryGetPeerCredentials(
+        Socket socket,
+        out UnixPeerCredentials credentials,
+        out LinuxErrno error)
+    {
+        ArgumentNullException.ThrowIfNull(socket);
+
+        credentials = default;
+        error = LinuxErrno.None;
+
+        if (!OperatingSystem.IsLinux())
+        {
+            error = LinuxErrno.FunctionNotImplemented;
+            return false;
+        }
+
+        Span<byte> buffer = stackalloc byte[CredentialsSize];
+
+        try
+        {
+            if (socket.GetRawSocketOption(SocketLevel, PeerCredentialsOption, buffer) < CredentialsSize)
+            {
+                error = LinuxErrno.InvalidArgument;
+                return false;
+            }
+        }
+        catch (SocketException exception)
+        {
+            error = (LinuxErrno)exception.NativeErrorCode;
+            return false;
+        }
+
+        credentials = new UnixPeerCredentials(
+            MemoryMarshal.Read<int>(buffer),
+            MemoryMarshal.Read<uint>(buffer[4..]),
+            MemoryMarshal.Read<uint>(buffer[8..]));
+
+        // WHY: a socket with no peer returns the ucred placeholder, not an error.
+        if (credentials.UserId == uint.MaxValue)
+        {
+            credentials = default;
+            error = LinuxErrno.ProtocolNotAvailable;
+            return false;
+        }
+
+        return true;
+    }
+}
