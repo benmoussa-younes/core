@@ -49,17 +49,11 @@ public sealed class UnixDescriptorTests
         using var sending = sender;
         using var receiving = receiver;
         using var scratch = directory;
-        var descriptors = new int[5];
-
-        for (var index = 0; index < descriptors.Length; index++)
-        {
-            descriptors[index] = OpenNull();
-        }
+        var descriptors = OpenNulls(5);
 
         try
         {
             var before = CountNullDescriptors();
-
             Assert.True(UnixSocket.TrySend(sender, "x"u8, descriptors, out _, out _));
 
             var payload = new byte[16];
@@ -71,11 +65,110 @@ public sealed class UnixDescriptorTests
         }
         finally
         {
-            foreach (var descriptor in descriptors)
-            {
-                _ = Interop.Close(descriptor);
-            }
+            CloseAll(descriptors);
         }
+    }
+
+    [Fact]
+    public void MoreDescriptorsThanSlotsFailsAndClosesTheExtras()
+    {
+        var (sender, receiver, directory) = CreatePair();
+        using var sending = sender;
+        using var receiving = receiver;
+        using var scratch = directory;
+        var descriptors = OpenNulls(2);
+
+        try
+        {
+            var before = CountNullDescriptors();
+            Assert.True(UnixSocket.TrySend(sender, "x"u8, descriptors, out _, out _));
+
+            var payload = new byte[16];
+            Span<int> slot = stackalloc int[1];
+            slot[0] = -1;
+
+            Assert.False(UnixSocket.TryReceive(receiver, payload, slot, out _, out var error));
+            Assert.Equal(LinuxErrno.MessageTooLong, error);
+            Assert.Equal(-1, slot[0]);
+            Assert.Equal(before, CountNullDescriptors());
+        }
+        finally
+        {
+            CloseAll(descriptors);
+        }
+    }
+
+    [Fact]
+    public void FourDescriptorsInAnEmptyBufferFail()
+    {
+        var (sender, receiver, directory) = CreatePair();
+        using var sending = sender;
+        using var receiving = receiver;
+        using var scratch = directory;
+        var descriptors = OpenNulls(4);
+
+        try
+        {
+            var before = CountNullDescriptors();
+            Assert.True(UnixSocket.TrySend(sender, "x"u8, descriptors, out _, out _));
+
+            var payload = new byte[16];
+            Span<int> none = [];
+
+            Assert.False(UnixSocket.TryReceive(receiver, payload, none, out _, out var error));
+            Assert.Equal(LinuxErrno.MessageTooLong, error);
+            Assert.Equal(before, CountNullDescriptors());
+        }
+        finally
+        {
+            CloseAll(descriptors);
+        }
+    }
+
+    [Fact]
+    public void ElevenDescriptorsInOneSlotFailAndLeaveTheSlotAlone()
+    {
+        var (sender, receiver, directory) = CreatePair();
+        using var sending = sender;
+        using var receiving = receiver;
+        using var scratch = directory;
+        var descriptors = OpenNulls(11);
+
+        try
+        {
+            var before = CountNullDescriptors();
+            Assert.True(UnixSocket.TrySend(sender, "x"u8, descriptors, out _, out _));
+
+            var payload = new byte[16];
+            Span<int> slot = stackalloc int[1];
+            slot[0] = -1;
+
+            Assert.False(UnixSocket.TryReceive(receiver, payload, slot, out _, out var error));
+            Assert.Equal(LinuxErrno.MessageTooLong, error);
+            Assert.Equal(-1, slot[0]);
+            Assert.Equal(before, CountNullDescriptors());
+        }
+        finally
+        {
+            CloseAll(descriptors);
+        }
+    }
+
+    [Fact]
+    public void MoreSlotsThanTheKernelAllowsAreRefused()
+    {
+        var (sender, receiver, directory) = CreatePair();
+        using var sending = sender;
+        using var receiving = receiver;
+        using var scratch = directory;
+        var descriptors = new int[254];
+
+        Assert.False(UnixSocket.TrySend(sender, "x"u8, descriptors, out _, out var sendError));
+        Assert.Equal(LinuxErrno.InvalidArgument, sendError);
+
+        var payload = new byte[16];
+        Assert.False(UnixSocket.TryReceive(receiver, payload, descriptors, out _, out var receiveError));
+        Assert.Equal(LinuxErrno.InvalidArgument, receiveError);
     }
 
     [Fact]
@@ -102,22 +195,117 @@ public sealed class UnixDescriptorTests
     }
 
     [Fact]
-    public void AShortPayloadBufferReportsTruncation()
+    public void DisabledPassCredentialsDeliverNone()
+    {
+        var (sender, receiver, directory) = CreatePair();
+        using var sending = sender;
+        using var receiving = receiver;
+        using var scratch = directory;
+
+        Assert.True(UnixSocket.TrySetPassCredentials(receiver, true, out _));
+        Assert.True(UnixSocket.TrySetPassCredentials(receiver, false, out _));
+        Assert.True(UnixSocket.TrySend(sender, "x"u8, [], out _, out _));
+
+        var payload = new byte[16];
+        Span<int> none = [];
+
+        Assert.True(UnixSocket.TryReceive(receiver, payload, none, out _, out var credentials, out _));
+        Assert.Null(credentials);
+    }
+
+    [Fact]
+    public void DescriptorsAndCredentialsArriveTogether()
+    {
+        var (sender, receiver, directory) = CreatePair();
+        using var sending = sender;
+        using var receiving = receiver;
+        using var scratch = directory;
+        var source = OpenNull();
+
+        try
+        {
+            Assert.True(UnixSocket.TrySetPassCredentials(receiver, true, out _));
+            Assert.True(UnixSocket.TrySend(sender, "x"u8, [source], out _, out _));
+
+            var payload = new byte[16];
+            Span<int> received = stackalloc int[1];
+
+            Assert.True(UnixSocket.TryReceive(receiver, payload, received, out var message, out var credentials, out _));
+            Assert.Equal(1, message.DescriptorCount);
+            Assert.NotNull(credentials);
+            Assert.Equal(Environment.ProcessId, credentials!.Value.ProcessId);
+            _ = Interop.Close(received[0]);
+        }
+        finally
+        {
+            _ = Interop.Close(source);
+        }
+    }
+
+    [Fact]
+    public void AnEmptyPayloadCarriesADescriptorOnADatagram()
     {
         var (sender, receiver, directory) = CreateDatagramPair();
         using var sending = sender;
         using var receiving = receiver;
         using var scratch = directory;
+        var source = OpenNull();
 
-        Assert.True(UnixSocket.TrySend(sender, new byte[16], [], out _, out _));
+        try
+        {
+            Assert.True(UnixSocket.TrySend(sender, [], [source], out var sent, out var error));
+            Assert.Equal(0, sent);
+            Assert.Equal(LinuxErrno.None, error);
 
-        var payload = new byte[4];
+            var payload = new byte[16];
+            Span<int> received = stackalloc int[1];
+
+            Assert.True(UnixSocket.TryReceive(receiver, payload, received, out var message, out _));
+            Assert.Equal(0, message.Length);
+            Assert.Equal(1, message.DescriptorCount);
+            _ = Interop.Close(received[0]);
+        }
+        finally
+        {
+            _ = Interop.Close(source);
+        }
+    }
+
+    [Fact]
+    public void AnEmptyPayloadWithADescriptorIsRefusedOnAStream()
+    {
+        var (sender, receiver, directory) = CreatePair();
+        using var sending = sender;
+        using var receiving = receiver;
+        using var scratch = directory;
+        var source = OpenNull();
+
+        try
+        {
+            Assert.False(UnixSocket.TrySend(sender, [], [source], out _, out var error));
+            Assert.Equal(LinuxErrno.InvalidArgument, error);
+        }
+        finally
+        {
+            _ = Interop.Close(source);
+        }
+    }
+
+    [Fact]
+    public void AStreamEndOfFileIsAnEmptyMessage()
+    {
+        var (sender, receiver, directory) = CreatePair();
+        using var receiving = receiver;
+        using var scratch = directory;
+        sender.Dispose();
+
+        var payload = new byte[16];
         Span<int> none = [];
 
         Assert.True(UnixSocket.TryReceive(receiver, payload, none, out var message, out var error));
         Assert.Equal(LinuxErrno.None, error);
-        Assert.Equal(4, message.Length);
-        Assert.True(message.Truncated);
+        Assert.Equal(0, message.Length);
+        Assert.Equal(0, message.DescriptorCount);
     }
 
     private static (Socket Sender, Socket Receiver, TempDirectory Directory) CreatePair()
@@ -162,6 +350,26 @@ public sealed class UnixDescriptorTests
             {
                 return Interop.OpenAt(Interop.AtCurrentWorkingDirectory, pointer, Interop.OpenReadOnly, 0);
             }
+        }
+    }
+
+    private static int[] OpenNulls(int count)
+    {
+        var descriptors = new int[count];
+
+        for (var index = 0; index < count; index++)
+        {
+            descriptors[index] = OpenNull();
+        }
+
+        return descriptors;
+    }
+
+    private static void CloseAll(int[] descriptors)
+    {
+        foreach (var descriptor in descriptors)
+        {
+            _ = Interop.Close(descriptor);
         }
     }
 

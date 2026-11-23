@@ -10,14 +10,16 @@ namespace Core.Platform.Linux;
 /// (<c>SCM_RIGHTS</c>) sent and received with <c>sendmsg</c>/<c>recvmsg</c>.
 /// </summary>
 /// <remarks>
-/// The calls read and write the options through the BCL and add no direct libc
-/// import for the peer identity; the descriptor path imports <c>sendmsg</c> and
-/// <c>recvmsg</c>. A socket must be a connected stream socket: a listening socket
-/// has no peer, and a datagram socket reports the invalid credentials
-/// (<c>uid</c> = <see cref="uint.MaxValue"/>). Both are refused, the listener with
-/// <see cref="LinuxErrno.NotConnected"/> and the datagram socket with
-/// <see cref="LinuxErrno.ProtocolNotAvailable"/>. A received descriptor is
-/// either handed to the caller or closed by the call: it is never leaked.
+/// The peer-identity call reads the option through the BCL and adds no direct
+/// libc import; the descriptor path imports <c>sendmsg</c> and <c>recvmsg</c>.
+/// <see cref="TryGetPeerCredentials"/> requires a connected stream socket: a
+/// listening socket has no peer and a datagram socket reports the invalid
+/// credentials (<c>uid</c> = <see cref="uint.MaxValue"/>), both refused.
+/// <c>TrySend</c> and <c>TryReceive</c> accept a connected socket;
+/// a stream socket attaches the descriptors to the payload and rejects an empty
+/// payload with descriptors, while a connected datagram socket carries a
+/// descriptor without payload. A received descriptor is either handed to the
+/// caller or closed by the call: it is never leaked.
 /// </remarks>
 [SupportedOSPlatform("linux")]
 public static class UnixSocket
@@ -36,6 +38,8 @@ public static class UnixSocket
     private const int MessageTruncated = 0x20;
     private const int MessageControlTruncated = 0x8;
     private const int CredentialsControlSpace = 32;
+    // WHY: SCM_MAX_FD is the kernel's per-message descriptor limit.
+    private const int MaximumDescriptors = 253;
 
     /// <summary>
     /// Reads the credentials of the peer connected to a Unix domain socket.
@@ -137,7 +141,7 @@ public static class UnixSocket
     /// Sends a payload with file descriptors attached (<c>SCM_RIGHTS</c>).
     /// </summary>
     /// <param name="socket">The connected stream socket.</param>
-    /// <param name="payload">The bytes to send; it may be empty when descriptors are attached.</param>
+    /// <param name="payload">The bytes to send; it must not be empty when descriptors are attached on a stream socket.</param>
     /// <param name="descriptors">The descriptors the receiver obtains a copy of.</param>
     /// <param name="sent">The number of payload bytes the kernel accepted.</param>
     /// <param name="error">The <c>errno</c> when the call fails; <see cref="LinuxErrno.None"/> otherwise.</param>
@@ -164,6 +168,19 @@ public static class UnixSocket
         if (!socket.Connected)
         {
             error = LinuxErrno.NotConnected;
+            return false;
+        }
+
+        if (descriptors.Length > MaximumDescriptors)
+        {
+            error = LinuxErrno.InvalidArgument;
+            return false;
+        }
+
+        // WHY: a stream socket attaches the control data to the first payload byte and drops it without one.
+        if (payload.IsEmpty && !descriptors.IsEmpty && socket.SocketType == SocketType.Stream)
+        {
+            error = LinuxErrno.InvalidArgument;
             return false;
         }
 
@@ -243,6 +260,11 @@ public static class UnixSocket
     /// <param name="credentials">The sender's credentials, or <see langword="null"/> when the message carries none.</param>
     /// <param name="error">The <c>errno</c> when the call fails; <see cref="LinuxErrno.None"/> otherwise.</param>
     /// <returns><see langword="true"/> when a message was received.</returns>
+    /// <remarks>
+    /// A stream peer that has closed is reported as a successful message whose
+    /// <see cref="UnixMessage.Length"/> and <see cref="UnixMessage.DescriptorCount"/>
+    /// are zero; a caller loops until it sees that message.
+    /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="socket"/> is <see langword="null"/>.</exception>
     public static unsafe bool TryReceive(
         Socket socket,
@@ -267,6 +289,12 @@ public static class UnixSocket
         if (!socket.Connected)
         {
             error = LinuxErrno.NotConnected;
+            return false;
+        }
+
+        if (descriptors.Length > MaximumDescriptors)
+        {
+            error = LinuxErrno.InvalidArgument;
             return false;
         }
 
@@ -307,6 +335,7 @@ public static class UnixSocket
             var flags = *(int*)(header + 48);
             var controlLength = (int)*(nuint*)(header + 40);
             var truncated = (flags & MessageControlTruncated) != 0;
+            var overflow = false;
             var parseLength = truncated ? controlSize : controlLength;
             var offset = 0;
 
@@ -329,27 +358,26 @@ public static class UnixSocket
                 {
                     var count = (usableLength - ControlHeaderSize) / 4;
 
-                    for (var index = 0; index < count; index++)
+                    if (truncated || count > descriptors.Length - receivedFds)
                     {
-                        var descriptor = *(int*)(control + offset + ControlHeaderSize + (index * 4));
+                        for (var index = 0; index < count; index++)
+                        {
+                            _ = Interop.Close(*(int*)(control + offset + ControlHeaderSize + (index * 4)));
+                        }
 
-                        if (truncated)
+                        overflow = !truncated;
+                    }
+                    else
+                    {
+                        for (var index = 0; index < count; index++)
                         {
-                            _ = Interop.Close(descriptor);
-                        }
-                        else if (receivedFds < descriptors.Length)
-                        {
-                            descriptors[receivedFds] = descriptor;
+                            descriptors[receivedFds] = *(int*)(control + offset + ControlHeaderSize + (index * 4));
                             receivedFds++;
-                        }
-                        else
-                        {
-                            _ = Interop.Close(descriptor);
                         }
                     }
                 }
                 else if (!truncated && level == SocketLevel && type == CredentialsControl &&
-                    rawLength >= ControlHeaderSize + CredentialsSize)
+                    usableLength >= ControlHeaderSize + CredentialsSize)
                 {
                     credentials = new UnixPeerCredentials(
                         *(int*)(control + offset + ControlHeaderSize),
@@ -365,8 +393,14 @@ public static class UnixSocket
                 offset += (rawLength + 7) & ~7;
             }
 
-            if (truncated)
+            if (truncated || overflow)
             {
+                for (var index = 0; index < receivedFds; index++)
+                {
+                    _ = Interop.Close(descriptors[index]);
+                    descriptors[index] = 0;
+                }
+
                 error = LinuxErrno.MessageTooLong;
                 return false;
             }
