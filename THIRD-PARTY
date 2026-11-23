@@ -9,7 +9,7 @@ the third-party components and their licences; the full texts ship in
 
 | Component | Licence |
 |---|---|
-| Avalonia and Avalonia.* (except Angle.Windows.Natives) | MIT |
+| Avalonia, Avalonia.Desktop, Avalonia.Fonts.Inter, Avalonia.Headless, Avalonia.Themes.Fluent, Avalonia.Wayland | MIT |
 | The Inter font, embedded by `Avalonia.Fonts.Inter` | SIL Open Font License 1.1 |
 | SkiaSharp and SkiaSharp.NativeAssets.* | MIT; the native Skia library is BSD-3-Clause |
 | HarfBuzzSharp and HarfBuzzSharp.NativeAssets.* | MIT; the native HarfBuzz library is MIT |
@@ -29,10 +29,10 @@ upstream projects and ship in each package's `LICENSE`; the MIT text itself is
 
 | Component | Licence |
 |---|---|
-| xUnit.net (xunit.v3) | Apache-2.0 |
+| xUnit.net (xunit.v3, xunit.v3.mtp-off) | Apache-2.0 |
 | xunit.runner.visualstudio | Apache-2.0 |
 | BenchmarkDotNet | MIT |
-| coverlet | MIT |
+| coverlet.collector | MIT |
 | Microsoft.CodeAnalysis.PublicApiAnalyzers | MIT |
 | Microsoft.Extensions.FileSystemGlobbing | MIT |
 | Microsoft.NET.Test.Sdk | MIT |

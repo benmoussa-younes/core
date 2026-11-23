@@ -161,8 +161,15 @@ if not report("no agent or editor files", agent_entries.length() == 0, agent_ent
 }
 
 let props = read_text(base, "Directory.Build.props")
-let version = "0.2.3"
-if not report("version {version}", props.contains(">{version}</VersionPrefix>"), "Directory.Build.props") {
+let mutable version = ""
+match props.capture_groups(r"<VersionPrefix[^>]*>([^<]+)</VersionPrefix>") {
+    ok(groups) => {
+        version = groups[1]
+    }
+    error(_) => {
+    }
+}
+if not report("version {version}", version != "" and props.contains(">{version}</VersionPrefix>"), "Directory.Build.props") {
     success = false
 }
 
@@ -200,6 +207,27 @@ for project in portable_projects {
     }
 }
 if not report("portable layers have no Linux API", portable_leaks.length() == 0, portable_leaks.join(" | ")) {
+    success = false
+}
+
+let third_party = read_text(base, "THIRD-PARTY")
+let mutable licence_gaps: list<string> = []
+for entry in files {
+    let project = entry.trim_whitespace()
+    if not project.ends_with(".csproj") or project.starts_with("experiments/") or project.starts_with("benchmarks/") {
+        continue
+    }
+    let content = read_text(base, project)
+    for line in content.lines() {
+        if line.contains("PackageReference") {
+            let parts = line.split("\"")
+            if parts.length() >= 3 and not third_party.contains(parts[1]) {
+                licence_gaps.append("{parts[1]} ({project})")
+            }
+        }
+    }
+}
+if not report("THIRD-PARTY covers every package", licence_gaps.length() == 0, licence_gaps.join(", ")) {
     success = false
 }
 
