@@ -22,6 +22,9 @@ and this project adheres to
 - `UnixProcessControl` sets the dumpable and no-new-privileges flags and the
   thread name; `UnixProcessLimits` reads and writes the kernel resource limits;
   `UnixMaskScope` applies a process `umask` and restores it.
+- `UnixTerminalEcho.Disable(int)` turns terminal echo off and restores the
+  previous attributes on dispose; `TryGetEcho` reads the flag without changing
+  it, and a non-terminal descriptor is refused with `NotATty` (25).
 
 ### Changed
 

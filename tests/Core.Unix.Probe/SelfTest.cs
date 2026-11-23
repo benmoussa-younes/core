@@ -1,10 +1,11 @@
 using System.Globalization;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
 using Core.Platform.Linux;
 
 namespace Core.Unix.Probe;
 
-internal static class SelfTest
+internal static partial class SelfTest
 {
     public static int Run()
     {
@@ -16,6 +17,7 @@ internal static class SelfTest
         failures += Check("thread name round trip", ThreadNameRoundTrip());
         failures += Check("resource limit read", ResourceLimitRead());
         failures += Check("mask scope", MaskScope());
+        failures += Check("terminal echo round trip", TerminalEchoRoundTrip());
         failures += Check("no new privileges", NoNewPrivileges());
         Console.WriteLine(failures == 0 ? "SELF-TEST PASS" : $"SELF-TEST FAIL ({failures})");
         return failures == 0 ? 0 : 1;
@@ -166,6 +168,82 @@ internal static class SelfTest
             UnixProcessControl.TryGetNoNewPrivileges(out var enabled, out _) &&
             enabled;
     }
+
+    private static bool TerminalEchoRoundTrip()
+    {
+        var master = PosixOpenPt(2 | 0x100);
+
+        if (master < 0)
+        {
+            return false;
+        }
+
+        try
+        {
+            if (GrantPt(master) != 0 || UnlockPt(master) != 0)
+            {
+                return false;
+            }
+
+            var name = new byte[256];
+
+            unsafe
+            {
+                fixed (byte* pointer = name)
+                {
+                    if (PtsNameR(master, pointer, (nuint)name.Length) != 0)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            var path = System.Text.Encoding.UTF8.GetString(name, 0, Array.IndexOf(name, (byte)0));
+            using var handle = File.OpenHandle(path, FileMode.Open, FileAccess.ReadWrite);
+            var descriptor = (int)handle.DangerousGetHandle();
+
+            if (!UnixTerminalEcho.TryGetEcho(descriptor, out var before, out _) || !before)
+            {
+                return false;
+            }
+
+            var disabled = UnixTerminalEcho.Disable(descriptor);
+
+            if (!disabled.IsSuccess)
+            {
+                return false;
+            }
+
+            using (disabled.Value)
+            {
+                if (!UnixTerminalEcho.TryGetEcho(descriptor, out var off, out _) || off)
+                {
+                    return false;
+                }
+            }
+
+            return UnixTerminalEcho.TryGetEcho(descriptor, out var restored, out _) && restored;
+        }
+        finally
+        {
+            _ = Close(master);
+        }
+    }
+
+    [LibraryImport("libc", EntryPoint = "posix_openpt", SetLastError = true)]
+    private static partial int PosixOpenPt(int flags);
+
+    [LibraryImport("libc", EntryPoint = "grantpt", SetLastError = true)]
+    private static partial int GrantPt(int descriptor);
+
+    [LibraryImport("libc", EntryPoint = "unlockpt", SetLastError = true)]
+    private static partial int UnlockPt(int descriptor);
+
+    [LibraryImport("libc", EntryPoint = "ptsname_r", SetLastError = true)]
+    private static unsafe partial int PtsNameR(int descriptor, byte* buffer, nuint length);
+
+    [LibraryImport("libc", EntryPoint = "close")]
+    private static partial int Close(int descriptor);
 
     private static (uint UserId, uint GroupId) ReadEffectiveIds()
     {
