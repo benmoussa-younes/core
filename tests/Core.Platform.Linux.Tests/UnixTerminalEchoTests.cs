@@ -12,24 +12,41 @@ public sealed class UnixTerminalEchoTests
 
         try
         {
-            Assert.True(UnixTerminalEcho.TryGetEcho(slave, out var before));
-            Assert.True(before);
+            Assert.True(ReadRawEcho(slave));
 
             var disabled = UnixTerminalEcho.Disable(slave);
             Assert.True(disabled.IsSuccess);
 
             using (disabled.Value)
             {
-                Assert.True(UnixTerminalEcho.TryGetEcho(slave, out var off));
-                Assert.False(off);
+                Assert.False(ReadRawEcho(slave));
             }
 
-            Assert.True(UnixTerminalEcho.TryGetEcho(slave, out var restored));
-            Assert.True(restored);
+            Assert.True(ReadRawEcho(slave));
         }
         finally
         {
             _ = Interop.Close(slave);
+            _ = Interop.Close(master);
+        }
+    }
+
+    [Fact]
+    public void AClosedDescriptorIsRefused()
+    {
+        var (master, slave) = OpenPseudoTerminal();
+        _ = Interop.Close(slave);
+
+        try
+        {
+            var disabled = UnixTerminalEcho.Disable(slave);
+
+            Assert.True(disabled.TryGetError(out var error));
+            Assert.Equal("unix.termios", error!.Code);
+            Assert.Contains("BadFileDescriptor", error.Message, StringComparison.Ordinal);
+        }
+        finally
+        {
             _ = Interop.Close(master);
         }
     }
@@ -53,6 +70,21 @@ public sealed class UnixTerminalEchoTests
         {
             _ = Interop.Close(descriptor);
         }
+    }
+
+    private static bool ReadRawEcho(int descriptor)
+    {
+        var attributes = new byte[60];
+
+        unsafe
+        {
+            fixed (byte* pointer = attributes)
+            {
+                Assert.Equal(0, Interop.TcGetAttr(descriptor, pointer));
+            }
+        }
+
+        return (BitConverter.ToUInt32(attributes, 12) & 0x8) != 0;
     }
 
     private static (int Master, int Slave) OpenPseudoTerminal()
