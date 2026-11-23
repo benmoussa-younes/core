@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Younes BENMOUSSA <younes.benmoussa@pm.me>
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-using System.Runtime.InteropServices;
 using Core.Platform.Linux;
 
 namespace Core.IO.Tests;
@@ -52,6 +51,5 @@ public sealed class AtomicFileWriterUmaskTests
         Assert.Equal(UnixFileMode.UserRead | UnixFileMode.UserWrite, File.GetUnixFileMode(target));
     }
 
-    [DllImport("libc", EntryPoint = "umask", SetLastError = false)]
-    private static extern uint SetProcessUmask(uint mask);
+    private static uint SetProcessUmask(uint mask) => (uint)UnixProcessMask.Replace((UnixFileMode)mask);
 }
