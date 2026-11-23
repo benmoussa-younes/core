@@ -14,7 +14,7 @@ internal static class LinuxPathEncoding
 
         var byteCount = Encoding.UTF8.GetByteCount(path);
 
-        // WHY: a 2 GiB path is the only input that overflows the +1; the PR probe proves the guard.
+        // WHY: a path of 2^31-1 UTF-8 bytes is the only input that overflows the +1.
         if (byteCount == int.MaxValue)
         {
             throw new ArgumentException("The path is too long to encode.", nameof(path));

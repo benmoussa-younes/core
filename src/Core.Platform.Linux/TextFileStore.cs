@@ -50,13 +50,13 @@ public sealed class TextFileStore
     /// <remarks>An editor opens the target the user named; the write path refuses a
     /// symbolic-link destination. A caller that must not follow a link uses
     /// <see cref="ReadNoFollow"/>.</remarks>
-    /// <exception cref="ArgumentException"><paramref name="path"/> is empty, whitespace, or too long to encode.</exception>
+    /// <exception cref="ArgumentException"><paramref name="path"/> is empty, whitespace, contains a NUL, or is too long to encode.</exception>
     public Result<TextDocument> Read(string path) => ReadCore<OperatingSystemFileChunkReader>(path, noFollow: false);
 
     /// <summary>Reads one text file, refusing a final symbolic link.</summary>
     /// <param name="path">The file path.</param>
     /// <returns>The document, or a typed failure.</returns>
-    /// <exception cref="ArgumentException"><paramref name="path"/> is empty, whitespace, or too long to encode.</exception>
+    /// <exception cref="ArgumentException"><paramref name="path"/> is empty, whitespace, contains a NUL, or is too long to encode.</exception>
     public Result<TextDocument> ReadNoFollow(string path) => ReadCore<OperatingSystemFileChunkReader>(path, noFollow: true);
 
     internal Result<TextDocument> ReadCore<TChunkReader>(string path, bool noFollow = false)
@@ -120,7 +120,7 @@ public sealed class TextFileStore
     /// <param name="path">The file path.</param>
     /// <param name="document">The document.</param>
     /// <returns>The written path, or a failure.</returns>
-    /// <exception cref="ArgumentException"><paramref name="path"/> is empty, whitespace, or too long to encode.</exception>
+    /// <exception cref="ArgumentException"><paramref name="path"/> is empty, whitespace, contains a NUL, or is too long to encode.</exception>
     /// <exception cref="ArgumentNullException"><paramref name="document"/> is <see langword="null"/>.</exception>
     public Result<string> Write(string path, TextDocument document)
     {
@@ -136,7 +136,7 @@ public sealed class TextFileStore
     /// <param name="writeBom">Whether to prefix a UTF-8 byte-order mark.</param>
     /// <returns>The written path, or a failure with code <c>text.too_large</c>,
     /// <c>text.unwritable</c> or the atomic writer's <c>io.*</c> code.</returns>
-    /// <exception cref="ArgumentException"><paramref name="path"/> is empty, whitespace, or too long to encode.</exception>
+    /// <exception cref="ArgumentException"><paramref name="path"/> is empty, whitespace, contains a NUL, or is too long to encode.</exception>
     /// <exception cref="ArgumentNullException"><paramref name="text"/> is <see langword="null"/>.</exception>
     public Result<string> Write(
         string path,

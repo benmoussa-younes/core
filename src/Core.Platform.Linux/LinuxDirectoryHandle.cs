@@ -56,6 +56,7 @@ public sealed class LinuxDirectoryHandle : IDirectoryHandle
     /// </summary>
     /// <param name="path">The directory path.</param>
     /// <returns>The open handle, or an error when the directory cannot be opened.</returns>
+    /// <exception cref="ArgumentException"><paramref name="path"/> contains a NUL or is too long to encode.</exception>
     public static Result<LinuxDirectoryHandle> Open(string path)
     {
         ArgumentNullException.ThrowIfNull(path);
