@@ -52,9 +52,9 @@ and this project adheres to
   evaluated `PackageReference` against `THIRD-PARTY`; the build restores from
   committed lock files and requires signed packages, and CI publishes the Unix
   probe with its ILC count and native self-test.
-- Avalonia 12.2.0, xunit.v3 4.0.3, Microsoft.NET.Test.Sdk 18.12.0,
-  Microsoft.CodeAnalysis.PublicApiAnalyzers 5.6.0 and coverlet.collector
-  10.1.1.
+- Avalonia 12.2.0, xunit.v3.mtp-off 4.0.3, xunit.runner.visualstudio 4.0.1,
+  Microsoft.NET.Test.Sdk 18.12.0, Microsoft.CodeAnalysis.PublicApiAnalyzers
+  5.6.0 and coverlet.collector 10.1.1.
 
 ## [0.2.3] - 2026-11-22
 

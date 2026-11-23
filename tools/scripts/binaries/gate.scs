@@ -175,7 +175,20 @@ match process.run(process.request("dotnet", ["msbuild", "src/Core/Core.csproj", 
         success = false
     }
 }
-if not report("version {version}", version != "", "Directory.Build.props") {
+let props = read_text(base, "Directory.Build.props")
+let mutable declared = false
+for line in props.lines() {
+    match line.capture_groups(r"<VersionPrefix[^>]*>([^<]+)</VersionPrefix>") {
+        ok(groups) => {
+            if version != "" and groups[1].trim_whitespace() == version {
+                declared = true
+            }
+        }
+        error(_) => {
+        }
+    }
+}
+if not report("version {version}", declared, "Directory.Build.props") {
     success = false
 }
 
@@ -245,7 +258,7 @@ for entry in files {
         }
     }
 }
-if not report("THIRD-PARTY names every evaluated package", licence_gaps.length() == 0, licence_gaps.join(", ")) {
+if not report("THIRD-PARTY mentions every evaluated package", licence_gaps.length() == 0, licence_gaps.join(", ")) {
     success = false
 }
 
@@ -407,7 +420,7 @@ if perf_mode {
     let mutable unix_probe_ready = false
     match process.run(process.request("dotnet", ["publish", "tests/Core.Unix.Probe/Core.Unix.Probe.csproj", "-c", "Release", "-r", "linux-x64", "-o", "/tmp/core-gate-unix"]).with_working_directory(root)) {
         ok(completed) => {
-            # WHY: ILC warnings are not MSBuild warnings, so this count is the only check.
+            # WHY: csharp-style requires the gate to count AOT diagnostics even though the publish fails them.
             let mutable ilc_lines = 0
             for line in completed.standard_output.lines() {
                 if line.contains("ILC:") or line.contains("ILC :") or line.contains("warning IL") {
@@ -456,7 +469,7 @@ if perf_mode {
     if read_text(base, "experiments/Core.UI.Shell/Core.UI.Shell.csproj") != "" {
         match process.run(process.request("dotnet", ["publish", "experiments/Core.UI.Shell/Core.UI.Shell.csproj", "-c", "Release", "-r", "linux-x64", "-p:PublishAot=true", "-p:StripSymbols=false", "-o", "/tmp/core-gate-perf"]).with_working_directory(root)) {
             ok(completed) => {
-                # WHY: ILC warnings are not MSBuild warnings, so this count is the only check.
+                # WHY: csharp-style requires the gate to count AOT diagnostics even though the publish fails them.
                 let mutable ilc_lines = 0
                 for line in completed.standard_output.lines() {
                     if line.contains("ILC:") or line.contains("ILC :") or line.contains("warning IL") {

@@ -41,6 +41,7 @@ upstream projects and ship in each package's `LICENSE`; the MIT text itself is
 | Microsoft.Bcl.AsyncInterfaces, Microsoft.Win32.Registry, System.Security.AccessControl | MIT |
 | Newtonsoft.Json | MIT |
 | Microsoft.NET.ILLink.Tasks | MIT |
+| Microsoft.DotNet.ILCompiler and its linux-x64 runtime pack | MIT |
 
 ## Vendored source (not linked into the Core libraries)
 
