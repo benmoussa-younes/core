@@ -37,8 +37,8 @@ function report(name: string, passed: boolean, detail: string) -> boolean {
 # bounded workload per hot path. The budget is a wall-clock ceiling, generous
 # enough for a loaded machine but tight enough to catch a catastrophic regression.
 # It needs hyperfine and jq; the fast gate does not.
-# The same mode publishes the AOT Unix probe and runs its `--self-test`, so the
-# native binary, not the JIT build, proves the surface.
+# The same mode publishes the AOT Unix probe first and runs its `--self-test`,
+# so a checkout without experiments/ still proves the native surface.
 function run_perf(name: string, flag: string, count: string, budget_seconds: float) -> boolean {
     let binary = "/tmp/core-gate-perf/Core.UI.Shell"
     let timing = "/tmp/core-gate-perf-{name}.json"
@@ -217,7 +217,7 @@ let workspace_leaf = "workspace"
 let user_name = "younes"
 let user_leaf = "-benmoussa"
 let forbidden = "{host}{domain}|{workspace_root}{workspace_leaf}|/home/{user_name}{user_leaf}"
-match process.run(process.request("grep", ["-rInE", "--exclude-dir=.git", "--exclude-dir=bin", "--exclude-dir=obj", "--exclude-dir=artifacts", "--exclude-dir=docs", forbidden, "."]).with_working_directory(root)) {
+match process.run(process.request("grep", ["-rInE", "--exclude-dir=.git", "--exclude-dir=bin", "--exclude-dir=obj", "--exclude-dir=artifacts", "--exclude-dir=docs", "--exclude-dir=TestResults", forbidden, "."]).with_working_directory(root)) {
     ok(completed) => {
         if completed.exit_code == 1 {
             io.write_standard_output_line("PASS no internal host or personal path")
@@ -355,6 +355,57 @@ match process.run(process.request("reuse", ["lint"]).with_working_directory(root
 }
 
 if perf_mode {
+    # The probe runs first and needs no local experiment, so a checkout without
+    # experiments/ still proves the native surface.
+    let mutable unix_probe_ready = false
+    match process.run(process.request("dotnet", ["publish", "tests/Core.Unix.Probe/Core.Unix.Probe.csproj", "-c", "Release", "-r", "linux-x64", "-o", "/tmp/core-gate-unix"]).with_working_directory(root)) {
+        ok(completed) => {
+            # WHY: ILC warnings are not MSBuild warnings, so this count is the only check.
+            let mutable ilc_lines = 0
+            for line in completed.standard_output.lines() {
+                if line.contains("ILC: ") {
+                    ilc_lines = ilc_lines + 1
+                }
+            }
+            for line in completed.standard_error.lines() {
+                if line.contains("ILC: ") {
+                    ilc_lines = ilc_lines + 1
+                }
+            }
+            if completed.exit_code != 0 {
+                io.write_standard_error_line("FAIL unix probe publish: exit {completed.exit_code} {completed.standard_error.trim_whitespace()}")
+                success = false
+            } else if ilc_lines > 0 {
+                io.write_standard_error_line("FAIL unix probe publish: {ilc_lines} ILC lines")
+                success = false
+            } else {
+                io.write_standard_output_line("PASS unix probe publish")
+                unix_probe_ready = true
+            }
+        }
+        error(failure) => {
+            io.write_standard_error_line("FAIL unix probe publish: {failure.kind}")
+            success = false
+        }
+    }
+
+    if unix_probe_ready {
+        match process.run(process.request("/tmp/core-gate-unix/Core.Unix.Probe", ["--self-test"])) {
+            ok(completed) => {
+                if completed.exit_code == 0 {
+                    io.write_standard_output_line("PASS unix probe self-test")
+                } else {
+                    io.write_standard_error_line("FAIL unix probe self-test: exit {completed.exit_code} {completed.standard_output.trim_whitespace()} {completed.standard_error.trim_whitespace()}")
+                    success = false
+                }
+            }
+            error(failure) => {
+                io.write_standard_error_line("FAIL unix probe self-test: {failure.kind}")
+                success = false
+            }
+        }
+    }
+
     match process.run(process.request("dotnet", ["publish", "experiments/Core.UI.Shell/Core.UI.Shell.csproj", "-c", "Release", "-r", "linux-x64", "-p:PublishAot=true", "-p:StripSymbols=false", "-o", "/tmp/core-gate-perf"]).with_working_directory(root)) {
         ok(completed) => {
             if completed.exit_code == 0 {
@@ -370,41 +421,7 @@ if perf_mode {
         }
     }
 
-    let mutable unix_probe_ready = false
-    match process.run(process.request("dotnet", ["publish", "tests/Core.Unix.Probe/Core.Unix.Probe.csproj", "-c", "Release", "-r", "linux-x64", "-p:PublishAot=true", "-p:StripSymbols=true", "-o", "/tmp/core-gate-unix"]).with_working_directory(root)) {
-        ok(completed) => {
-            if completed.exit_code == 0 {
-                io.write_standard_output_line("PASS unix probe publish")
-                unix_probe_ready = true
-            } else {
-                io.write_standard_error_line("FAIL unix probe publish: exit {completed.exit_code} {completed.standard_error.trim_whitespace()}")
-                success = false
-            }
-        }
-        error(failure) => {
-            io.write_standard_error_line("FAIL unix probe publish: {failure.kind}")
-            success = false
-        }
-    }
-
     if success {
-        if unix_probe_ready {
-            match process.run(process.request("/tmp/core-gate-unix/Core.Unix.Probe", ["--self-test"])) {
-                ok(completed) => {
-                    if completed.exit_code == 0 {
-                        io.write_standard_output_line("PASS unix probe self-test")
-                    } else {
-                        io.write_standard_error_line("FAIL unix probe self-test: exit {completed.exit_code} {completed.standard_output.trim_whitespace()} {completed.standard_error.trim_whitespace()}")
-                        success = false
-                    }
-                }
-                error(failure) => {
-                    io.write_standard_error_line("FAIL unix probe self-test: {failure.kind}")
-                    success = false
-                }
-            }
-        }
-
         if not run_perf("walk", "--walk", "20", 0.25) {
             success = false
         }

@@ -72,6 +72,9 @@ internal static unsafe partial class Interop
     [LibraryImport("libc", EntryPoint = "geteuid")]
     internal static partial uint GetEuid();
 
+    [LibraryImport("libc", EntryPoint = "getegid")]
+    internal static partial uint GetEgid();
+
     [LibraryImport("libc", EntryPoint = "fstat", SetLastError = true)]
     internal static partial int FStat(int descriptor, byte* status);
 

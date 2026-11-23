@@ -62,6 +62,7 @@ Core.Platform.Linux.LinuxErrno.NameTooLong = 36 -> Core.Platform.Linux.LinuxErrn
 Core.Platform.Linux.LinuxErrno.NoEntry = 2 -> Core.Platform.Linux.LinuxErrno
 Core.Platform.Linux.LinuxErrno.NoSpaceLeft = 28 -> Core.Platform.Linux.LinuxErrno
 Core.Platform.Linux.LinuxErrno.None = 0 -> Core.Platform.Linux.LinuxErrno
+Core.Platform.Linux.LinuxErrno.NotConnected = 107 -> Core.Platform.Linux.LinuxErrno
 Core.Platform.Linux.LinuxErrno.NotDirectory = 20 -> Core.Platform.Linux.LinuxErrno
 Core.Platform.Linux.LinuxErrno.OperationNotPermitted = 1 -> Core.Platform.Linux.LinuxErrno
 Core.Platform.Linux.LinuxErrno.OutOfMemory = 12 -> Core.Platform.Linux.LinuxErrno

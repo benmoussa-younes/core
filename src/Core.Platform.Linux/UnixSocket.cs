@@ -9,10 +9,13 @@ namespace Core.Platform.Linux;
 /// kernel reports for the process at the other end (<c>SO_PEERCRED</c>).
 /// </summary>
 /// <remarks>
-/// The call reads the option through the BCL and never calls libc. A socket with
-/// no peer reports the invalid credentials (<c>uid</c> = <see cref="uint.MaxValue"/>)
-/// instead of failing; an older kernel refuses the option. Both cases return
-/// <see langword="false"/> with <see cref="LinuxErrno.ProtocolNotAvailable"/>.
+/// The call reads the option through the BCL and adds no libc import. The socket
+/// must be connected: a listening socket has no peer, and the kernel would report
+/// the listener's own credentials, so the call refuses it with
+/// <see cref="LinuxErrno.NotConnected"/>. A connected socket of another family
+/// reports the invalid credentials (<c>uid</c> = <see cref="uint.MaxValue"/>) or
+/// refuses the option; both cases return <see langword="false"/> with
+/// <see cref="LinuxErrno.ProtocolNotAvailable"/>.
 /// </remarks>
 [SupportedOSPlatform("linux")]
 public static class UnixSocket
@@ -26,9 +29,14 @@ public static class UnixSocket
     /// </summary>
     /// <param name="socket">The connected socket.</param>
     /// <param name="credentials">The peer's identifiers when the call succeeds; the default value otherwise.</param>
-    /// <param name="error">The <c>errno</c> when the call fails; <see cref="LinuxErrno.None"/> otherwise.</param>
+    /// <param name="error">
+    /// The <c>errno</c> when the call fails, or <see cref="LinuxErrno.InvalidArgument"/>
+    /// when the kernel returned an unexpected option length;
+    /// <see cref="LinuxErrno.None"/> otherwise.
+    /// </param>
     /// <returns><see langword="true"/> when the kernel reported the peer's credentials.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="socket"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ObjectDisposedException">The socket has been disposed.</exception>
     public static bool TryGetPeerCredentials(
         Socket socket,
         out UnixPeerCredentials credentials,
@@ -42,6 +50,12 @@ public static class UnixSocket
         if (!OperatingSystem.IsLinux())
         {
             error = LinuxErrno.FunctionNotImplemented;
+            return false;
+        }
+
+        if (!socket.Connected)
+        {
+            error = LinuxErrno.NotConnected;
             return false;
         }
 
@@ -66,8 +80,7 @@ public static class UnixSocket
             MemoryMarshal.Read<uint>(buffer[4..]),
             MemoryMarshal.Read<uint>(buffer[8..]));
 
-        // WHY: a socket with no peer returns the ucred placeholder, not an error.
-        if (credentials.UserId == uint.MaxValue)
+        if (!IsPeerIdentity(credentials.UserId))
         {
             credentials = default;
             error = LinuxErrno.ProtocolNotAvailable;
@@ -76,4 +89,6 @@ public static class UnixSocket
 
         return true;
     }
+
+    internal static bool IsPeerIdentity(uint userId) => userId != uint.MaxValue;
 }

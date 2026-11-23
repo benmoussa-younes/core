@@ -88,4 +88,7 @@ public enum LinuxErrno
 
     /// <summary>Protocol not available (<c>ENOPROTOOPT</c>, 92).</summary>
     ProtocolNotAvailable = 92,
+
+    /// <summary>Transport endpoint is not connected (<c>ENOTCONN</c>, 107).</summary>
+    NotConnected = 107,
 }

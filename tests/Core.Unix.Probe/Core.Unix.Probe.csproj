@@ -7,6 +7,9 @@
     <RootNamespace>Core.Unix.Probe</RootNamespace>
     <IsPackable>false</IsPackable>
     <IsAotCompatible>true</IsAotCompatible>
+    <PublishAot>true</PublishAot>
+    <StripSymbols>true</StripSymbols>
+    <RuntimeIdentifiers>linux-x64</RuntimeIdentifiers>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../src/Core.Platform.Linux/Core.Platform.Linux.csproj" />

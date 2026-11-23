@@ -477,7 +477,6 @@ public sealed class SingleInstanceLock : ISingleInstance
 
     private static bool HasSameUser(Socket connection)
     {
-        // WHY: SO_PEERCRED makes the same-user rule explicit against an inherited directory.
         return UnixSocket.TryGetPeerCredentials(connection, out var peer, out _) &&
             peer.UserId == Interop.GetEuid();
     }

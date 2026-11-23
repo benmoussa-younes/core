@@ -11,9 +11,10 @@ and this project adheres to
 ### Added
 
 - `UnixPeerCredentials` and `UnixSocket.TryGetPeerCredentials` read the peer
-  identity of a Unix domain socket (`SO_PEERCRED`) through the BCL, without a
-  libc call; a socket without a peer fails with
-  `LinuxErrno.ProtocolNotAvailable`, and `LinuxErrno` names `ENOPROTOOPT` (92).
+  identity of a connected Unix domain socket (`SO_PEERCRED`) through the BCL,
+  adding no libc import; a listening or unconnected socket is refused with
+  `LinuxErrno.NotConnected`, a socket without peer credentials with
+  `ProtocolNotAvailable`, and `LinuxErrno` names both (107, 92).
   `SingleInstanceLock` uses the same helper.
 
 ### Changed

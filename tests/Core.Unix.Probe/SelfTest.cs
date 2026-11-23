@@ -8,8 +8,8 @@ internal static class SelfTest
     public static int Run()
     {
         var failures = 0;
-        failures += Check("peer credentials of a Unix socket", PeerCredentialsOfAUnixSocket());
-        failures += Check("no peer credentials without a peer", NoPeerCredentials());
+        failures += Check("peer credentials of a connected Unix socket", PeerCredentialsOfAConnectedUnixSocket());
+        failures += Check("no peer on a listening socket", NoPeerOnAListeningSocket());
         Console.WriteLine(failures == 0 ? "SELF-TEST PASS" : $"SELF-TEST FAIL ({failures})");
         return failures == 0 ? 0 : 1;
     }
@@ -25,7 +25,7 @@ internal static class SelfTest
         return 1;
     }
 
-    private static bool PeerCredentialsOfAUnixSocket()
+    private static bool PeerCredentialsOfAConnectedUnixSocket()
     {
         var directory = Directory.CreateTempSubdirectory("core-unix-probe-");
         var socketPath = Path.Combine(directory.FullName, "probe.sock");
@@ -40,9 +40,11 @@ internal static class SelfTest
             client.Connect(new UnixDomainSocketEndPoint(socketPath));
             using var server = listener.Accept();
 
-            return UnixSocket.TryGetPeerCredentials(server, out var credentials, out _) &&
+            return UnixSocket.TryGetPeerCredentials(server, out var credentials, out var error) &&
+                error == LinuxErrno.None &&
                 credentials.ProcessId == Environment.ProcessId &&
-                credentials.UserId != uint.MaxValue;
+                credentials.UserId != uint.MaxValue &&
+                credentials.GroupId != uint.MaxValue;
         }
         finally
         {
@@ -50,10 +52,23 @@ internal static class SelfTest
         }
     }
 
-    private static bool NoPeerCredentials()
+    private static bool NoPeerOnAListeningSocket()
     {
-        using var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-        return !UnixSocket.TryGetPeerCredentials(socket, out _, out var error) &&
-            error == LinuxErrno.ProtocolNotAvailable;
+        var directory = Directory.CreateTempSubdirectory("core-unix-probe-");
+        var socketPath = Path.Combine(directory.FullName, "listener.sock");
+
+        try
+        {
+            using var listener = new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified);
+            listener.Bind(new UnixDomainSocketEndPoint(socketPath));
+            listener.Listen(1);
+
+            return !UnixSocket.TryGetPeerCredentials(listener, out _, out var error) &&
+                error == LinuxErrno.NotConnected;
+        }
+        finally
+        {
+            directory.Delete(recursive: true);
+        }
     }
 }
