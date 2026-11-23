@@ -16,6 +16,7 @@ internal static partial class SelfTest
         failures += Check("dumpable round trip", DumpableRoundTrip());
         failures += Check("thread name round trip", ThreadNameRoundTrip());
         failures += Check("resource limit read", ResourceLimitRead());
+        failures += Check("resource limit write", ResourceLimitWrite());
         failures += Check("mask scope", MaskScope());
         failures += Check("terminal echo round trip", TerminalEchoRoundTrip());
         failures += Check("descriptor round trip", DescriptorRoundTrip());
@@ -142,6 +143,22 @@ internal static partial class SelfTest
     {
         return UnixProcessLimits.TryGet(UnixResource.NoFile, out var limit, out _) &&
             limit.Hard >= limit.Soft;
+    }
+
+    private static bool ResourceLimitWrite()
+    {
+        if (!UnixProcessLimits.TryGet(UnixResource.NoFile, out var original, out _) || original.Soft == 0)
+        {
+            return false;
+        }
+
+        var changed = original with { Soft = original.Soft - 1 };
+        var applied = UnixProcessLimits.TrySet(UnixResource.NoFile, changed, out _) &&
+            UnixProcessLimits.TryGet(UnixResource.NoFile, out var read, out _) &&
+            read == changed;
+
+        _ = UnixProcessLimits.TrySet(UnixResource.NoFile, original, out _);
+        return applied;
     }
 
     private static bool MaskScope()

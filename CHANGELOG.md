@@ -33,11 +33,13 @@ and this project adheres to
 ### Security
 
 - The Unix surface keeps secrets out of swap (`UnixLockedMemory` zeroes before
-  `munlock`), disables core dumps and privilege gain (`UnixProcessControl`,
-  `UnixProcessLimits`), applies an owner-only `umask` scope, hides a passphrase
-  with terminal echo control, receives descriptors close-on-exec, and never
-  leaks a descriptor on a refused or truncated message. `SO_PEERCRED`
-  identifies a connected peer and refuses a listening socket.
+  `munlock`), lets a process turn off dumpable and tracing (`UnixProcessControl`)
+  and set its no-new-privileges flag, exposes the kernel resource limits
+  (`UnixProcessLimits`), hides a passphrase with terminal echo control, receives
+  descriptors close-on-exec, and never leaks a descriptor on a refused or
+  truncated message. `UnixMaskScope` applies the caller's mask and restores it
+  (the tests use 0077). `SO_PEERCRED` identifies a connected peer and refuses a
+  listening socket.
 
 ### Changed
 

@@ -14,7 +14,8 @@ namespace Core.Platform.Linux;
 /// libc import; the descriptor path imports <c>sendmsg</c> and <c>recvmsg</c>.
 /// <see cref="TryGetPeerCredentials"/> requires a connected stream socket: a
 /// listening socket has no peer and a datagram socket reports the invalid
-/// credentials (<c>uid</c> = <see cref="uint.MaxValue"/>), both refused.
+/// credentials (<c>uid</c> = <see cref="uint.MaxValue"/>); an unconnected socket
+/// is refused earlier with <see cref="LinuxErrno.NotConnected"/>.
 /// <c>TrySend</c> and <c>TryReceive</c> accept a connected socket;
 /// a stream socket attaches the descriptors to the payload and rejects an empty
 /// payload with descriptors, while a connected datagram socket carries a
@@ -140,7 +141,7 @@ public static class UnixSocket
     /// <summary>
     /// Sends a payload with file descriptors attached (<c>SCM_RIGHTS</c>).
     /// </summary>
-    /// <param name="socket">The connected stream socket.</param>
+    /// <param name="socket">The connected socket, stream or datagram.</param>
     /// <param name="payload">The bytes to send; it must not be empty when descriptors are attached on a stream socket.</param>
     /// <param name="descriptors">The descriptors the receiver obtains a copy of.</param>
     /// <param name="sent">The number of payload bytes the kernel accepted.</param>
@@ -232,7 +233,7 @@ public static class UnixSocket
     /// <summary>
     /// Receives a payload and its attached file descriptors.
     /// </summary>
-    /// <param name="socket">The connected stream socket.</param>
+    /// <param name="socket">The connected socket, stream or datagram.</param>
     /// <param name="payload">The buffer the payload is copied into.</param>
     /// <param name="descriptors">The buffer that receives the attached descriptors, one per slot.</param>
     /// <param name="message">The received length, descriptor count and truncation flag when the call succeeds.</param>
@@ -253,7 +254,7 @@ public static class UnixSocket
     /// Receives a payload, its attached file descriptors and its sender's
     /// credentials when <c>SO_PASSCRED</c> is enabled.
     /// </summary>
-    /// <param name="socket">The connected stream socket.</param>
+    /// <param name="socket">The connected socket, stream or datagram.</param>
     /// <param name="payload">The buffer the payload is copied into.</param>
     /// <param name="descriptors">The buffer that receives the attached descriptors, one per slot.</param>
     /// <param name="message">The received length, descriptor count and truncation flag when the call succeeds.</param>

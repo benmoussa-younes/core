@@ -18,7 +18,7 @@ public static class UnixProcessMask
 
     /// <summary>Replaces the process mask and returns the previous one.</summary>
     /// <param name="mask">The bits to remove from every created file.</param>
-    /// <returns>The mask in force before the call; unchanged on another platform.</returns>
+    /// <returns>The mask in force before the call; the argument unchanged on another platform.</returns>
     public static UnixFileMode Replace(UnixFileMode mask)
     {
         if (!OperatingSystem.IsLinux())

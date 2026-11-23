@@ -50,7 +50,7 @@ public static class UnixProcessControl
     }
 
     /// <summary>Reads whether another process may trace or dump this one.</summary>
-    /// <param name="dumpable">Whether the process is dumpable and traceable.</param>
+    /// <param name="dumpable">Whether the process is dumpable, including the root-only mode.</param>
     /// <param name="error">The <c>errno</c> when the call fails; <see cref="LinuxErrno.None"/> otherwise.</param>
     /// <returns><see langword="true"/> when the kernel reported the flag.</returns>
     public static bool TryGetDumpable(out bool dumpable, out LinuxErrno error)
