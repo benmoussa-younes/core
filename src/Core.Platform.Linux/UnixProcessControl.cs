@@ -8,10 +8,11 @@ namespace Core.Platform.Linux;
 /// the dumpable and no-new-privileges flags, and the thread name.
 /// </summary>
 /// <remarks>
-/// Every member is a non-throwing probe: a refusal is <see langword="false"/>
-/// with the <c>errno</c> in an out parameter, and a getter returns the kernel's
-/// value. Setting <c>PR_SET_NO_NEW_PRIVILEGES</c> is irreversible for the
-/// process, so a caller sets it once, after its privileged setup.
+/// A refusal is <see langword="false"/> with the <c>errno</c> in an out
+/// parameter, and a getter returns the kernel's value; a name that does not fit
+/// is an <see cref="System.ArgumentException"/> (a caller fault). Setting
+/// <c>PR_SET_NO_NEW_PRIVILEGES</c> is irreversible for the process, so a caller
+/// sets it once, after its privileged setup.
 /// </remarks>
 [SupportedOSPlatform("linux")]
 public static class UnixProcessControl

@@ -17,16 +17,21 @@ public sealed class UnixProcessMaskTests
     public void MaskScopeAppliesAndRestoresTheProcessMask()
     {
         Assert.True(UnixProcessMask.TryRead(out var original));
+        var target = original == GroupAndOther ? UnixFileMode.GroupWrite : GroupAndOther;
 
-        using (var scope = UnixMaskScope.Enter(GroupAndOther))
+        using (var scope = UnixMaskScope.Enter(target))
         {
             Assert.Equal(original, scope.Previous);
             Assert.True(UnixProcessMask.TryRead(out var current));
-            Assert.Equal(GroupAndOther, current);
+            Assert.Equal(target, current);
         }
 
         Assert.True(UnixProcessMask.TryRead(out var restored));
         Assert.Equal(original, restored);
+
+        default(UnixMaskScope).Dispose();
+        Assert.True(UnixProcessMask.TryRead(out var untouched));
+        Assert.Equal(original, untouched);
     }
 
     [Fact]
@@ -34,8 +39,13 @@ public sealed class UnixProcessMaskTests
     {
         using var temp = new TempDirectory();
         var path = temp.FullPath("masked.txt");
+        Assert.True(UnixProcessMask.TryRead(out var original));
+        var mask = original == GroupAndOther ? UnixFileMode.GroupWrite | UnixFileMode.OtherWrite : GroupAndOther;
+        var expected = mask == GroupAndOther
+            ? UnixFileMode.UserRead | UnixFileMode.UserWrite
+            : UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.GroupRead | UnixFileMode.OtherRead;
 
-        using (UnixMaskScope.Enter(GroupAndOther))
+        using (UnixMaskScope.Enter(mask))
         {
             using var stream = new FileStream(
                 path,
@@ -47,6 +57,6 @@ public sealed class UnixProcessMaskTests
                 });
         }
 
-        Assert.Equal(UnixFileMode.UserRead | UnixFileMode.UserWrite, File.GetUnixFileMode(path));
+        Assert.Equal(expected, File.GetUnixFileMode(path));
     }
 }

@@ -12,14 +12,15 @@ namespace Core.Platform.Linux;
 /// <remarks>
 /// The buffer stays pinned for the lock's lifetime, so the garbage collector
 /// never moves the locked pages. A copy of the bytes elsewhere is not locked:
-/// the caller must not duplicate the buffer.
+/// the caller must not duplicate the buffer, and a span obtained before
+/// <see cref="Dispose"/> stays writable, so the caller must not retain it.
 /// </remarks>
 [SupportedOSPlatform("linux")]
 public sealed class UnixLockedMemory : IDisposable
 {
     private readonly byte[] _buffer;
     private GCHandle _handle;
-    private bool _disposed;
+    private int _disposed;
 
     private UnixLockedMemory(byte[] buffer, GCHandle handle)
     {
@@ -33,12 +34,12 @@ public sealed class UnixLockedMemory : IDisposable
     {
         get
         {
-            ObjectDisposedException.ThrowIf(_disposed, this);
+            ObjectDisposedException.ThrowIf(Volatile.Read(ref _disposed) != 0, this);
             return _buffer;
         }
     }
 
-    /// <summary>Gets the number of locked bytes.</summary>
+    /// <summary>Gets the number of bytes the lock covers.</summary>
     public int Length => _buffer.Length;
 
     /// <summary>Pins a buffer and locks its pages in memory.</summary>
@@ -77,14 +78,20 @@ public sealed class UnixLockedMemory : IDisposable
     /// <summary>Zeroes the buffer, unlocks its pages and releases the pin.</summary>
     public unsafe void Dispose()
     {
-        if (_disposed)
+        if (Interlocked.Exchange(ref _disposed, 1) != 0)
         {
             return;
         }
 
-        _disposed = true;
         CryptographicOperations.ZeroMemory(_buffer);
         _ = Interop.MUnlock(_handle.AddrOfPinnedObject().ToPointer(), (nuint)_buffer.Length);
         _handle.Free();
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>Releases the lock when the caller forgot <see cref="Dispose"/>.</summary>
+    ~UnixLockedMemory()
+    {
+        Dispose();
     }
 }

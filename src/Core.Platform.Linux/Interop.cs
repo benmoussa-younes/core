@@ -9,8 +9,8 @@ namespace Core.Platform.Linux;
 /// The raw libc surface of the Linux platform layer.
 /// </summary>
 /// <remarks>
-/// This is the only place in the portfolio that declares <c>LibraryImport</c>.
-/// The source-generated imports are NativeAOT-safe and allocate nothing. Paths
+/// This is the libc surface of <c>Core.Platform.Linux</c>. The source-generated
+/// imports are NativeAOT-safe and allocate nothing. Paths
 /// are raw, null-terminated UTF-8 byte pointers so the caller controls the
 /// buffer; the managed wrappers own the encoding. <c>errno</c> is read with
 /// <see cref="Marshal.GetLastPInvokeError"/> immediately after a call whose

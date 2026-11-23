@@ -9,10 +9,12 @@ namespace Core.Platform.Linux;
 public readonly struct UnixMaskScope : IDisposable
 {
     private readonly UnixFileMode _previous;
+    private readonly bool _entered;
 
     private UnixMaskScope(UnixFileMode previous)
     {
         _previous = previous;
+        _entered = true;
     }
 
     /// <summary>Gets the mask in force before the scope was entered.</summary>
@@ -27,8 +29,14 @@ public readonly struct UnixMaskScope : IDisposable
     }
 
     /// <summary>Restores the mask in force before the scope was entered.</summary>
+    /// <remarks>A default-initialized scope does nothing, so it can never clear the mask.</remarks>
     public void Dispose()
     {
+        if (!_entered)
+        {
+            return;
+        }
+
         _ = UnixProcessMask.Replace(_previous);
     }
 }
