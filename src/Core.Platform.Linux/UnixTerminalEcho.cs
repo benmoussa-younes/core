@@ -10,11 +10,13 @@ namespace Core.Platform.Linux;
 /// dispose.
 /// </summary>
 /// <remarks>
-/// The descriptor must be a terminal: a regular file or a closed descriptor is a
-/// failure with <see cref="LinuxErrno.NotATty"/>. The <c>termios</c> layout stays
+/// The descriptor must be a terminal: a regular file is a failure with
+/// <see cref="LinuxErrno.NotATty"/> and a closed descriptor with
+/// <see cref="LinuxErrno.BadFileDescriptor"/>. The <c>termios</c> layout stays
 /// internal; only the echo flag is touched, and the restore uses
 /// <c>TCSAFLUSH</c>. The class holds no reference to the descriptor and never
-/// closes it.
+/// closes it. The library does not own the signal disposition: if the process
+/// is signalled while echo is off, the terminal keeps the disabled attributes.
 /// </remarks>
 [SupportedOSPlatform("linux")]
 public sealed class UnixTerminalEcho : IDisposable
@@ -73,13 +75,16 @@ public sealed class UnixTerminalEcho : IDisposable
     /// <summary>Reads whether a terminal descriptor echoes its input.</summary>
     /// <param name="descriptor">The terminal descriptor to inspect.</param>
     /// <param name="enabled">Whether echo is on when the call succeeds.</param>
+    /// <param name="error">The <c>errno</c> when the call fails; <see cref="LinuxErrno.None"/> otherwise.</param>
     /// <returns><see langword="true"/> when the descriptor is a terminal whose attributes were read.</returns>
-    public static unsafe bool TryGetEcho(int descriptor, out bool enabled)
+    public static unsafe bool TryGetEcho(int descriptor, out bool enabled, out LinuxErrno error)
     {
         enabled = false;
+        error = LinuxErrno.None;
 
         if (!OperatingSystem.IsLinux())
         {
+            error = LinuxErrno.FunctionNotImplemented;
             return false;
         }
 
@@ -89,6 +94,7 @@ public sealed class UnixTerminalEcho : IDisposable
         {
             if (Interop.TcGetAttr(descriptor, pointer) != 0)
             {
+                error = (LinuxErrno)Marshal.GetLastPInvokeError();
                 return false;
             }
         }

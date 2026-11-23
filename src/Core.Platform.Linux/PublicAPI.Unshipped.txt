@@ -281,4 +281,4 @@ static Core.Platform.Linux.UnixResourceLimit.operator ==(Core.Platform.Linux.Uni
 static Core.Platform.Linux.UnixResourceLimit.Unlimited.get -> Core.Platform.Linux.UnixResourceLimit
 Core.Platform.Linux.UnixTerminalEcho.Dispose() -> void
 static Core.Platform.Linux.UnixTerminalEcho.Disable(int descriptor) -> Core.Results.Result<Core.Platform.Linux.UnixTerminalEcho!>
-static Core.Platform.Linux.UnixTerminalEcho.TryGetEcho(int descriptor, out bool enabled) -> bool
+static Core.Platform.Linux.UnixTerminalEcho.TryGetEcho(int descriptor, out bool enabled, out Core.Platform.Linux.LinuxErrno error) -> bool

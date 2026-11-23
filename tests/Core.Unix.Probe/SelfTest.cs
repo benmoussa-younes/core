@@ -202,7 +202,7 @@ internal static partial class SelfTest
             using var handle = File.OpenHandle(path, FileMode.Open, FileAccess.ReadWrite);
             var descriptor = (int)handle.DangerousGetHandle();
 
-            if (!UnixTerminalEcho.TryGetEcho(descriptor, out var before) || !before)
+            if (!UnixTerminalEcho.TryGetEcho(descriptor, out var before, out _) || !before)
             {
                 return false;
             }
@@ -216,13 +216,13 @@ internal static partial class SelfTest
 
             using (disabled.Value)
             {
-                if (!UnixTerminalEcho.TryGetEcho(descriptor, out var off) || off)
+                if (!UnixTerminalEcho.TryGetEcho(descriptor, out var off, out _) || off)
                 {
                     return false;
                 }
             }
 
-            return UnixTerminalEcho.TryGetEcho(descriptor, out var restored) && restored;
+            return UnixTerminalEcho.TryGetEcho(descriptor, out var restored, out _) && restored;
         }
         finally
         {
