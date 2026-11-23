@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 using System.Runtime.InteropServices;
+using Core.Platform.Linux;
 using System.Text;
 
 namespace Core.IO.Tests;
@@ -131,7 +132,7 @@ internal static unsafe class RawFileSystem
             throw new IOException($"open failed with errno {Marshal.GetLastPInvokeError()}.");
         }
 
-        _ = Close(fileDescriptor);
+        _ = Interop.Close(fileDescriptor);
     }
 
     public static int OpenReadOnly(string path)
@@ -140,15 +141,23 @@ internal static unsafe class RawFileSystem
 
         fixed (byte* pointer = bytes)
         {
-            return OpenAt(-100, pointer, 0, 0);
+            return Interop.OpenAt(Interop.AtCurrentWorkingDirectory, pointer, 0, 0);
         }
     }
 
     public static void MakeFifo(string path, uint mode)
     {
-        if (MakeFifoNative(path, mode) != 0)
+        var bytes = Encoding.UTF8.GetBytes(path + "\0");
+
+        unsafe
         {
-            throw new IOException($"mkfifo failed with errno {Marshal.GetLastPInvokeError()}.");
+            fixed (byte* pointer = bytes)
+            {
+                if (Interop.MkFifo(pointer, mode) != 0)
+                {
+                    throw new IOException($"mkfifo failed with errno {Marshal.GetLastPInvokeError()}.");
+                }
+            }
         }
     }
 
@@ -156,16 +165,7 @@ internal static unsafe class RawFileSystem
     {
         fixed (byte* pointer = path)
         {
-            return OpenAt(-100, pointer, flags, (uint)mode);
+            return Interop.OpenAt(Interop.AtCurrentWorkingDirectory, pointer, flags, (uint)mode);
         }
     }
-
-    [DllImport("libc", EntryPoint = "openat", SetLastError = true)]
-    private static extern int OpenAt(int directoryDescriptor, byte* path, int flags, uint mode);
-
-    [DllImport("libc", EntryPoint = "close", SetLastError = true)]
-    private static extern int Close(int fileDescriptor);
-
-    [DllImport("libc", EntryPoint = "mkfifo", SetLastError = true)]
-    private static extern int MakeFifoNative([MarshalAs(UnmanagedType.LPUTF8Str)] string path, uint mode);
 }

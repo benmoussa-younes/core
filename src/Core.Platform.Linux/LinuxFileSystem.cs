@@ -3,7 +3,6 @@
 
 using System.Buffers;
 using System.Runtime.InteropServices;
-using System.Text;
 using Microsoft.Win32.SafeHandles;
 
 
@@ -540,25 +539,8 @@ public static class LinuxFileSystem
     // Encodes the path as UTF-8 into a pooled buffer with a trailing NUL, shared by
     // every syscall wrapper. No delegate: the caller returns the buffer. The length
     // includes the NUL.
-    private static byte[] RentNullTerminatedPath(string path, out int length)
-    {
-        // A NUL cannot be part of a path: the kernel stops at the first one, so the
-        // call would silently act on a prefix. Refuse it here, once, so no wrapper
-        // can forget the check.
-        if (path.Contains('\0'))
-        {
-            throw new ArgumentException("A path cannot contain a NUL character.", nameof(path));
-        }
-
-        var byteCount = Encoding.UTF8.GetByteCount(path);
-        var rented = ArrayPool<byte>.Shared.Rent(byteCount + 1);
-
-        var written = Encoding.UTF8.GetBytes(path, rented);
-        rented[written] = 0;
-        length = written + 1;
-
-        return rented;
-    }
+    private static byte[] RentNullTerminatedPath(string path, out int length) =>
+        LinuxPathEncoding.Rent(path, out length);
 
     private static unsafe bool Open(ReadOnlySpan<byte> nullTerminatedPath, out int descriptor)
     {

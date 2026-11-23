@@ -15,8 +15,9 @@ namespace Core.Platform.Linux;
 
 /// <summary>
 /// The real process runner. It starts the executable directly with an argument
-/// vector: <c>UseShellExecute</c> is false, no shell is spawned, and no
-/// privilege-escalation program is ever invoked here.
+/// vector: <c>UseShellExecute</c> is false, no shell is spawned, and the runner
+/// never wraps a call in a privilege-escalation program; an explicit absolute
+/// path is used as given (see remarks).
 /// </summary>
 /// <remarks>
 /// A bare executable name is resolved against a fixed list of trusted system
@@ -25,7 +26,9 @@ namespace Core.Platform.Linux;
 /// <c>notify-send</c> with a rogue binary. The output is captured up to
 /// <see cref="ProcessRequest.MaxOutputBytes"/> and the remainder is drained, so a
 /// chatty child cannot block on a full pipe or exhaust memory. A run that exceeds
-/// <see cref="ProcessRequest.Timeout"/> is killed as a process tree.
+/// <see cref="ProcessRequest.Timeout"/> is killed as a process tree. The runner is
+/// a trusted-caller API: an explicit absolute path and the caller's environment
+/// overlay are honoured, so an untrusted input must not reach them.
 /// </remarks>
 [SupportedOSPlatform("linux")]
 public sealed class SystemProcessRunner : IProcessRunner
