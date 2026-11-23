@@ -6,6 +6,7 @@ on:
   push:
     branches: [main]
   pull_request:
+  merge_group:
 
 permissions:
   contents: read
@@ -56,6 +57,29 @@ jobs:
           name: test-results
           if-no-files-found: ignore
           path: TestResults/*.trx
+
+  aot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - name: Set up .NET
+        uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
+        with:
+          dotnet-version: 10.0.x
+          dotnet-quality: ga
+      - name: Publish the Unix probe and run its self-test
+        run: |
+          if ! dotnet publish tests/Core.Unix.Probe/Core.Unix.Probe.csproj -c Release -r linux-x64 -o "$RUNNER_TEMP/unix-probe" > publish.log 2>&1; then
+            cat publish.log
+            exit 1
+          fi
+          if grep -qE 'ILC: |ILC : |warning IL' publish.log; then
+            cat publish.log
+            exit 1
+          fi
+          "$RUNNER_TEMP/unix-probe/Core.Unix.Probe" --self-test
 
   licence:
     runs-on: ubuntu-latest

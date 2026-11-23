@@ -160,9 +160,37 @@ if not report("no agent or editor files", agent_entries.length() == 0, agent_ent
     success = false
 }
 
-let props = read_text(base, "Directory.Build.props")
-let version = "0.2.3"
-if not report("version {version}", props.contains(">{version}</VersionPrefix>"), "Directory.Build.props") {
+let mutable version = ""
+match process.run(process.request("dotnet", ["msbuild", "src/Core/Core.csproj", "-getProperty:VersionPrefix", "-nologo"]).with_working_directory(root)) {
+    ok(completed) => {
+        if completed.exit_code == 0 {
+            version = completed.standard_output.trim_whitespace()
+        } else {
+            io.write_standard_error_line("FAIL version: msbuild exit {completed.exit_code} {completed.standard_error.trim_whitespace()}")
+            success = false
+        }
+    }
+    error(failure) => {
+        io.write_standard_error_line("FAIL version: {failure.kind}")
+        success = false
+    }
+}
+let mutable declared = ""
+match process.run(process.request("dotnet", ["msbuild", "src/Core/Core.csproj", "-getProperty:CoreVersionPrefixDeclared", "-nologo"]).with_working_directory(root)) {
+    ok(completed) => {
+        if completed.exit_code == 0 {
+            declared = completed.standard_output.trim_whitespace()
+        } else {
+            io.write_standard_error_line("FAIL version: msbuild exit {completed.exit_code} {completed.standard_error.trim_whitespace()}")
+            success = false
+        }
+    }
+    error(failure) => {
+        io.write_standard_error_line("FAIL version: {failure.kind}")
+        success = false
+    }
+}
+if not report("version {version}", version != "" and version == declared, "Directory.Build.props") {
     success = false
 }
 
@@ -200,6 +228,39 @@ for project in portable_projects {
     }
 }
 if not report("portable layers have no Linux API", portable_leaks.length() == 0, portable_leaks.join(" | ")) {
+    success = false
+}
+
+let third_party = read_text(base, "THIRD-PARTY")
+let mutable licence_gaps: list<string> = []
+for entry in files {
+    let project = entry.trim_whitespace()
+    if not project.ends_with(".csproj") or project.starts_with("experiments/") or project.starts_with("benchmarks/") {
+        continue
+    }
+    match process.run(process.request("dotnet", ["msbuild", project, "-getItem:PackageReference", "-nologo"]).with_working_directory(root)) {
+        ok(completed) => {
+            if completed.exit_code != 0 {
+                io.write_standard_error_line("FAIL THIRD-PARTY names every evaluated package: msbuild exit {completed.exit_code} on {project}")
+                success = false
+            } else {
+                for line in completed.standard_output.lines() {
+                    if line.contains("\"Identity\"") {
+                        let parts = line.split("\"")
+                        if parts.length() >= 4 and not third_party.contains(parts[3]) {
+                            licence_gaps.append("{parts[3]} ({project})")
+                        }
+                    }
+                }
+            }
+        }
+        error(failure) => {
+            io.write_standard_error_line("FAIL THIRD-PARTY names every evaluated package: {failure.kind}")
+            success = false
+        }
+    }
+}
+if not report("THIRD-PARTY mentions every evaluated package", licence_gaps.length() == 0, licence_gaps.join(", ")) {
     success = false
 }
 
@@ -361,15 +422,15 @@ if perf_mode {
     let mutable unix_probe_ready = false
     match process.run(process.request("dotnet", ["publish", "tests/Core.Unix.Probe/Core.Unix.Probe.csproj", "-c", "Release", "-r", "linux-x64", "-o", "/tmp/core-gate-unix"]).with_working_directory(root)) {
         ok(completed) => {
-            # WHY: ILC warnings are not MSBuild warnings, so this count is the only check.
+            # WHY: csharp-style requires the gate to count AOT diagnostics even though the publish fails them.
             let mutable ilc_lines = 0
             for line in completed.standard_output.lines() {
-                if line.contains("ILC:") or line.contains("ILC :") {
+                if line.contains("ILC:") or line.contains("ILC :") or line.contains("warning IL") {
                     ilc_lines = ilc_lines + 1
                 }
             }
             for line in completed.standard_error.lines() {
-                if line.contains("ILC:") or line.contains("ILC :") {
+                if line.contains("ILC:") or line.contains("ILC :") or line.contains("warning IL") {
                     ilc_lines = ilc_lines + 1
                 }
             }
@@ -410,15 +471,15 @@ if perf_mode {
     if read_text(base, "experiments/Core.UI.Shell/Core.UI.Shell.csproj") != "" {
         match process.run(process.request("dotnet", ["publish", "experiments/Core.UI.Shell/Core.UI.Shell.csproj", "-c", "Release", "-r", "linux-x64", "-p:PublishAot=true", "-p:StripSymbols=false", "-o", "/tmp/core-gate-perf"]).with_working_directory(root)) {
             ok(completed) => {
-                # WHY: ILC warnings are not MSBuild warnings, so this count is the only check.
+                # WHY: csharp-style requires the gate to count AOT diagnostics even though the publish fails them.
                 let mutable ilc_lines = 0
                 for line in completed.standard_output.lines() {
-                    if line.contains("ILC:") or line.contains("ILC :") {
+                    if line.contains("ILC:") or line.contains("ILC :") or line.contains("warning IL") {
                         ilc_lines = ilc_lines + 1
                     }
                 }
                 for line in completed.standard_error.lines() {
-                    if line.contains("ILC:") or line.contains("ILC :") {
+                    if line.contains("ILC:") or line.contains("ILC :") or line.contains("warning IL") {
                         ilc_lines = ilc_lines + 1
                     }
                 }
