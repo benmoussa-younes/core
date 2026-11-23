@@ -156,4 +156,10 @@ internal static unsafe partial class Interop
 
     [LibraryImport("libc", EntryPoint = "ptsname_r", SetLastError = true)]
     internal static partial int PtsNameR(int descriptor, byte* buffer, nuint length);
+
+    [LibraryImport("libc", EntryPoint = "sendmsg", SetLastError = true)]
+    internal static partial nint SendMsg(int descriptor, byte* message, int flags);
+
+    [LibraryImport("libc", EntryPoint = "recvmsg", SetLastError = true)]
+    internal static partial nint RecvMsg(int descriptor, byte* message, int flags);
 }

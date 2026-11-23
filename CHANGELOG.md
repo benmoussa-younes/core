@@ -25,6 +25,10 @@ and this project adheres to
 - `UnixTerminalEcho.Disable(int)` turns terminal echo off and restores the
   previous attributes on dispose; `TryGetEcho` reads the flag without changing
   it, and a non-terminal descriptor is refused with `NotATty` (25).
+- `UnixSocket.TrySend`/`TryReceive` attach and receive file descriptors
+  (`SCM_RIGHTS`, `MSG_CMSG_CLOEXEC`), `TrySetPassCredentials` enables the
+  per-message sender credentials, and a truncated control buffer fails with
+  `MessageTooLong` after closing every descriptor it installed.
 
 ### Changed
 

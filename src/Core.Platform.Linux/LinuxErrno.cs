@@ -89,6 +89,9 @@ public enum LinuxErrno
     /// <summary>Value too large for the data type (<c>EOVERFLOW</c>, 75).</summary>
     Overflow = 75,
 
+    /// <summary>Message too long or control data truncated (<c>EMSGSIZE</c>, 90).</summary>
+    MessageTooLong = 90,
+
     /// <summary>Protocol not available (<c>ENOPROTOOPT</c>, 92).</summary>
     ProtocolNotAvailable = 92,
 
