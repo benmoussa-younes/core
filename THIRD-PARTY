@@ -10,6 +10,7 @@ the third-party components and their licences; the full texts ship in
 | Component | Licence |
 |---|---|
 | Avalonia, Avalonia.Desktop, Avalonia.Fonts.Inter, Avalonia.Headless, Avalonia.Themes.Fluent, Avalonia.Wayland | MIT |
+| The Avalonia transitive closure (`Avalonia.BuildServices`, `Avalonia.FreeDesktop`, `Avalonia.Native`, `Avalonia.Skia`, `Avalonia.Win32`, `Avalonia.X11`, ...) | MIT |
 | The Inter font, embedded by `Avalonia.Fonts.Inter` | SIL Open Font License 1.1 |
 | SkiaSharp and SkiaSharp.NativeAssets.* | MIT; the native Skia library is BSD-3-Clause |
 | HarfBuzzSharp and HarfBuzzSharp.NativeAssets.* | MIT; the native HarfBuzz library is MIT |

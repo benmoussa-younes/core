@@ -160,16 +160,22 @@ if not report("no agent or editor files", agent_entries.length() == 0, agent_ent
     success = false
 }
 
-let props = read_text(base, "Directory.Build.props")
 let mutable version = ""
-match props.capture_groups(r"<VersionPrefix[^>]*>([^<]+)</VersionPrefix>") {
-    ok(groups) => {
-        version = groups[1]
+match process.run(process.request("dotnet", ["msbuild", "src/Core/Core.csproj", "-getProperty:VersionPrefix", "-nologo"]).with_working_directory(root)) {
+    ok(completed) => {
+        if completed.exit_code == 0 {
+            version = completed.standard_output.trim_whitespace()
+        } else {
+            io.write_standard_error_line("FAIL version: msbuild exit {completed.exit_code} {completed.standard_error.trim_whitespace()}")
+            success = false
+        }
     }
-    error(_) => {
+    error(failure) => {
+        io.write_standard_error_line("FAIL version: {failure.kind}")
+        success = false
     }
 }
-if not report("version {version}", version != "" and props.contains(">{version}</VersionPrefix>"), "Directory.Build.props") {
+if not report("version {version}", version != "", "Directory.Build.props") {
     success = false
 }
 
@@ -217,17 +223,29 @@ for entry in files {
     if not project.ends_with(".csproj") or project.starts_with("experiments/") or project.starts_with("benchmarks/") {
         continue
     }
-    let content = read_text(base, project)
-    for line in content.lines() {
-        if line.contains("PackageReference") {
-            let parts = line.split("\"")
-            if parts.length() >= 3 and not third_party.contains(parts[1]) {
-                licence_gaps.append("{parts[1]} ({project})")
+    match process.run(process.request("dotnet", ["msbuild", project, "-getItem:PackageReference", "-nologo"]).with_working_directory(root)) {
+        ok(completed) => {
+            if completed.exit_code != 0 {
+                io.write_standard_error_line("FAIL THIRD-PARTY names every evaluated package: msbuild exit {completed.exit_code} on {project}")
+                success = false
+            } else {
+                for line in completed.standard_output.lines() {
+                    if line.contains("\"Identity\"") {
+                        let parts = line.split("\"")
+                        if parts.length() >= 4 and not third_party.contains(parts[3]) {
+                            licence_gaps.append("{parts[3]} ({project})")
+                        }
+                    }
+                }
             }
+        }
+        error(failure) => {
+            io.write_standard_error_line("FAIL THIRD-PARTY names every evaluated package: {failure.kind}")
+            success = false
         }
     }
 }
-if not report("THIRD-PARTY covers every package", licence_gaps.length() == 0, licence_gaps.join(", ")) {
+if not report("THIRD-PARTY names every evaluated package", licence_gaps.length() == 0, licence_gaps.join(", ")) {
     success = false
 }
 
@@ -392,12 +410,12 @@ if perf_mode {
             # WHY: ILC warnings are not MSBuild warnings, so this count is the only check.
             let mutable ilc_lines = 0
             for line in completed.standard_output.lines() {
-                if line.contains("ILC:") or line.contains("ILC :") {
+                if line.contains("ILC:") or line.contains("ILC :") or line.contains("warning IL") {
                     ilc_lines = ilc_lines + 1
                 }
             }
             for line in completed.standard_error.lines() {
-                if line.contains("ILC:") or line.contains("ILC :") {
+                if line.contains("ILC:") or line.contains("ILC :") or line.contains("warning IL") {
                     ilc_lines = ilc_lines + 1
                 }
             }
@@ -441,12 +459,12 @@ if perf_mode {
                 # WHY: ILC warnings are not MSBuild warnings, so this count is the only check.
                 let mutable ilc_lines = 0
                 for line in completed.standard_output.lines() {
-                    if line.contains("ILC:") or line.contains("ILC :") {
+                    if line.contains("ILC:") or line.contains("ILC :") or line.contains("warning IL") {
                         ilc_lines = ilc_lines + 1
                     }
                 }
                 for line in completed.standard_error.lines() {
-                    if line.contains("ILC:") or line.contains("ILC :") {
+                    if line.contains("ILC:") or line.contains("ILC :") or line.contains("warning IL") {
                         ilc_lines = ilc_lines + 1
                     }
                 }

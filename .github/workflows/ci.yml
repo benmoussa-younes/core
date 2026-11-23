@@ -71,8 +71,14 @@ jobs:
           dotnet-quality: ga
       - name: Publish the Unix probe and run its self-test
         run: |
-          dotnet publish tests/Core.Unix.Probe/Core.Unix.Probe.csproj -c Release -r linux-x64 -o "$RUNNER_TEMP/unix-probe" > publish.log 2>&1
-          test "$(grep -c 'ILC: ' publish.log || true)" -eq 0
+          if ! dotnet publish tests/Core.Unix.Probe/Core.Unix.Probe.csproj -c Release -r linux-x64 -o "$RUNNER_TEMP/unix-probe" > publish.log 2>&1; then
+            cat publish.log
+            exit 1
+          fi
+          if grep -qE 'ILC: |ILC : |warning IL' publish.log; then
+            cat publish.log
+            exit 1
+          fi
           "$RUNNER_TEMP/unix-probe/Core.Unix.Probe" --self-test
 
   licence:
