@@ -128,14 +128,14 @@
       "core.io": {
         "type": "Project",
         "dependencies": {
-          "Core": "[0.2.3, )",
-          "Core.Platform": "[0.2.3, )"
+          "Core": "[0.3.0, )",
+          "Core.Platform": "[0.3.0, )"
         }
       },
       "core.platform": {
         "type": "Project",
         "dependencies": {
-          "Core": "[0.2.3, )"
+          "Core": "[0.3.0, )"
         }
       }
     },

@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-23
+
 ### Added
 
 - `UnixPeerCredentials` and `UnixSocket.TryGetPeerCredentials` read the peer
@@ -55,6 +57,9 @@ and this project adheres to
 - Avalonia 12.2.0, xunit.v3.mtp-off 4.0.3, xunit.runner.visualstudio 4.0.1,
   Microsoft.NET.Test.Sdk 18.12.0, Microsoft.CodeAnalysis.PublicApiAnalyzers
   5.6.0 and coverlet.collector 10.1.1.
+- The file system and directory handles refuse a path that contains a NUL or is
+  too large to encode; the text store and the process runner state their
+  follow-link and trusted-caller contracts.
 
 ## [0.2.3] - 2026-11-22
 

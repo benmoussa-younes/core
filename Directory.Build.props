@@ -16,7 +16,7 @@
   <!-- Release identity. Core is consumed by ProjectReference, so no package is
        produced; the version and the licensing identity stay on the assemblies. -->
   <PropertyGroup>
-    <VersionPrefix Condition="'$(VersionPrefix)' == ''">0.2.3</VersionPrefix>
+    <VersionPrefix Condition="'$(VersionPrefix)' == ''">0.3.0</VersionPrefix>
     <!-- The gate reads this back: it proves the props declared the version, not the SDK default. -->
     <CoreVersionPrefixDeclared>$(VersionPrefix)</CoreVersionPrefixDeclared>
     <Authors>Younes BENMOUSSA</Authors>

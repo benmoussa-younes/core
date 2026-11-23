@@ -286,29 +286,29 @@
       "core.io": {
         "type": "Project",
         "dependencies": {
-          "Core": "[0.2.3, )",
-          "Core.Platform": "[0.2.3, )"
+          "Core": "[0.3.0, )",
+          "Core.Platform": "[0.3.0, )"
         }
       },
       "core.mvp": {
         "type": "Project",
         "dependencies": {
-          "Core": "[0.2.3, )",
-          "Core.Platform": "[0.2.3, )"
+          "Core": "[0.3.0, )",
+          "Core.Platform": "[0.3.0, )"
         }
       },
       "core.platform": {
         "type": "Project",
         "dependencies": {
-          "Core": "[0.2.3, )"
+          "Core": "[0.3.0, )"
         }
       },
       "core.serialization": {
         "type": "Project",
         "dependencies": {
-          "Core": "[0.2.3, )",
-          "Core.IO": "[0.2.3, )",
-          "Core.Platform": "[0.2.3, )"
+          "Core": "[0.3.0, )",
+          "Core.IO": "[0.3.0, )",
+          "Core.Platform": "[0.3.0, )"
         }
       },
       "core.ui": {
@@ -319,8 +319,8 @@
           "Avalonia.Fonts.Inter": "[12.2.0, )",
           "Avalonia.Themes.Fluent": "[12.2.0, )",
           "Avalonia.Wayland": "[12.2.0, )",
-          "Core.Mvp": "[0.2.3, )",
-          "Core.Platform": "[0.2.3, )"
+          "Core.Mvp": "[0.3.0, )",
+          "Core.Platform": "[0.3.0, )"
         }
       },
       "Avalonia": {
