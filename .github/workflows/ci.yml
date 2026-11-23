@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 jobs:
-  build-test-licence:
+  build-test:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -56,3 +56,13 @@ jobs:
           name: test-results
           if-no-files-found: ignore
           path: TestResults/*.trx
+
+  licence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - name: Install reuse
+        run: pipx install --force reuse==5.0.2
+      - name: Check the licence layout
+        run: reuse lint
