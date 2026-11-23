@@ -61,25 +61,27 @@ public sealed class UnixSocketTests
     [Fact]
     public void CredentialsAreReadAtTheKernelOffsets()
     {
-        var buffer = new byte[12];
-        BitConverter.TryWriteBytes(buffer.AsSpan(0, 4), 1234);
-        BitConverter.TryWriteBytes(buffer.AsSpan(4, 4), 1000u);
-        BitConverter.TryWriteBytes(buffer.AsSpan(8, 4), 2000u);
-
-        var credentials = UnixSocket.ReadCredentials(buffer);
-
+        Assert.True(UnixSocket.TryReadPeerIdentity(Credentials(1234, 1000, 2000), out var credentials));
         Assert.Equal(1234, credentials.ProcessId);
         Assert.Equal(1000u, credentials.UserId);
         Assert.Equal(2000u, credentials.GroupId);
     }
 
     [Theory]
-    [InlineData(0, uint.MaxValue, uint.MaxValue, false)]
-    [InlineData(1234, 1000, 1000, true)]
-    [InlineData(0, 1000, 1000, true)]
-    [InlineData(1234, 1000, uint.MaxValue, true)]
-    public void ThePeerIdentityIsTheEffectiveUserId(int processId, uint userId, uint groupId, bool expected)
+    [InlineData(0, 1000u, 1000u, true)]
+    [InlineData(1234, 1000u, uint.MaxValue, true)]
+    [InlineData(1234, uint.MaxValue, 1000u, false)]
+    public void AnInvalidUserIdIsNotAPeerIdentity(int processId, uint userId, uint groupId, bool expected)
     {
-        Assert.Equal(expected, UnixSocket.IsPeerIdentity(new UnixPeerCredentials(processId, userId, groupId)));
+        Assert.Equal(expected, UnixSocket.TryReadPeerIdentity(Credentials(processId, userId, groupId), out _));
+    }
+
+    private static byte[] Credentials(int processId, uint userId, uint groupId)
+    {
+        var buffer = new byte[12];
+        BitConverter.TryWriteBytes(buffer.AsSpan(0, 4), processId);
+        BitConverter.TryWriteBytes(buffer.AsSpan(4, 4), userId);
+        BitConverter.TryWriteBytes(buffer.AsSpan(8, 4), groupId);
+        return buffer;
     }
 }

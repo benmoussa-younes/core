@@ -11,11 +11,11 @@ namespace Core.Platform.Linux;
 /// <remarks>
 /// The call reads the option through the BCL and adds no direct libc import. The
 /// socket must be a connected stream socket: a listening socket has no peer and
-/// the kernel would report the listener's own credentials, and a datagram socket
-/// reports the invalid credentials (<c>uid</c> = <see cref="uint.MaxValue"/>).
-/// Both are refused, the listener with <see cref="LinuxErrno.NotConnected"/> and
-/// the datagram socket with <see cref="LinuxErrno.ProtocolNotAvailable"/>, as is
-/// a connected socket of another family.
+/// the kernel would report the listener's own credentials, so the call refuses
+/// it with <see cref="LinuxErrno.NotConnected"/>. A connected datagram socket or
+/// a connected socket of another family reports the invalid credentials
+/// (<c>uid</c> = <see cref="uint.MaxValue"/>) and is refused with
+/// <see cref="LinuxErrno.ProtocolNotAvailable"/>.
 /// </remarks>
 [SupportedOSPlatform("linux")]
 public static class UnixSocket
@@ -74,11 +74,8 @@ public static class UnixSocket
             return false;
         }
 
-        credentials = ReadCredentials(buffer);
-
-        if (!IsPeerIdentity(credentials))
+        if (!TryReadPeerIdentity(buffer, out credentials))
         {
-            credentials = default;
             error = LinuxErrno.ProtocolNotAvailable;
             return false;
         }
@@ -86,12 +83,19 @@ public static class UnixSocket
         return true;
     }
 
-    internal static UnixPeerCredentials ReadCredentials(ReadOnlySpan<byte> buffer) =>
-        new(
+    internal static bool TryReadPeerIdentity(ReadOnlySpan<byte> buffer, out UnixPeerCredentials credentials)
+    {
+        credentials = new UnixPeerCredentials(
             MemoryMarshal.Read<int>(buffer),
             MemoryMarshal.Read<uint>(buffer[4..]),
             MemoryMarshal.Read<uint>(buffer[8..]));
 
-    internal static bool IsPeerIdentity(UnixPeerCredentials credentials) =>
-        credentials.UserId != uint.MaxValue;
+        if (credentials.UserId == uint.MaxValue)
+        {
+            credentials = default;
+            return false;
+        }
+
+        return true;
+    }
 }
