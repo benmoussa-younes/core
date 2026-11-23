@@ -245,6 +245,7 @@ const Core.Results.CoreErrorCodes.TextTooLarge = "text.too_large" -> string!
 const Core.Results.CoreErrorCodes.TextUnwritable = "text.unwritable" -> string!
 const Core.Results.CoreErrorCodes.UnitsInvalid = "units.invalid" -> string!
 const Core.Results.CoreErrorCodes.UnixMemoryLockFailed = "unix.mlock" -> string!
+const Core.Results.CoreErrorCodes.UnixTerminalFailed = "unix.termios" -> string!
 const Core.Results.CoreErrorCodes.ValidationPort = "validation.port" -> string!
 const Core.Results.CoreErrorCodes.ValidationRequired = "validation.required" -> string!
 const Core.Results.CoreErrorCodes.ValidationTooLong = "validation.too_long" -> string!

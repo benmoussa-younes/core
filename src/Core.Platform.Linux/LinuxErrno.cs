@@ -65,6 +65,9 @@ public enum LinuxErrno
     /// <summary>Too many open files (<c>EMFILE</c>, 24).</summary>
     TooManyOpenFiles = 24,
 
+    /// <summary>Inappropriate ioctl for a non-terminal descriptor (<c>ENOTTY</c>, 25).</summary>
+    NotATty = 25,
+
     /// <summary>No space left on device (<c>ENOSPC</c>, 28).</summary>
     NoSpaceLeft = 28,
 
