@@ -9,13 +9,13 @@ namespace Core.Platform.Linux;
 /// kernel reports for the process at the other end (<c>SO_PEERCRED</c>).
 /// </summary>
 /// <remarks>
-/// The call reads the option through the BCL and adds no libc import. The socket
-/// must be connected: a listening socket has no peer, and the kernel would report
-/// the listener's own credentials, so the call refuses it with
-/// <see cref="LinuxErrno.NotConnected"/>. A connected socket of another family
-/// reports the invalid credentials (<c>uid</c> = <see cref="uint.MaxValue"/>) or
-/// refuses the option; both cases return <see langword="false"/> with
-/// <see cref="LinuxErrno.ProtocolNotAvailable"/>.
+/// The call reads the option through the BCL and adds no direct libc import. The
+/// socket must be a connected stream socket: a listening socket has no peer and
+/// the kernel would report the listener's own credentials, and a datagram socket
+/// reports the invalid credentials (<c>uid</c> = <see cref="uint.MaxValue"/>).
+/// Both are refused, the listener with <see cref="LinuxErrno.NotConnected"/> and
+/// the datagram socket with <see cref="LinuxErrno.ProtocolNotAvailable"/>, as is
+/// a connected socket of another family.
 /// </remarks>
 [SupportedOSPlatform("linux")]
 public static class UnixSocket
@@ -27,7 +27,7 @@ public static class UnixSocket
     /// <summary>
     /// Reads the credentials of the peer connected to a Unix domain socket.
     /// </summary>
-    /// <param name="socket">The connected socket.</param>
+    /// <param name="socket">The connected stream socket.</param>
     /// <param name="credentials">The peer's identifiers when the call succeeds; the default value otherwise.</param>
     /// <param name="error">
     /// The <c>errno</c> when the call fails, or <see cref="LinuxErrno.InvalidArgument"/>
@@ -36,7 +36,6 @@ public static class UnixSocket
     /// </param>
     /// <returns><see langword="true"/> when the kernel reported the peer's credentials.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="socket"/> is <see langword="null"/>.</exception>
-    /// <exception cref="ObjectDisposedException">The socket has been disposed.</exception>
     public static bool TryGetPeerCredentials(
         Socket socket,
         out UnixPeerCredentials credentials,
@@ -75,12 +74,9 @@ public static class UnixSocket
             return false;
         }
 
-        credentials = new UnixPeerCredentials(
-            MemoryMarshal.Read<int>(buffer),
-            MemoryMarshal.Read<uint>(buffer[4..]),
-            MemoryMarshal.Read<uint>(buffer[8..]));
+        credentials = ReadCredentials(buffer);
 
-        if (!IsPeerIdentity(credentials.UserId))
+        if (!IsPeerIdentity(credentials))
         {
             credentials = default;
             error = LinuxErrno.ProtocolNotAvailable;
@@ -90,5 +86,12 @@ public static class UnixSocket
         return true;
     }
 
-    internal static bool IsPeerIdentity(uint userId) => userId != uint.MaxValue;
+    internal static UnixPeerCredentials ReadCredentials(ReadOnlySpan<byte> buffer) =>
+        new(
+            MemoryMarshal.Read<int>(buffer),
+            MemoryMarshal.Read<uint>(buffer[4..]),
+            MemoryMarshal.Read<uint>(buffer[8..]));
+
+    internal static bool IsPeerIdentity(UnixPeerCredentials credentials) =>
+        credentials.UserId != uint.MaxValue;
 }

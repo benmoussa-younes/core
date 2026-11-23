@@ -363,12 +363,12 @@ if perf_mode {
             # WHY: ILC warnings are not MSBuild warnings, so this count is the only check.
             let mutable ilc_lines = 0
             for line in completed.standard_output.lines() {
-                if line.contains("ILC: ") {
+                if line.contains("ILC:") or line.contains("ILC :") {
                     ilc_lines = ilc_lines + 1
                 }
             }
             for line in completed.standard_error.lines() {
-                if line.contains("ILC: ") {
+                if line.contains("ILC:") or line.contains("ILC :") {
                     ilc_lines = ilc_lines + 1
                 }
             }
