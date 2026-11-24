@@ -44,7 +44,7 @@ public sealed class UnixTerminalEcho : IDisposable
         if (!OperatingSystem.IsLinux())
         {
             return Result<UnixTerminalEcho>.Failure(
-                new CoreError("unix.termios", "termios is only available on Linux."));
+                new CoreError(CoreErrorCodes.UnixTerminalFailed, "termios is only available on Linux."));
         }
 
         var original = new byte[TermiosSize];
@@ -122,6 +122,6 @@ public sealed class UnixTerminalEcho : IDisposable
     private static Result<UnixTerminalEcho> Failure(string call, int errno)
     {
         return Result<UnixTerminalEcho>.Failure(
-            new CoreError("unix.termios", $"{call} failed: {(LinuxErrno)errno}."));
+            new CoreError(CoreErrorCodes.UnixTerminalFailed, $"{call} failed: {(LinuxErrno)errno}."));
     }
 }
