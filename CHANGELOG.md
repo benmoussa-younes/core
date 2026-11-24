@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-24
+
 ### Added
 
 - `UnixPipe.Create()` returns both ends of a pipe opened with
@@ -307,6 +309,10 @@ First public source release.
   headers; non-commentable `.txt` files use `.license` sidecars.
 - The texts in `LICENSES/` are the official Apache, GNU, Creative Commons and
   SPDX License List texts; the project `LICENSE` embeds the official LGPL text.
+
+[0.4.0]: https://github.com/benmoussa-younes/core/releases/tag/v0.4.0
+
+[0.3.0]: https://github.com/benmoussa-younes/core/releases/tag/v0.3.0
 
 [0.2.1]: https://github.com/benmoussa-younes/core/releases/tag/v0.2.1
 
