@@ -10,6 +10,8 @@ namespace Core.Platform.Linux.Tests;
 public sealed partial class UnixProcessSpawnTests
 {
     private const int DuplicateDescriptorCommand = 0;
+    private const short PollReadable = 1;
+    private const int ReadTimeoutMilliseconds = 5000;
 
     private static readonly string ProbePath = Path.Combine(
         AppContext.BaseDirectory,
@@ -356,6 +358,173 @@ public sealed partial class UnixProcessSpawnTests
     }
 
     [Fact]
+    public async Task TheChildRunsOnTheAttachedTerminal()
+    {
+        using var temp = new TempDirectory();
+        var facts = temp.FullPath("facts.txt");
+        var terminalCreated = UnixPseudoTerminal.Create();
+
+        Assert.True(terminalCreated.IsSuccess);
+
+        using var terminal = terminalCreated.Value;
+
+        Assert.True(terminal.TrySetSize(new UnixTerminalSize(37, 111), out var sizeError));
+        Assert.Equal(LinuxErrno.None, sizeError);
+
+        var created = UnixPipe.Create();
+
+        Assert.True(created.IsSuccess);
+
+        using var secret = created.Value;
+        var second = UnixPipe.Create();
+
+        Assert.True(second.IsSuccess);
+
+        using var other = second.Value;
+        var started = UnixProcessSpawn.Start(new UnixSpawnRequest(
+            Dotnet,
+            [ProbePath, "--spawn-child", facts, "3,200"],
+            temp.Path,
+            new Dictionary<string, string>(),
+            [
+                new UnixDescriptorMapping(secret.ReadDescriptor, 3),
+                new UnixDescriptorMapping(other.ReadDescriptor, 200),
+            ],
+            terminal));
+
+        Assert.True(
+            started.IsSuccess,
+            started.TryGetError(out var startError) ? startError!.Message : string.Empty);
+
+        using var child = started.Value;
+
+        Assert.True(secret.TryWriteAll("spawn-secret"u8, out var written, out _));
+        Assert.Equal(12, written);
+        secret.CloseWrite();
+        Assert.True(other.TryWriteAll("other-secret"u8, out written, out _));
+        Assert.Equal(12, written);
+        other.CloseWrite();
+        Assert.Equal(5, WriteDescriptor(terminal.MasterDescriptor, "ping\n"u8.ToArray()));
+
+        var status = await WaitForExitAsync(child, TimeSpan.FromSeconds(30));
+
+        Assert.True(status.Exited);
+        Assert.Equal(0, status.ExitCode);
+
+        var lines = File.ReadAllLines(facts);
+
+        Assert.Contains("ISATTY0=1", lines);
+        Assert.Contains($"FOREGROUND={child.ProcessId}", lines);
+        Assert.Contains("WINSIZE=37,111", lines);
+        Assert.Contains("STDIN=ping", lines);
+        Assert.Contains("FD3=spawn-secret", lines);
+        Assert.Contains("FD200=other-secret", lines);
+        var ttyDescriptors = DescriptorsPointingTo(lines, terminal.SlavePath);
+
+        Assert.Contains(0, ttyDescriptors);
+        Assert.Contains(1, ttyDescriptors);
+        Assert.Contains(2, ttyDescriptors);
+        Assert.Contains("pty-child", ReadDescriptor(terminal.MasterDescriptor), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task TheAttachedTerminalClosesEveryOtherDescriptor()
+    {
+        using var temp = new TempDirectory();
+        var terminalCreated = UnixPseudoTerminal.Create();
+
+        Assert.True(terminalCreated.IsSuccess);
+
+        using var terminal = terminalCreated.Value;
+        var first = UnixPipe.Create();
+        Assert.True(first.IsSuccess);
+        using var secret = first.Value;
+        var second = UnixPipe.Create();
+        Assert.True(second.IsSuccess);
+        using var other = second.Value;
+        var started = UnixProcessSpawn.Start(new UnixSpawnRequest(
+            "/bin/sleep",
+            ["30"],
+            temp.Path,
+            new Dictionary<string, string>(),
+            [
+                new UnixDescriptorMapping(secret.ReadDescriptor, 3),
+                new UnixDescriptorMapping(other.ReadDescriptor, 200),
+            ],
+            terminal));
+
+        Assert.True(
+            started.IsSuccess,
+            started.TryGetError(out var startError) ? startError!.Message : string.Empty);
+
+        using var child = started.Value;
+
+        try
+        {
+            var table = await WaitForDescriptorTableAsync(child.ProcessId);
+
+            Assert.Equal([0, 1, 2, 3, 200], table.Keys.Order().ToArray());
+            Assert.All(
+                table.Where(pair => pair.Key < 3),
+                pair => Assert.Equal(terminal.SlavePath, pair.Value));
+            Assert.StartsWith("pipe:", table[3], StringComparison.Ordinal);
+            Assert.StartsWith("pipe:", table[200], StringComparison.Ordinal);
+        }
+        finally
+        {
+            _ = child.TrySignal(9, true, out _);
+            _ = child.TryWait(out _, out _);
+        }
+    }
+
+    [Fact]
+    public void ADisposedTerminalIsRefused()
+    {
+        using var temp = new TempDirectory();
+        var created = UnixPseudoTerminal.Create();
+
+        Assert.True(created.IsSuccess);
+
+        var terminal = created.Value;
+        terminal.Dispose();
+        var started = UnixProcessSpawn.Start(new UnixSpawnRequest(
+            "/bin/true",
+            [],
+            temp.Path,
+            new Dictionary<string, string>(),
+            null,
+            terminal));
+
+        Assert.True(started.IsFailure);
+        Assert.True(started.TryGetError(out var error));
+        Assert.Equal(CoreErrorCodes.UnixSpawnFailed, error!.Code);
+        Assert.Contains("pseudo-terminal", error.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ATerminalRequestCannotMapAStandardDescriptor()
+    {
+        using var temp = new TempDirectory();
+        var created = UnixPseudoTerminal.Create();
+
+        Assert.True(created.IsSuccess);
+
+        using var terminal = created.Value;
+        var started = UnixProcessSpawn.Start(new UnixSpawnRequest(
+            "/bin/true",
+            [],
+            temp.Path,
+            new Dictionary<string, string>(),
+            [new UnixDescriptorMapping(0, 1)],
+            terminal));
+
+        Assert.True(started.IsFailure);
+        Assert.True(started.TryGetError(out var error));
+        Assert.Equal(CoreErrorCodes.UnixSpawnFailed, error!.Code);
+        Assert.Contains("terminal request", error.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void TheProbeSpawnSelfTestPasses()
     {
         Assert.True(File.Exists(ProbePath), $"the probe is not copied to the test output: {ProbePath}");
@@ -561,6 +730,76 @@ public sealed partial class UnixProcessSpawnTests
         return facts.Single(line => line.StartsWith(key + "=", StringComparison.Ordinal))[(key.Length + 1)..];
     }
 
+    private static unsafe int WriteDescriptor(int descriptor, byte[] bytes)
+    {
+        fixed (byte* pointer = bytes)
+        {
+            return WriteCore(descriptor, pointer, bytes.Length);
+        }
+    }
+
+    private static unsafe string ReadDescriptor(int descriptor)
+    {
+        var poll = new PollDescriptor { Descriptor = descriptor, Events = PollReadable };
+
+        if (Poll(&poll, 1, ReadTimeoutMilliseconds) <= 0)
+        {
+            return string.Empty;
+        }
+
+        var buffer = new byte[2048];
+        int count;
+
+        fixed (byte* pointer = buffer)
+        {
+            count = ReadCore(descriptor, pointer, buffer.Length);
+        }
+
+        return count <= 0 ? string.Empty : Encoding.UTF8.GetString(buffer, 0, count);
+    }
+
+    private static Dictionary<int, string> ReadDescriptorTable(int processId)
+    {
+        var table = new Dictionary<int, string>();
+
+        foreach (var path in Directory.GetFiles($"/proc/{processId}/fd"))
+        {
+            var target = new FileInfo(path).LinkTarget;
+
+            if (target is not null)
+            {
+                table[int.Parse(Path.GetFileName(path), CultureInfo.InvariantCulture)] = target;
+            }
+        }
+
+        return table;
+    }
+
+    private static async Task<Dictionary<int, string>> WaitForDescriptorTableAsync(int processId)
+    {
+        for (var attempt = 0; attempt < 500; attempt++)
+        {
+            var table = ReadDescriptorTable(processId);
+
+            if (table.ContainsKey(200))
+            {
+                return table;
+            }
+
+            await Task.Delay(10, TestContext.Current.CancellationToken);
+        }
+
+        Assert.Fail("the child descriptor table was not ready.");
+        return [];
+    }
+
+    private struct PollDescriptor
+    {
+        internal int Descriptor;
+        internal short Events;
+        internal short Ready;
+    }
+
     private static string DescriptorTarget(int descriptor)
     {
         return new FileInfo($"/proc/self/fd/{descriptor}").LinkTarget ?? "closed";
@@ -665,6 +904,15 @@ public sealed partial class UnixProcessSpawnTests
 
         throw new InvalidOperationException("dotnet was not found on PATH.");
     }
+
+    [LibraryImport("libc", EntryPoint = "poll", SetLastError = true)]
+    private static unsafe partial int Poll(void* descriptors, nuint count, int timeoutMilliseconds);
+
+    [LibraryImport("libc", EntryPoint = "write", SetLastError = true)]
+    private static unsafe partial int WriteCore(int descriptor, byte* buffer, nint count);
+
+    [LibraryImport("libc", EntryPoint = "read", SetLastError = true)]
+    private static unsafe partial int ReadCore(int descriptor, byte* buffer, nint count);
 
     [LibraryImport("libc", EntryPoint = "sigaction", SetLastError = true)]
     private static unsafe partial int SigAction(int signal, byte* action, byte* oldAction);

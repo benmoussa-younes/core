@@ -63,6 +63,12 @@ internal static unsafe partial class Interop
     /// <summary>Close the descriptor at exec, from <c>F_GETFD</c> (<c>FD_CLOEXEC</c>).</summary>
     internal const int FileDescriptorCloseOnExec = 1;
 
+    /// <summary>Read the terminal window size (<c>TIOCGWINSZ</c>).</summary>
+    internal const nuint TerminalGetWindowSize = 0x5413;
+
+    /// <summary>Set the terminal window size (<c>TIOCSWINSZ</c>).</summary>
+    internal const nuint TerminalSetWindowSize = 0x5414;
+
     /// <summary>Duplicate a descriptor above the given minimum, close-on-exec (<c>F_DUPFD_CLOEXEC</c>).</summary>
     internal const int FileDescriptorDuplicateCloseOnExec = 1030;
 
@@ -141,6 +147,14 @@ internal static unsafe partial class Interop
 
     [LibraryImport("libc", EntryPoint = "posix_spawn_file_actions_addclosefrom_np", SetLastError = true)]
     internal static partial int PosixSpawnFileActionsAddCloseFrom(byte* fileActions, int fromDescriptor);
+
+    [LibraryImport("libc", EntryPoint = "posix_spawn_file_actions_addopen", SetLastError = true)]
+    internal static partial int PosixSpawnFileActionsAddOpen(
+        byte* fileActions,
+        int descriptor,
+        byte* path,
+        int flags,
+        int mode);
 
     [LibraryImport("libc", EntryPoint = "posix_spawnattr_init", SetLastError = true)]
     internal static partial int PosixSpawnAttrInit(byte* attributes);
@@ -225,6 +239,9 @@ internal static unsafe partial class Interop
 
     [LibraryImport("libc", EntryPoint = "ptsname_r", SetLastError = true)]
     internal static partial int PtsNameR(int descriptor, byte* buffer, nuint length);
+
+    [LibraryImport("libc", EntryPoint = "ioctl", SetLastError = true)]
+    internal static partial int Ioctl(int descriptor, nuint request, void* argument);
 
     [LibraryImport("libc", EntryPoint = "sendmsg", SetLastError = true)]
     internal static partial nint SendMsg(int descriptor, byte* message, int flags);

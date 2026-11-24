@@ -346,7 +346,7 @@ Core.Platform.Linux.UnixSpawnRequest
 Core.Platform.Linux.UnixSpawnRequest.Arguments.get -> System.Collections.Generic.IReadOnlyList<string!>!
 Core.Platform.Linux.UnixSpawnRequest.Arguments.init -> void
 Core.Platform.Linux.UnixSpawnRequest.<Clone>$() -> Core.Platform.Linux.UnixSpawnRequest!
-Core.Platform.Linux.UnixSpawnRequest.Deconstruct(out string! Program, out System.Collections.Generic.IReadOnlyList<string!>! Arguments, out string! WorkingDirectory, out System.Collections.Generic.IReadOnlyDictionary<string!, string!>! Environment, out System.Collections.Generic.IReadOnlyList<Core.Platform.Linux.UnixDescriptorMapping>? Descriptors) -> void
+Core.Platform.Linux.UnixSpawnRequest.Deconstruct(out string! Program, out System.Collections.Generic.IReadOnlyList<string!>! Arguments, out string! WorkingDirectory, out System.Collections.Generic.IReadOnlyDictionary<string!, string!>! Environment, out System.Collections.Generic.IReadOnlyList<Core.Platform.Linux.UnixDescriptorMapping>? Descriptors, out Core.Platform.Linux.UnixPseudoTerminal? Terminal) -> void
 Core.Platform.Linux.UnixSpawnRequest.Descriptors.get -> System.Collections.Generic.IReadOnlyList<Core.Platform.Linux.UnixDescriptorMapping>?
 Core.Platform.Linux.UnixSpawnRequest.Descriptors.init -> void
 Core.Platform.Linux.UnixSpawnRequest.Environment.get -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>!
@@ -354,7 +354,7 @@ Core.Platform.Linux.UnixSpawnRequest.Environment.init -> void
 Core.Platform.Linux.UnixSpawnRequest.Equals(Core.Platform.Linux.UnixSpawnRequest? other) -> bool
 Core.Platform.Linux.UnixSpawnRequest.Program.get -> string!
 Core.Platform.Linux.UnixSpawnRequest.Program.init -> void
-Core.Platform.Linux.UnixSpawnRequest.UnixSpawnRequest(string! Program, System.Collections.Generic.IReadOnlyList<string!>! Arguments, string! WorkingDirectory, System.Collections.Generic.IReadOnlyDictionary<string!, string!>! Environment, System.Collections.Generic.IReadOnlyList<Core.Platform.Linux.UnixDescriptorMapping>? Descriptors = null) -> void
+Core.Platform.Linux.UnixSpawnRequest.UnixSpawnRequest(string! Program, System.Collections.Generic.IReadOnlyList<string!>! Arguments, string! WorkingDirectory, System.Collections.Generic.IReadOnlyDictionary<string!, string!>! Environment, System.Collections.Generic.IReadOnlyList<Core.Platform.Linux.UnixDescriptorMapping>? Descriptors = null, Core.Platform.Linux.UnixPseudoTerminal? Terminal = null) -> void
 Core.Platform.Linux.UnixSpawnRequest.WorkingDirectory.get -> string!
 Core.Platform.Linux.UnixSpawnRequest.WorkingDirectory.init -> void
 ~override Core.Platform.Linux.UnixDescriptorMapping.Equals(object obj) -> bool
@@ -373,3 +373,33 @@ static Core.Platform.Linux.UnixExitStatus.operator ==(Core.Platform.Linux.UnixEx
 static Core.Platform.Linux.UnixProcessSpawn.Start(Core.Platform.Linux.UnixSpawnRequest! request) -> Core.Results.Result<Core.Platform.Linux.UnixChildProcess!>
 static Core.Platform.Linux.UnixSpawnRequest.operator !=(Core.Platform.Linux.UnixSpawnRequest? left, Core.Platform.Linux.UnixSpawnRequest? right) -> bool
 static Core.Platform.Linux.UnixSpawnRequest.operator ==(Core.Platform.Linux.UnixSpawnRequest? left, Core.Platform.Linux.UnixSpawnRequest? right) -> bool
+Core.Platform.Linux.UnixPseudoTerminal
+Core.Platform.Linux.UnixPseudoTerminal.Dispose() -> void
+Core.Platform.Linux.UnixPseudoTerminal.MasterDescriptor.get -> int
+Core.Platform.Linux.UnixPseudoTerminal.SlavePath.get -> string!
+Core.Platform.Linux.UnixPseudoTerminal.TryGetSize(out Core.Platform.Linux.UnixTerminalSize size, out Core.Platform.Linux.LinuxErrno error) -> bool
+Core.Platform.Linux.UnixPseudoTerminal.TrySetSize(Core.Platform.Linux.UnixTerminalSize size, out Core.Platform.Linux.LinuxErrno error) -> bool
+Core.Platform.Linux.UnixSpawnRequest.Terminal.get -> Core.Platform.Linux.UnixPseudoTerminal?
+Core.Platform.Linux.UnixSpawnRequest.Terminal.init -> void
+Core.Platform.Linux.UnixTerminalRawMode
+Core.Platform.Linux.UnixTerminalRawMode.Dispose() -> void
+Core.Platform.Linux.UnixTerminalSize
+Core.Platform.Linux.UnixTerminalSize.Columns.get -> ushort
+Core.Platform.Linux.UnixTerminalSize.Columns.init -> void
+Core.Platform.Linux.UnixTerminalSize.Deconstruct(out ushort Rows, out ushort Columns, out ushort XPixels, out ushort YPixels) -> void
+Core.Platform.Linux.UnixTerminalSize.Equals(Core.Platform.Linux.UnixTerminalSize other) -> bool
+Core.Platform.Linux.UnixTerminalSize.Rows.get -> ushort
+Core.Platform.Linux.UnixTerminalSize.Rows.init -> void
+Core.Platform.Linux.UnixTerminalSize.UnixTerminalSize() -> void
+Core.Platform.Linux.UnixTerminalSize.UnixTerminalSize(ushort Rows, ushort Columns, ushort XPixels = 0, ushort YPixels = 0) -> void
+Core.Platform.Linux.UnixTerminalSize.XPixels.get -> ushort
+Core.Platform.Linux.UnixTerminalSize.XPixels.init -> void
+Core.Platform.Linux.UnixTerminalSize.YPixels.get -> ushort
+Core.Platform.Linux.UnixTerminalSize.YPixels.init -> void
+~override Core.Platform.Linux.UnixTerminalSize.Equals(object obj) -> bool
+override Core.Platform.Linux.UnixTerminalSize.GetHashCode() -> int
+~override Core.Platform.Linux.UnixTerminalSize.ToString() -> string
+static Core.Platform.Linux.UnixPseudoTerminal.Create() -> Core.Results.Result<Core.Platform.Linux.UnixPseudoTerminal!>
+static Core.Platform.Linux.UnixTerminalRawMode.Enable(int descriptor) -> Core.Results.Result<Core.Platform.Linux.UnixTerminalRawMode!>
+static Core.Platform.Linux.UnixTerminalSize.operator !=(Core.Platform.Linux.UnixTerminalSize left, Core.Platform.Linux.UnixTerminalSize right) -> bool
+static Core.Platform.Linux.UnixTerminalSize.operator ==(Core.Platform.Linux.UnixTerminalSize left, Core.Platform.Linux.UnixTerminalSize right) -> bool

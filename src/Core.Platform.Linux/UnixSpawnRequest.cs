@@ -8,9 +8,15 @@ namespace Core.Platform.Linux;
 /// <param name="WorkingDirectory">The absolute working directory of the child.</param>
 /// <param name="Environment">The explicit environment; the parent's environment is not inherited.</param>
 /// <param name="Descriptors">The parent-to-child descriptor mappings; <see langword="null"/> means none.</param>
+/// <param name="Terminal">
+/// The pseudo-terminal whose slave becomes the child's descriptors 0, 1 and 2 and
+/// its controlling terminal; <see langword="null"/> means none, and a terminal
+/// request cannot map those three descriptors.
+/// </param>
 public sealed record UnixSpawnRequest(
     string Program,
     IReadOnlyList<string> Arguments,
     string WorkingDirectory,
     IReadOnlyDictionary<string, string> Environment,
-    IReadOnlyList<UnixDescriptorMapping>? Descriptors = null);
+    IReadOnlyList<UnixDescriptorMapping>? Descriptors = null,
+    UnixPseudoTerminal? Terminal = null);
