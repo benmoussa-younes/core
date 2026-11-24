@@ -14,9 +14,11 @@
   observes except the sources and the targets; each source that is not a target
   is closed after its duplication. `addclosefrom_np` closes the close-from base
   (3 or the highest target plus one) and above, including a descriptor opened
-  after the scan. A descriptor at or above the soft `RLIMIT_NOFILE` cannot be
-  closed by `addclose` (glibc returns `EBADF`), so the spawn is refused with
-  `InvalidArgument`; the caller keeps its other descriptors close-on-exec or
-  ensures no other thread opens a non-CLOEXEC one during the spawn.
+  after the scan (skipped when the base reaches the soft limit). A descriptor at
+  or above the soft `RLIMIT_NOFILE` cannot be closed by `addclose` (glibc returns
+  `EBADF`), so the spawn is refused with `InvalidArgument` unless it is
+  close-on-exec, which the exec closes; the caller keeps its other descriptors
+  close-on-exec or ensures no other thread opens a non-CLOEXEC one during the
+  spawn.
 - A received descriptor is handed to the caller or closed by the call, never
   leaked.

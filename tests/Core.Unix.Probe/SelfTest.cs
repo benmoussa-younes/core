@@ -11,6 +11,7 @@ internal static partial class SelfTest
 {
     private const int SetDescriptorFlags = 2;
     private const int DuplicateDescriptorFlags = 0;
+    private const int DuplicateCloseOnExecFlags = 1030;
 
     public static int Run()
     {
@@ -30,6 +31,7 @@ internal static partial class SelfTest
         failures += Check("no new privileges", NoNewPrivileges());
         failures += Check("spawn round trip", SpawnRoundTrip());
         failures += Check("spawn refuses a descriptor above a lowered limit", RefusesADescriptorAboveALoweredLimit());
+        failures += Check("spawn with a target at the lowered limit", SpawnsWithATargetAtTheLoweredLimit());
         failures += Check("descriptor zero", Program.DescriptorZero());
         Console.WriteLine(failures == 0 ? "SELF-TEST PASS" : $"SELF-TEST FAIL ({failures})");
         return failures == 0 ? 0 : 1;
@@ -481,30 +483,67 @@ internal static partial class SelfTest
             var facts = Path.Combine(directory.FullName, "facts.txt");
             using var parentFile = File.OpenHandle("/etc/hostname", FileMode.Open, FileAccess.Read);
             var parent = (int)parentFile.DangerousGetHandle();
+            var loweredLimit = HighestDescriptor() + 32;
 
             if (Program.Fcntl(parent, SetDescriptorFlags, 0) != 0)
             {
                 return false;
             }
 
-            var loweredLimit = Directory.GetFiles("/proc/self/fd").Length + 32;
             above = Program.Fcntl(parent, DuplicateDescriptorFlags, loweredLimit + 1);
 
-            if (above <= loweredLimit)
+            if (above <= loweredLimit || !LowerFileLimit(loweredLimit, out previous))
             {
                 return false;
             }
 
-            if (!UnixProcessLimits.TryGet(UnixResource.NoFile, out var limit, out _) ||
-                !UnixProcessLimits.TrySet(
-                    UnixResource.NoFile,
-                    new UnixResourceLimit((ulong)loweredLimit, limit.Hard),
-                    out _))
+            var created = UnixPipe.Create();
+
+            if (!created.IsSuccess)
             {
                 return false;
             }
 
-            previous = limit;
+            using var secret = created.Value;
+            var started = StartSpawn(directory.FullName, facts, secret, loweredLimit - 1);
+
+            return started.IsFailure &&
+                started.TryGetError(out var error) &&
+                error!.Code == CoreErrorCodes.UnixSpawnFailed &&
+                error.Message.Contains("soft file descriptor limit", StringComparison.Ordinal);
+        }
+        finally
+        {
+            RestoreFileLimit(previous);
+
+            if (above >= 0)
+            {
+                _ = Program.Close(above);
+            }
+
+            Directory.Delete(directory.FullName, recursive: true);
+        }
+    }
+
+    private static bool SpawnsWithATargetAtTheLoweredLimit()
+    {
+        var directory = Directory.CreateTempSubdirectory("core-spawn-target-");
+        var above = -1;
+        UnixResourceLimit? previous = null;
+
+        try
+        {
+            var facts = Path.Combine(directory.FullName, "facts.txt");
+            using var parentFile = File.OpenHandle("/etc/hostname", FileMode.Open, FileAccess.Read);
+            var parent = (int)parentFile.DangerousGetHandle();
+            var loweredLimit = HighestDescriptor() + 32;
+            above = Program.Fcntl(parent, DuplicateCloseOnExecFlags, loweredLimit + 1);
+
+            if (above <= loweredLimit || !LowerFileLimit(loweredLimit, out previous))
+            {
+                return false;
+            }
+
             var created = UnixPipe.Create();
 
             if (!created.IsSuccess)
@@ -514,26 +553,35 @@ internal static partial class SelfTest
 
             using var secret = created.Value;
             var target = loweredLimit - 1;
-            var (program, spawnArguments) = SpawnCommand(
-                ["--spawn-child", facts, target.ToString(CultureInfo.InvariantCulture)]);
-            var started = UnixProcessSpawn.Start(new UnixSpawnRequest(
-                program,
-                spawnArguments,
-                directory.FullName,
-                new Dictionary<string, string>(),
-                [new UnixDescriptorMapping(secret.ReadDescriptor, target)]));
+            var started = StartSpawn(directory.FullName, facts, secret, target);
 
-            return started.IsFailure &&
-                started.TryGetError(out var error) &&
-                error!.Code == CoreErrorCodes.UnixSpawnFailed &&
-                error.Message.Contains("soft file descriptor limit", StringComparison.Ordinal);
+            if (!started.IsSuccess)
+            {
+                return false;
+            }
+
+            using var child = started.Value;
+
+            if (!secret.TryWriteAll("spawn-secret"u8, out _, out _))
+            {
+                return false;
+            }
+
+            secret.CloseWrite();
+
+            if (!WaitForSpawn(child, out var status) || !status.Exited || status.ExitCode != 0)
+            {
+                return false;
+            }
+
+            var lines = File.ReadAllLines(facts);
+            return lines.Contains($"FD{target}=spawn-secret") &&
+                !lines.Any(line => line.StartsWith("TARGET_", StringComparison.Ordinal) &&
+                    line.EndsWith("=/etc/hostname", StringComparison.Ordinal));
         }
         finally
         {
-            if (previous is not null)
-            {
-                _ = UnixProcessLimits.TrySet(UnixResource.NoFile, previous.Value, out _);
-            }
+            RestoreFileLimit(previous);
 
             if (above >= 0)
             {
@@ -542,6 +590,52 @@ internal static partial class SelfTest
 
             Directory.Delete(directory.FullName, recursive: true);
         }
+    }
+
+    private static int HighestDescriptor()
+    {
+        return Directory.GetFiles("/proc/self/fd")
+            .Select(path => int.Parse(Path.GetFileName(path), CultureInfo.InvariantCulture))
+            .Max();
+    }
+
+    private static bool LowerFileLimit(int limit, out UnixResourceLimit? previous)
+    {
+        previous = null;
+
+        if (!UnixProcessLimits.TryGet(UnixResource.NoFile, out var current, out _) ||
+            !UnixProcessLimits.TrySet(UnixResource.NoFile, new UnixResourceLimit((ulong)limit, current.Hard), out _))
+        {
+            return false;
+        }
+
+        previous = current;
+        return true;
+    }
+
+    private static void RestoreFileLimit(UnixResourceLimit? previous)
+    {
+        if (previous is not null)
+        {
+            _ = UnixProcessLimits.TrySet(UnixResource.NoFile, previous.Value, out _);
+        }
+    }
+
+    private static Result<UnixChildProcess> StartSpawn(
+        string workingDirectory,
+        string facts,
+        UnixPipe secret,
+        int target)
+    {
+        var (program, spawnArguments) = SpawnCommand(
+            ["--spawn-child", facts, target.ToString(CultureInfo.InvariantCulture)]);
+
+        return UnixProcessSpawn.Start(new UnixSpawnRequest(
+            program,
+            spawnArguments,
+            workingDirectory,
+            new Dictionary<string, string>(),
+            [new UnixDescriptorMapping(secret.ReadDescriptor, target)]));
     }
 
     private static (string Program, string[] Arguments) SpawnCommand(string[] childArguments)

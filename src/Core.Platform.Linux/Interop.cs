@@ -60,6 +60,9 @@ internal static unsafe partial class Interop
     /// <summary>Read the descriptor flags (<c>F_GETFD</c>).</summary>
     internal const int FileDescriptorStatusCommand = 1;
 
+    /// <summary>Close the descriptor at exec, from <c>F_GETFD</c> (<c>FD_CLOEXEC</c>).</summary>
+    internal const int FileDescriptorCloseOnExec = 1;
+
     /// <summary>Duplicate a descriptor above the given minimum, close-on-exec (<c>F_DUPFD_CLOEXEC</c>).</summary>
     internal const int FileDescriptorDuplicateCloseOnExec = 1030;
 

@@ -22,10 +22,11 @@ and this project adheres to
   (`TrySignal`). The `/proc` scan closes every descriptor it observes except
   the sources and the targets, a source that is not a target is closed after its
   duplication, and `addclosefrom_np` closes the close-from base (3 or the highest
-  target plus one) and above. A descriptor at or above the soft `RLIMIT_NOFILE`
-  cannot be closed by a file action, so the spawn is refused with
-  `InvalidArgument`. The child is a session leader; a source that is also a
-  target is duplicated.
+  target plus one) and above, skipped when the base reaches the soft limit. A
+  descriptor at or above the soft `RLIMIT_NOFILE` cannot be closed by a file
+  action, so the spawn is refused with `InvalidArgument` unless it is
+  close-on-exec, which the exec closes. The child is a session leader; a source
+  that is also a target is duplicated.
   `LinuxErrno` names `ESRCH`, `E2BIG`, `ENOEXEC`, `ECHILD` and `ETXTBSY`, and
   `CoreErrorCodes.UnixSpawnFailed` is `unix.spawn`.
 

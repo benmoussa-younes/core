@@ -18,9 +18,12 @@ namespace Core.Platform.Linux;
 /// except the sources and the targets; each source that is not a target is
 /// closed in the child after its duplication. <c>addclosefrom_np</c> closes the
 /// close-from base, 3 or the highest target plus one, and above, including a
-/// descriptor opened after the scan. A descriptor at or above the soft
-/// <c>RLIMIT_NOFILE</c> cannot be closed by a file action, so the spawn is
-/// refused with <see cref="LinuxErrno.InvalidArgument"/> when one is observed.
+/// descriptor opened after the scan; it is skipped when the base reaches the
+/// soft limit, where nothing inheritable is left. A descriptor at or above the
+/// soft <c>RLIMIT_NOFILE</c> that is not close-on-exec cannot be closed by a
+/// file action, so the spawn is refused with
+/// <see cref="LinuxErrno.InvalidArgument"/> when one is observed; a
+/// close-on-exec one is closed at exec and skipped.
 /// The child is a session leader and its <c>SIGPIPE</c> disposition is reset to
 /// the default at exec; a .NET child's runtime may ignore it again when it
 /// initialises. The spawn flags set <c>SETSIGDEF</c>, <c>SETSIGMASK</c> and
@@ -155,6 +158,11 @@ public static unsafe class UnixProcessSpawn
                 {
                     if ((ulong)source >= limit.Soft)
                     {
+                        if (CannotBeInherited(source))
+                        {
+                            continue;
+                        }
+
                         return AboveLimit();
                     }
 
@@ -177,6 +185,11 @@ public static unsafe class UnixProcessSpawn
                     {
                         if ((ulong)descriptor >= limit.Soft)
                         {
+                            if (CannotBeInherited(descriptor))
+                            {
+                                continue;
+                            }
+
                             return AboveLimit();
                         }
 
@@ -209,11 +222,15 @@ public static unsafe class UnixProcessSpawn
                 }
             }
 
-            var fromResult = Interop.PosixSpawnFileActionsAddCloseFrom(actions, closeFrom);
-
-            if (fromResult != 0)
+            // WHY: glibc rejects a close-from at or above the soft limit, and nothing inheritable is left there.
+            if ((ulong)closeFrom < limit.Soft)
             {
-                return Failure((LinuxErrno)fromResult, "the remaining descriptors could not be closed.");
+                var fromResult = Interop.PosixSpawnFileActionsAddCloseFrom(actions, closeFrom);
+
+                if (fromResult != 0)
+                {
+                    return Failure((LinuxErrno)fromResult, "the remaining descriptors could not be closed.");
+                }
             }
 
             var attributesResult = Interop.PosixSpawnAttrInit(attributes);
@@ -353,6 +370,13 @@ public static unsafe class UnixProcessSpawn
         }
 
         return null;
+    }
+
+    private static bool CannotBeInherited(int descriptor)
+    {
+        var flags = Interop.Fcntl(descriptor, Interop.FileDescriptorStatusCommand, 0);
+
+        return flags < 0 || (flags & Interop.FileDescriptorCloseOnExec) != 0;
     }
 
     private static Result<UnixChildProcess> AboveLimit()
