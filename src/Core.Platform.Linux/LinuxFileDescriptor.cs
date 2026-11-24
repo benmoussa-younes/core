@@ -10,11 +10,13 @@ namespace Core.Platform.Linux;
 /// released, including from a finalizer.
 /// </summary>
 /// <remarks>
-/// Wrapping the descriptor in a <see cref="SafeHandleZeroOrMinusOneIsInvalid"/>
-/// makes the lifetime exception-safe and finalizable without a hand-written
-/// finalizer in the public type.
+/// Wrapping the descriptor in a <see cref="SafeHandleMinusOneIsInvalid"/> makes
+/// the lifetime exception-safe and finalizable without a hand-written finalizer
+/// in the public type. Descriptor 0 is a valid Linux descriptor, so only -1 is
+/// invalid; the conventional zero-or-minus-one rule would leak a pipe end that
+/// landed on descriptor 0.
 /// </remarks>
-internal sealed class LinuxFileDescriptor : SafeHandleZeroOrMinusOneIsInvalid
+internal sealed class LinuxFileDescriptor : SafeHandleMinusOneIsInvalid
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="LinuxFileDescriptor"/> class.

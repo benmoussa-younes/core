@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using Core.Platform.Linux;
+using Microsoft.Win32.SafeHandles;
 
 namespace Core.Unix.Probe;
 
@@ -20,8 +21,10 @@ internal static partial class SelfTest
         failures += Check("mask scope", MaskScope());
         failures += Check("terminal echo round trip", TerminalEchoRoundTrip());
         failures += Check("descriptor round trip", DescriptorRoundTrip());
+        failures += Check("pipe round trip", PipeRoundTrip());
         failures += Check("per-message credentials", PerMessageCredentials());
         failures += Check("no new privileges", NoNewPrivileges());
+        failures += Check("descriptor zero", Program.DescriptorZero());
         Console.WriteLine(failures == 0 ? "SELF-TEST PASS" : $"SELF-TEST FAIL ({failures})");
         return failures == 0 ? 0 : 1;
     }
@@ -221,6 +224,38 @@ internal static partial class SelfTest
             receiver.Dispose();
             Directory.Delete(directory, recursive: true);
         }
+    }
+
+    private static bool PipeRoundTrip()
+    {
+        var created = UnixPipe.Create();
+
+        if (!created.IsSuccess)
+        {
+            return false;
+        }
+
+        using var pipe = created.Value;
+
+        if (!pipe.TryWriteAll("probe"u8, out var written, out _) || written != 5)
+        {
+            return false;
+        }
+
+        pipe.CloseWrite();
+
+        using var handle = new SafeFileHandle((IntPtr)pipe.ReadDescriptor, ownsHandle: false);
+        using var reader = new FileStream(handle, FileAccess.Read, bufferSize: 1);
+        var buffer = new byte[8];
+        var read = reader.ReadAsync(buffer, CancellationToken.None).AsTask();
+
+        if (!read.Wait(TimeSpan.FromSeconds(5)))
+        {
+            return false;
+        }
+
+        var count = read.Result;
+        return count == 5 && buffer.AsSpan(0, count).SequenceEqual("probe"u8);
     }
 
     private static bool PerMessageCredentials()

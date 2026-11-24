@@ -59,7 +59,7 @@ public sealed class UnixLockedMemory : IDisposable
         if (!OperatingSystem.IsLinux())
         {
             return Result<UnixLockedMemory>.Failure(
-                new CoreError("unix.mlock", "mlock is only available on Linux."));
+                new CoreError(CoreErrorCodes.UnixMemoryLockFailed, "mlock is only available on Linux."));
         }
 
         var handle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
@@ -69,7 +69,7 @@ public sealed class UnixLockedMemory : IDisposable
             var errno = (LinuxErrno)Marshal.GetLastPInvokeError();
             handle.Free();
             return Result<UnixLockedMemory>.Failure(
-                new CoreError("unix.mlock", $"mlock failed: {errno}."));
+                new CoreError(CoreErrorCodes.UnixMemoryLockFailed, $"mlock failed: {errno}."));
         }
 
         return Result<UnixLockedMemory>.Success(new UnixLockedMemory(buffer, handle));
