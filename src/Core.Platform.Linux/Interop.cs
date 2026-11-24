@@ -57,6 +57,15 @@ internal static unsafe partial class Interop
     /// <summary>Do not make the opened terminal the controlling terminal (<c>O_NOCTTY</c>).</summary>
     internal const int OpenNoControlTerminal = 0x100;
 
+    /// <summary>Read the descriptor flags (<c>F_GETFD</c>).</summary>
+    internal const int FileDescriptorStatusCommand = 1;
+
+    /// <summary>Close the descriptor at exec, from <c>F_GETFD</c> (<c>FD_CLOEXEC</c>).</summary>
+    internal const int FileDescriptorCloseOnExec = 1;
+
+    /// <summary>Duplicate a descriptor above the given minimum, close-on-exec (<c>F_DUPFD_CLOEXEC</c>).</summary>
+    internal const int FileDescriptorDuplicateCloseOnExec = 1030;
+
     /// <summary>The basic stat mask: type, mode, links, ownership, times, inode, size and blocks (<c>STATX_BASIC_STATS</c>).</summary>
     internal const uint StatxBasicStats = 0x07ff;
 
@@ -105,6 +114,60 @@ internal static unsafe partial class Interop
 
     [LibraryImport("libc", EntryPoint = "pipe2", SetLastError = true)]
     internal static partial int Pipe2(int* descriptors, int flags);
+
+    [LibraryImport("libc", EntryPoint = "posix_spawn", SetLastError = true)]
+    internal static partial int PosixSpawn(
+        out int processId,
+        byte* path,
+        byte* fileActions,
+        byte* attributes,
+        byte** arguments,
+        byte** environment);
+
+    [LibraryImport("libc", EntryPoint = "posix_spawn_file_actions_init", SetLastError = true)]
+    internal static partial int PosixSpawnFileActionsInit(byte* fileActions);
+
+    [LibraryImport("libc", EntryPoint = "posix_spawn_file_actions_destroy", SetLastError = true)]
+    internal static partial int PosixSpawnFileActionsDestroy(byte* fileActions);
+
+    [LibraryImport("libc", EntryPoint = "posix_spawn_file_actions_adddup2", SetLastError = true)]
+    internal static partial int PosixSpawnFileActionsAddDup2(byte* fileActions, int descriptor, int newDescriptor);
+
+    [LibraryImport("libc", EntryPoint = "posix_spawn_file_actions_addclose", SetLastError = true)]
+    internal static partial int PosixSpawnFileActionsAddClose(byte* fileActions, int descriptor);
+
+    [LibraryImport("libc", EntryPoint = "posix_spawn_file_actions_addchdir_np", SetLastError = true)]
+    internal static partial int PosixSpawnFileActionsAddChdir(byte* fileActions, byte* path);
+
+    [LibraryImport("libc", EntryPoint = "posix_spawn_file_actions_addclosefrom_np", SetLastError = true)]
+    internal static partial int PosixSpawnFileActionsAddCloseFrom(byte* fileActions, int fromDescriptor);
+
+    [LibraryImport("libc", EntryPoint = "posix_spawnattr_init", SetLastError = true)]
+    internal static partial int PosixSpawnAttrInit(byte* attributes);
+
+    [LibraryImport("libc", EntryPoint = "posix_spawnattr_destroy", SetLastError = true)]
+    internal static partial int PosixSpawnAttrDestroy(byte* attributes);
+
+    [LibraryImport("libc", EntryPoint = "posix_spawnattr_setflags", SetLastError = true)]
+    internal static partial int PosixSpawnAttrSetFlags(byte* attributes, short flags);
+
+    [LibraryImport("libc", EntryPoint = "posix_spawnattr_setsigdefault", SetLastError = true)]
+    internal static partial int PosixSpawnAttrSetSigDefault(byte* attributes, byte* signals);
+
+    [LibraryImport("libc", EntryPoint = "posix_spawnattr_setsigmask", SetLastError = true)]
+    internal static partial int PosixSpawnAttrSetSigMask(byte* attributes, byte* signals);
+
+    [LibraryImport("libc", EntryPoint = "sigemptyset", SetLastError = true)]
+    internal static partial int SigEmptySet(byte* signals);
+
+    [LibraryImport("libc", EntryPoint = "sigaddset", SetLastError = true)]
+    internal static partial int SigAddSet(byte* signals, int signal);
+
+    [LibraryImport("libc", EntryPoint = "waitpid", SetLastError = true)]
+    internal static partial int WaitPid(int processId, out int status, int options);
+
+    [LibraryImport("libc", EntryPoint = "kill", SetLastError = true)]
+    internal static partial int Kill(int processId, int signal);
 
     /// <summary>Read the mapping (<c>PROT_READ</c>).</summary>
     internal const int ProtectionRead = 0x1;

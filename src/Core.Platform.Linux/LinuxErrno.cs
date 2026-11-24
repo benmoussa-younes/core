@@ -23,14 +23,26 @@ public enum LinuxErrno
     /// <summary>No such file or directory (<c>ENOENT</c>, 2).</summary>
     NoEntry = 2,
 
+    /// <summary>No such process (<c>ESRCH</c>, 3).</summary>
+    NoSuchProcess = 3,
+
     /// <summary>Interrupted system call (<c>EINTR</c>, 4).</summary>
     Interrupted = 4,
 
     /// <summary>Input/output error (<c>EIO</c>, 5).</summary>
     InputOutput = 5,
 
+    /// <summary>Argument list too long (<c>E2BIG</c>, 7).</summary>
+    ArgumentListTooLong = 7,
+
+    /// <summary>Exec format error (<c>ENOEXEC</c>, 8).</summary>
+    ExecFormatError = 8,
+
     /// <summary>Bad file descriptor (<c>EBADF</c>, 9).</summary>
     BadFileDescriptor = 9,
+
+    /// <summary>No child processes (<c>ECHILD</c>, 10).</summary>
+    NoChild = 10,
 
     /// <summary>Resource temporarily unavailable (<c>EAGAIN</c>, 11).</summary>
     TryAgain = 11,
@@ -67,6 +79,9 @@ public enum LinuxErrno
 
     /// <summary>Inappropriate ioctl for a non-terminal descriptor (<c>ENOTTY</c>, 25).</summary>
     NotATty = 25,
+
+    /// <summary>Text file busy (<c>ETXTBSY</c>, 26).</summary>
+    TextFileBusy = 26,
 
     /// <summary>No space left on device (<c>ENOSPC</c>, 28).</summary>
     NoSpaceLeft = 28,

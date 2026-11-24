@@ -18,9 +18,9 @@ namespace Core.Platform.Linux;
 /// the caller keeps the write below the pipe capacity or provides a reader that
 /// drains it. A write to a closed reader returns
 /// <see cref="LinuxErrno.BrokenPipe"/> when <c>SIGPIPE</c> is ignored or blocked;
-/// the .NET runtime ignores it, and a blocked <c>SIGPIPE</c> stays pending and can
-/// terminate the process when it is unblocked. The pipe does not change the
-/// process's signal disposition.
+/// the .NET runtime normally ignores it, and a blocked <c>SIGPIPE</c> stays
+/// pending and can terminate the process when it is unblocked. The pipe does not
+/// change the process's signal disposition.
 /// </remarks>
 [SupportedOSPlatform("linux")]
 public sealed class UnixPipe : IDisposable

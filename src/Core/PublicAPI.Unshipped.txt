@@ -246,6 +246,7 @@ const Core.Results.CoreErrorCodes.TextUnwritable = "text.unwritable" -> string!
 const Core.Results.CoreErrorCodes.UnitsInvalid = "units.invalid" -> string!
 const Core.Results.CoreErrorCodes.UnixMemoryLockFailed = "unix.mlock" -> string!
 const Core.Results.CoreErrorCodes.UnixPipeFailed = "unix.pipe" -> string!
+const Core.Results.CoreErrorCodes.UnixSpawnFailed = "unix.spawn" -> string!
 const Core.Results.CoreErrorCodes.UnixTerminalFailed = "unix.termios" -> string!
 const Core.Results.CoreErrorCodes.ValidationPort = "validation.port" -> string!
 const Core.Results.CoreErrorCodes.ValidationRequired = "validation.required" -> string!

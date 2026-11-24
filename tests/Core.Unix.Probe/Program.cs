@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using System.Globalization;
 using System.Runtime.InteropServices;
 using Core.Platform.Linux;
 
@@ -17,7 +19,38 @@ internal static partial class Program
             return DescriptorZero() ? 0 : 1;
         }
 
-        Console.Error.WriteLine("usage: Core.Unix.Probe --self-test|--fd0");
+        if (args is ["--spawn-child", var factsPath, var readText])
+        {
+            var reads = readText
+                .Split(',')
+                .Select(text => int.Parse(text, CultureInfo.InvariantCulture))
+                .ToArray();
+            return SpawnChild.Run(factsPath, reads);
+        }
+
+        if (args is ["--sleep-grandchild", var pidPath])
+        {
+            var startInfo = new ProcessStartInfo("/bin/sleep") { UseShellExecute = false };
+            startInfo.ArgumentList.Add("30");
+            var grandchild = Process.Start(startInfo)!;
+            File.WriteAllText(pidPath, grandchild.Id.ToString(CultureInfo.InvariantCulture));
+            Thread.Sleep(30_000);
+            return 0;
+        }
+
+        if (args is ["--exit", var codeText])
+        {
+            Environment.Exit(int.Parse(codeText, CultureInfo.InvariantCulture));
+            return 0;
+        }
+
+        if (args is ["--sleep"])
+        {
+            Thread.Sleep(30_000);
+            return 0;
+        }
+
+        Console.Error.WriteLine("usage: Core.Unix.Probe --self-test|--fd0|--spawn-child|--sleep-grandchild|--exit|--sleep");
         return 2;
     }
 
@@ -57,8 +90,8 @@ internal static partial class Program
     }
 
     [LibraryImport("libc", EntryPoint = "close", SetLastError = true)]
-    private static partial int Close(int descriptor);
+    internal static partial int Close(int descriptor);
 
     [LibraryImport("libc", EntryPoint = "fcntl", SetLastError = true)]
-    private static partial int Fcntl(int descriptor, int command, int argument);
+    internal static partial int Fcntl(int descriptor, int command, int argument);
 }
