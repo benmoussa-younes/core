@@ -8,6 +8,22 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- `UnixPipe.Create()` returns both ends of a pipe opened with
+  `pipe2(O_CLOEXEC)`; `TryWriteAll` writes every byte (the prefix is reported on
+  failure) and reports `EPIPE` when the reader is gone, `CloseWrite` closes the
+  write end so the reader reaches end-of-file after draining the buffer, and
+  disposing closes both ends.
+
+### Security
+
+- `UnixPipe` opens both ends close-on-exec, so a child that execs without being
+  given the read end cannot inherit it; the .NET runtime ignores `SIGPIPE`, so a
+  write to a closed reader returns `LinuxErrno.BrokenPipe` (a host that restores
+  `SIG_DFL` must ignore or handle it, as blocking only leaves the signal
+  pending).
+
 ## [0.3.0] - 2026-11-23
 
 ### Added

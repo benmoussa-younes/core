@@ -103,6 +103,9 @@ internal static unsafe partial class Interop
     [LibraryImport("libc", EntryPoint = "write", SetLastError = true)]
     internal static partial nint Write(int descriptor, byte* buffer, nuint count);
 
+    [LibraryImport("libc", EntryPoint = "pipe2", SetLastError = true)]
+    internal static partial int Pipe2(int* descriptors, int flags);
+
     /// <summary>Read the mapping (<c>PROT_READ</c>).</summary>
     internal const int ProtectionRead = 0x1;
 

@@ -298,6 +298,14 @@ override Core.Platform.Linux.UnixMessage.GetHashCode() -> int
 ~override Core.Platform.Linux.UnixMessage.ToString() -> string
 static Core.Platform.Linux.UnixMessage.operator !=(Core.Platform.Linux.UnixMessage left, Core.Platform.Linux.UnixMessage right) -> bool
 static Core.Platform.Linux.UnixMessage.operator ==(Core.Platform.Linux.UnixMessage left, Core.Platform.Linux.UnixMessage right) -> bool
+Core.Platform.Linux.UnixPipe
+Core.Platform.Linux.UnixPipe.CloseRead() -> void
+Core.Platform.Linux.UnixPipe.CloseWrite() -> void
+Core.Platform.Linux.UnixPipe.Dispose() -> void
+Core.Platform.Linux.UnixPipe.ReadDescriptor.get -> int
+Core.Platform.Linux.UnixPipe.WriteDescriptor.get -> int
+Core.Platform.Linux.UnixPipe.TryWriteAll(System.ReadOnlySpan<byte> data, out int written, out Core.Platform.Linux.LinuxErrno error) -> bool
+static Core.Platform.Linux.UnixPipe.Create() -> Core.Results.Result<Core.Platform.Linux.UnixPipe!>
 static Core.Platform.Linux.UnixSocket.TryReceive(System.Net.Sockets.Socket! socket, System.Span<byte> payload, System.Span<int> descriptors, out Core.Platform.Linux.UnixMessage message, out Core.Platform.Linux.LinuxErrno error) -> bool
 static Core.Platform.Linux.UnixSocket.TryReceive(System.Net.Sockets.Socket! socket, System.Span<byte> payload, System.Span<int> descriptors, out Core.Platform.Linux.UnixMessage message, out Core.Platform.Linux.UnixPeerCredentials? credentials, out Core.Platform.Linux.LinuxErrno error) -> bool
 static Core.Platform.Linux.UnixSocket.TrySend(System.Net.Sockets.Socket! socket, System.ReadOnlySpan<byte> payload, System.ReadOnlySpan<int> descriptors, out int sent, out Core.Platform.Linux.LinuxErrno error) -> bool

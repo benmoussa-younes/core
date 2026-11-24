@@ -20,5 +20,18 @@
   <ItemGroup>
     <ProjectReference Include="../../src/Core.Platform.Linux/Core.Platform.Linux.csproj" />
     <ProjectReference Include="../../src/Core.IO/Core.IO.csproj" />
+    <ProjectReference Include="../Core.Unix.Probe/Core.Unix.Probe.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
+  <Target Name="CopyUnixProbe" AfterTargets="Build">
+    <PropertyGroup>
+      <UnixProbeDirectory Condition="'$(RuntimeIdentifier)' != ''">$(MSBuildThisFileDirectory)../Core.Unix.Probe/bin/$(Configuration)/$(TargetFramework)/$(RuntimeIdentifier)</UnixProbeDirectory>
+      <UnixProbeDirectory Condition="'$(RuntimeIdentifier)' == ''">$(MSBuildThisFileDirectory)../Core.Unix.Probe/bin/$(Configuration)/$(TargetFramework)</UnixProbeDirectory>
+    </PropertyGroup>
+    <ItemGroup>
+      <UnixProbeFiles Include="$(UnixProbeDirectory)/Core*.dll" />
+      <UnixProbeFiles Include="$(UnixProbeDirectory)/Core.Unix.Probe.deps.json" />
+      <UnixProbeFiles Include="$(UnixProbeDirectory)/Core.Unix.Probe.runtimeconfig.json" />
+    </ItemGroup>
+    <Copy SourceFiles="@(UnixProbeFiles)" DestinationFiles="@(UnixProbeFiles->'$(OutDir)unix-probe/%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+  </Target>
 </Project>

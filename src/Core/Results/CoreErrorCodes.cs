@@ -132,6 +132,9 @@ public static class CoreErrorCodes
     /// <summary>A memory lock (<c>mlock</c>) was refused by the kernel.</summary>
     public const string UnixMemoryLockFailed = "unix.mlock";
 
+    /// <summary>A pipe could not be created (<c>pipe2</c>).</summary>
+    public const string UnixPipeFailed = "unix.pipe";
+
     /// <summary>A terminal attribute read or write failed.</summary>
     public const string UnixTerminalFailed = "unix.termios";
 
