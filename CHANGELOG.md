@@ -30,6 +30,17 @@ and this project adheres to
   `LinuxErrno` names `ESRCH`, `E2BIG`, `ENOEXEC`, `ECHILD` and `ETXTBSY`, and
   `CoreErrorCodes.UnixSpawnFailed` is `unix.spawn`.
 
+- `UnixPseudoTerminal.Create()` opens a pseudo-terminal with `posix_openpt`,
+  `grantpt` and `unlockpt`: the master is close-on-exec, and the slave belongs
+  to the caller with the group and mode of the devpts mount (0600 by default).
+  `TryGetSize`/`TrySetSize` read and write the window
+  size (`TIOCGWINSZ`/`TIOCSWINSZ`) and `SlavePath` names the device.
+  `UnixSpawnRequest` takes the terminal: the child opens the slave on descriptors
+  0, 1 and 2 and, as a session leader, acquires it as its controlling terminal;
+  such a request cannot map those three descriptors. `UnixTerminalRawMode`
+  applies the `cfmakeraw` attributes to a terminal for the lifetime of the
+  object and restores the previous ones on dispose.
+
 ### Security
 
 - `UnixPipe` opens both ends close-on-exec, so a child that execs without being

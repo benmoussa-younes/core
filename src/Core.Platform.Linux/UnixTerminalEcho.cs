@@ -1,4 +1,3 @@
-using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using Core.Results;
 
@@ -21,10 +20,7 @@ namespace Core.Platform.Linux;
 [SupportedOSPlatform("linux")]
 public sealed class UnixTerminalEcho : IDisposable
 {
-    private const int TermiosSize = 60;
-    private const int LocalFlagsOffset = 12;
     private const uint EchoFlag = 0x8;
-    private const int FlushOnSet = 2;
 
     private readonly int _descriptor;
     private readonly byte[] _original;
@@ -47,26 +43,20 @@ public sealed class UnixTerminalEcho : IDisposable
                 new CoreError(CoreErrorCodes.UnixTerminalFailed, "termios is only available on Linux."));
         }
 
-        var original = new byte[TermiosSize];
+        var original = new byte[Termios.Size];
 
-        fixed (byte* pointer = original)
+        if (!Termios.TryRead(descriptor, original, out var readError))
         {
-            if (Interop.TcGetAttr(descriptor, pointer) != 0)
-            {
-                return Failure("tcgetattr", Marshal.GetLastPInvokeError());
-            }
+            return Failure("tcgetattr", (int)readError);
         }
 
         var modified = (byte[])original.Clone();
-        var flags = BitConverter.ToUInt32(modified, LocalFlagsOffset);
-        BitConverter.TryWriteBytes(modified.AsSpan(LocalFlagsOffset, 4), flags & ~EchoFlag);
+        var flags = BitConverter.ToUInt32(modified, Termios.LocalFlagsOffset);
+        BitConverter.TryWriteBytes(modified.AsSpan(Termios.LocalFlagsOffset, 4), flags & ~EchoFlag);
 
-        fixed (byte* pointer = modified)
+        if (!Termios.TryWrite(descriptor, modified, out var writeError))
         {
-            if (Interop.TcSetAttr(descriptor, FlushOnSet, pointer) != 0)
-            {
-                return Failure("tcsetattr", Marshal.GetLastPInvokeError());
-            }
+            return Failure("tcsetattr", (int)writeError);
         }
 
         return Result<UnixTerminalEcho>.Success(new UnixTerminalEcho(descriptor, original));
@@ -88,18 +78,14 @@ public sealed class UnixTerminalEcho : IDisposable
             return false;
         }
 
-        var attributes = new byte[TermiosSize];
+        var attributes = new byte[Termios.Size];
 
-        fixed (byte* pointer = attributes)
+        if (!Termios.TryRead(descriptor, attributes, out error))
         {
-            if (Interop.TcGetAttr(descriptor, pointer) != 0)
-            {
-                error = (LinuxErrno)Marshal.GetLastPInvokeError();
-                return false;
-            }
+            return false;
         }
 
-        enabled = (BitConverter.ToUInt32(attributes, LocalFlagsOffset) & EchoFlag) != 0;
+        enabled = (BitConverter.ToUInt32(attributes, Termios.LocalFlagsOffset) & EchoFlag) != 0;
         return true;
     }
 
@@ -113,10 +99,7 @@ public sealed class UnixTerminalEcho : IDisposable
 
         _disposed = true;
 
-        fixed (byte* pointer = _original)
-        {
-            _ = Interop.TcSetAttr(_descriptor, FlushOnSet, pointer);
-        }
+        _ = Termios.TryWrite(_descriptor, _original, out _);
     }
 
     private static Result<UnixTerminalEcho> Failure(string call, int errno)

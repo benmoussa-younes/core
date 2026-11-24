@@ -28,6 +28,24 @@ internal sealed class LinuxFileDescriptor : SafeHandleMinusOneIsInvalid
         SetHandle(descriptor);
     }
 
+    /// <summary>Adds a reference for a synchronous call; false when the handle is closed.</summary>
+    /// <returns><see langword="true"/> when the caller must call <see cref="System.Runtime.InteropServices.SafeHandle.DangerousRelease"/>.</returns>
+    internal bool TryAddRef()
+    {
+        var added = false;
+
+        try
+        {
+            DangerousAddRef(ref added);
+        }
+        catch (ObjectDisposedException)
+        {
+            return false;
+        }
+
+        return added;
+    }
+
     /// <inheritdoc />
     protected override bool ReleaseHandle()
     {

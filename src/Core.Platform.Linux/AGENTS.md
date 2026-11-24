@@ -20,5 +20,11 @@
   close-on-exec, which the exec closes; the caller keeps its other descriptors
   close-on-exec or ensures no other thread opens a non-CLOEXEC one during the
   spawn.
+- `posix_openpt`/`grantpt`/`unlockpt`/`ptsname_r` own the master; the slave is
+  opened by the child through `addopen` on 0, 1 and 2, so it becomes the
+  controlling terminal after `SETSID`, and a terminal request cannot map those
+  three descriptors. The window size is the 8-byte `winsize` read and written
+  with `TIOCGWINSZ` (0x5413) and `TIOCSWINSZ` (0x5414); the raw attributes are
+  the `cfmakeraw` set on the 60-byte `termios` and restore with `TCSAFLUSH`.
 - A received descriptor is handed to the caller or closed by the call, never
   leaked.

@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Net.Sockets;
+using System.Text;
 using System.Runtime.InteropServices;
 using Core.Platform.Linux;
 using Core.Results;
@@ -11,6 +12,11 @@ internal static partial class SelfTest
 {
     private const int SetDescriptorFlags = 2;
     private const int DuplicateDescriptorFlags = 0;
+    private const int TermiosSize = 60;
+    private const short PollReadable = 1;
+    private const int ReadTimeoutMilliseconds = 2000;
+    private const int LocalFlagsOffset = 12;
+    private const uint LocalMask = 0x804B;
     private const int DuplicateCloseOnExecFlags = 1030;
 
     public static int Run()
@@ -32,6 +38,8 @@ internal static partial class SelfTest
         failures += Check("spawn round trip", SpawnRoundTrip());
         failures += Check("spawn refuses a descriptor above a lowered limit", RefusesADescriptorAboveALoweredLimit());
         failures += Check("spawn with a target at the lowered limit", SpawnsWithATargetAtTheLoweredLimit());
+        failures += Check("pseudo-terminal round trip", PseudoTerminalRoundTrip());
+        failures += Check("raw terminal mode round trip", RawTerminalModeRoundTrip());
         failures += Check("descriptor zero", Program.DescriptorZero());
         Console.WriteLine(failures == 0 ? "SELF-TEST PASS" : $"SELF-TEST FAIL ({failures})");
         return failures == 0 ? 0 : 1;
@@ -396,6 +404,19 @@ internal static partial class SelfTest
     [LibraryImport("libc", EntryPoint = "close")]
     private static partial int Close(int descriptor);
 
+    private struct PollDescriptor
+    {
+        internal int Descriptor;
+        internal short Events;
+        internal short Ready;
+    }
+
+    [LibraryImport("libc", EntryPoint = "poll", SetLastError = true)]
+    private static unsafe partial int Poll(void* descriptors, nuint count, int timeoutMilliseconds);
+
+    [LibraryImport("libc", EntryPoint = "tcgetattr", SetLastError = true)]
+    private static unsafe partial int TcGetAttr(int descriptor, byte* attributes);
+
     private static bool SpawnRoundTrip()
     {
         var directory = Directory.CreateTempSubdirectory("core-spawn-probe-");
@@ -636,6 +657,137 @@ internal static partial class SelfTest
             workingDirectory,
             new Dictionary<string, string>(),
             [new UnixDescriptorMapping(secret.ReadDescriptor, target)]));
+    }
+
+    private static unsafe bool PseudoTerminalRoundTrip()
+    {
+        var directory = Directory.CreateTempSubdirectory("core-pty-probe-");
+
+        try
+        {
+            var facts = Path.Combine(directory.FullName, "facts.txt");
+            var created = UnixPseudoTerminal.Create();
+
+            if (!created.IsSuccess)
+            {
+                return false;
+            }
+
+            using var terminal = created.Value;
+
+            if (!terminal.TrySetSize(new UnixTerminalSize(37, 111), out _))
+            {
+                return false;
+            }
+
+            var pipe = UnixPipe.Create();
+
+            if (!pipe.IsSuccess)
+            {
+                return false;
+            }
+
+            using var secret = pipe.Value;
+            var (program, spawnArguments) = SpawnCommand(["--spawn-child", facts, "3"]);
+            var started = UnixProcessSpawn.Start(new UnixSpawnRequest(
+                program,
+                spawnArguments,
+                directory.FullName,
+                new Dictionary<string, string>(),
+                [new UnixDescriptorMapping(secret.ReadDescriptor, 3)],
+                terminal));
+
+            if (!started.IsSuccess)
+            {
+                return false;
+            }
+
+            using var child = started.Value;
+            using var master = new FileStream(
+                new SafeFileHandle((IntPtr)terminal.MasterDescriptor, ownsHandle: false),
+                FileAccess.ReadWrite,
+                bufferSize: 1);
+
+            if (!secret.TryWriteAll("pty-secret"u8, out _, out _))
+            {
+                return false;
+            }
+
+            secret.CloseWrite();
+            master.Write("ping\n"u8);
+
+            if (!WaitForSpawn(child, out var status) || !status.Exited || status.ExitCode != 0)
+            {
+                return false;
+            }
+
+            var lines = File.ReadAllLines(facts);
+            var buffer = new byte[512];
+            var poll = new PollDescriptor { Descriptor = terminal.MasterDescriptor, Events = PollReadable };
+            var count = Poll(&poll, 1, ReadTimeoutMilliseconds) > 0 ? master.Read(buffer) : 0;
+            var output = count <= 0 ? string.Empty : Encoding.UTF8.GetString(buffer, 0, count);
+
+            return lines.Contains("ISATTY0=1") &&
+                lines.Contains("WINSIZE=37,111") &&
+                lines.Contains("STDIN=ping") &&
+                lines.Contains("FD3=pty-secret") &&
+                output.Contains("pty-child", StringComparison.Ordinal);
+        }
+        finally
+        {
+            Directory.Delete(directory.FullName, recursive: true);
+        }
+    }
+
+    private static bool RawTerminalModeRoundTrip()
+    {
+        var created = UnixPseudoTerminal.Create();
+
+        if (!created.IsSuccess)
+        {
+            return false;
+        }
+
+        using var terminal = created.Value;
+        using var slave = File.OpenHandle(terminal.SlavePath, FileMode.Open, FileAccess.ReadWrite);
+        var descriptor = (int)slave.DangerousGetHandle();
+        var original = new byte[TermiosSize];
+
+        if (ReadAttributes(descriptor, original) != 0)
+        {
+            return false;
+        }
+
+        var enabled = UnixTerminalRawMode.Enable(descriptor);
+
+        if (!enabled.IsSuccess)
+        {
+            return false;
+        }
+
+        var raw = new byte[TermiosSize];
+
+        using (enabled.Value)
+        {
+            if (ReadAttributes(descriptor, raw) != 0)
+            {
+                return false;
+            }
+        }
+
+        var restored = new byte[TermiosSize];
+
+        return ReadAttributes(descriptor, restored) == 0 &&
+            (BitConverter.ToUInt32(raw, LocalFlagsOffset) & LocalMask) == 0 &&
+            restored.AsSpan().SequenceEqual(original);
+    }
+
+    private static unsafe int ReadAttributes(int descriptor, byte[] attributes)
+    {
+        fixed (byte* pointer = attributes)
+        {
+            return TcGetAttr(descriptor, pointer);
+        }
     }
 
     private static (string Program, string[] Arguments) SpawnCommand(string[] childArguments)

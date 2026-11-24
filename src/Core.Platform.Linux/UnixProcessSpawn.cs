@@ -14,7 +14,8 @@ namespace Core.Platform.Linux;
 /// The program is started with <c>posix_spawn</c>: no shell, no <c>PATH</c>
 /// lookup and no <c>system</c>. The environment and the working directory are
 /// the request's, not the parent's. Descriptors 0, 1 and 2 are inherited unless
-/// mapped. The <c>/proc/self/fd</c> scan closes every descriptor it observes
+/// mapped, or opened on the request's terminal slave when it has one. The
+/// <c>/proc/self/fd</c> scan closes every descriptor it observes
 /// except the sources and the targets; each source that is not a target is
 /// closed in the child after its duplication. <c>addclosefrom_np</c> closes the
 /// close-from base, 3 or the highest target plus one, and above, including a
@@ -103,6 +104,19 @@ public static unsafe class UnixProcessSpawn
         var maskSignals = (byte*)maskWords;
         var actionsInitialized = false;
         var attributesInitialized = false;
+        var terminalReferenced = false;
+
+        if (request.Terminal is not null)
+        {
+            try
+            {
+                request.Terminal.MasterHandle.DangerousAddRef(ref terminalReferenced);
+            }
+            catch (ObjectDisposedException)
+            {
+                return Failure(LinuxErrno.BadFileDescriptor, "the pseudo-terminal is disposed.");
+            }
+        }
 
         try
         {
@@ -149,6 +163,29 @@ public static unsafe class UnixProcessSpawn
                 if (added != 0)
                 {
                     return Failure((LinuxErrno)added, "a descriptor could not be mapped.");
+                }
+            }
+
+            if (request.Terminal is not null)
+            {
+                var slavePathBytes = Encoding.UTF8.GetBytes(request.Terminal.SlavePath + "\0");
+
+                fixed (byte* slavePath = slavePathBytes)
+                {
+                    for (var descriptor = 0; descriptor < StandardDescriptorCount; descriptor++)
+                    {
+                        var opened = Interop.PosixSpawnFileActionsAddOpen(
+                            actions,
+                            descriptor,
+                            slavePath,
+                            Interop.OpenReadWrite,
+                            0);
+
+                        if (opened != 0)
+                        {
+                            return Failure((LinuxErrno)opened, "the pseudo-terminal could not be attached.");
+                        }
+                    }
                 }
             }
 
@@ -307,6 +344,11 @@ public static unsafe class UnixProcessSpawn
             {
                 _ = Interop.Close(duplicate);
             }
+
+            if (terminalReferenced)
+            {
+                request.Terminal!.MasterHandle.DangerousRelease();
+            }
         }
     }
 
@@ -346,6 +388,11 @@ public static unsafe class UnixProcessSpawn
             }
         }
 
+        if (request.Terminal is { IsDisposed: true })
+        {
+            return Invalid("the pseudo-terminal is disposed.");
+        }
+
         var targets = new HashSet<int>();
 
         foreach (var mapping in request.Descriptors ?? [])
@@ -361,6 +408,11 @@ public static unsafe class UnixProcessSpawn
             if (!targets.Add(mapping.TargetDescriptor))
             {
                 return Invalid("two mappings share a target descriptor.");
+            }
+
+            if (request.Terminal is not null && mapping.TargetDescriptor < StandardDescriptorCount)
+            {
+                return Invalid("a terminal request cannot map descriptor 0, 1 or 2.");
             }
 
             if (Interop.Fcntl(mapping.SourceDescriptor, Interop.FileDescriptorStatusCommand, 0) < 0)
