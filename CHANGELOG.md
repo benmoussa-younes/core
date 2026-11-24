@@ -15,14 +15,35 @@ and this project adheres to
   failure) and reports `EPIPE` when the reader is gone, `CloseWrite` closes the
   write end so the reader reaches end-of-file after draining the buffer, and
   disposing closes both ends.
+- `UnixProcessSpawn.Start` starts a child with `posix_spawn` and no shell: an
+  absolute program, explicit arguments, environment and working directory, and
+  parent-to-child descriptor mappings. `UnixChildProcess` reaps it without
+  blocking (`TryWait`) and signals the child or its process group
+  (`TrySignal`). The `/proc` scan closes every descriptor it observes except
+  the sources and the targets, a source that is not a target is closed after its
+  duplication, and `addclosefrom_np` closes the close-from base (3 or the highest
+  target plus one) and above. A descriptor at or above the soft `RLIMIT_NOFILE`
+  cannot be closed by a file action, so the spawn is refused with
+  `InvalidArgument`. The child is a session leader; a source that is also a
+  target is duplicated.
+  `LinuxErrno` names `ESRCH`, `E2BIG`, `ENOEXEC`, `ECHILD` and `ETXTBSY`, and
+  `CoreErrorCodes.UnixSpawnFailed` is `unix.spawn`.
 
 ### Security
 
 - `UnixPipe` opens both ends close-on-exec, so a child that execs without being
-  given the read end cannot inherit it; the .NET runtime ignores `SIGPIPE`, so a
-  write to a closed reader returns `LinuxErrno.BrokenPipe` (a host that restores
-  `SIG_DFL` must ignore or handle it, as blocking only leaves the signal
-  pending).
+  given the read end cannot inherit it; the .NET runtime normally ignores
+  `SIGPIPE`, so a write to a closed reader returns `LinuxErrno.BrokenPipe` (a
+  host that restores `SIG_DFL` must ignore or handle it, as blocking only leaves
+  the signal pending).
+- `UnixProcessSpawn` passes the environment explicitly (the parent's is not
+  inherited), closes every descriptor the `/proc/self/fd` scan observes except
+  the sources and the targets, lets `addclosefrom_np` close the close-from base
+  and above, refuses a descriptor left at or above a lowered soft
+  `RLIMIT_NOFILE`, starts the program without a shell or a `PATH` lookup, and
+  resets `SIGPIPE` to the default at exec (a .NET child's runtime may ignore it
+  again). The caller keeps its other descriptors close-on-exec or ensures no
+  other thread opens a non-CLOEXEC one during the spawn.
 
 ## [0.3.0] - 2026-11-23
 

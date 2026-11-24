@@ -135,6 +135,9 @@ public static class CoreErrorCodes
     /// <summary>A pipe could not be created (<c>pipe2</c>).</summary>
     public const string UnixPipeFailed = "unix.pipe";
 
+    /// <summary>A child process could not be started (<c>posix_spawn</c>).</summary>
+    public const string UnixSpawnFailed = "unix.spawn";
+
     /// <summary>A terminal attribute read or write failed.</summary>
     public const string UnixTerminalFailed = "unix.termios";
 

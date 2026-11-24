@@ -311,3 +311,65 @@ static Core.Platform.Linux.UnixSocket.TryReceive(System.Net.Sockets.Socket! sock
 static Core.Platform.Linux.UnixSocket.TrySend(System.Net.Sockets.Socket! socket, System.ReadOnlySpan<byte> payload, System.ReadOnlySpan<int> descriptors, out int sent, out Core.Platform.Linux.LinuxErrno error) -> bool
 static Core.Platform.Linux.UnixSocket.TrySetPassCredentials(System.Net.Sockets.Socket! socket, bool enabled, out Core.Platform.Linux.LinuxErrno error) -> bool
 static Core.Platform.Linux.UnixTerminalEcho.TryGetEcho(int descriptor, out bool enabled, out Core.Platform.Linux.LinuxErrno error) -> bool
+Core.Platform.Linux.LinuxErrno.ArgumentListTooLong = 7 -> Core.Platform.Linux.LinuxErrno
+Core.Platform.Linux.LinuxErrno.ExecFormatError = 8 -> Core.Platform.Linux.LinuxErrno
+Core.Platform.Linux.LinuxErrno.NoChild = 10 -> Core.Platform.Linux.LinuxErrno
+Core.Platform.Linux.LinuxErrno.NoSuchProcess = 3 -> Core.Platform.Linux.LinuxErrno
+Core.Platform.Linux.LinuxErrno.TextFileBusy = 26 -> Core.Platform.Linux.LinuxErrno
+Core.Platform.Linux.UnixChildProcess
+Core.Platform.Linux.UnixChildProcess.Dispose() -> void
+Core.Platform.Linux.UnixChildProcess.ProcessId.get -> int
+Core.Platform.Linux.UnixChildProcess.TrySignal(int signal, bool wholeGroup, out Core.Platform.Linux.LinuxErrno error) -> bool
+Core.Platform.Linux.UnixChildProcess.TryWait(out Core.Platform.Linux.UnixExitStatus status, out Core.Platform.Linux.LinuxErrno error) -> bool
+Core.Platform.Linux.UnixDescriptorMapping
+Core.Platform.Linux.UnixDescriptorMapping.Deconstruct(out int SourceDescriptor, out int TargetDescriptor) -> void
+Core.Platform.Linux.UnixDescriptorMapping.Equals(Core.Platform.Linux.UnixDescriptorMapping other) -> bool
+Core.Platform.Linux.UnixDescriptorMapping.SourceDescriptor.get -> int
+Core.Platform.Linux.UnixDescriptorMapping.SourceDescriptor.init -> void
+Core.Platform.Linux.UnixDescriptorMapping.TargetDescriptor.get -> int
+Core.Platform.Linux.UnixDescriptorMapping.TargetDescriptor.init -> void
+Core.Platform.Linux.UnixDescriptorMapping.UnixDescriptorMapping(int SourceDescriptor, int TargetDescriptor) -> void
+Core.Platform.Linux.UnixDescriptorMapping.UnixDescriptorMapping() -> void
+Core.Platform.Linux.UnixExitStatus
+Core.Platform.Linux.UnixExitStatus.Deconstruct(out bool Exited, out int ExitCode, out int Signal) -> void
+Core.Platform.Linux.UnixExitStatus.Equals(Core.Platform.Linux.UnixExitStatus other) -> bool
+Core.Platform.Linux.UnixExitStatus.ExitCode.get -> int
+Core.Platform.Linux.UnixExitStatus.ExitCode.init -> void
+Core.Platform.Linux.UnixExitStatus.Exited.get -> bool
+Core.Platform.Linux.UnixExitStatus.Exited.init -> void
+Core.Platform.Linux.UnixExitStatus.Signal.get -> int
+Core.Platform.Linux.UnixExitStatus.Signal.init -> void
+Core.Platform.Linux.UnixExitStatus.UnixExitStatus(bool Exited, int ExitCode, int Signal) -> void
+Core.Platform.Linux.UnixExitStatus.UnixExitStatus() -> void
+Core.Platform.Linux.UnixProcessSpawn
+Core.Platform.Linux.UnixSpawnRequest
+Core.Platform.Linux.UnixSpawnRequest.Arguments.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Core.Platform.Linux.UnixSpawnRequest.Arguments.init -> void
+Core.Platform.Linux.UnixSpawnRequest.<Clone>$() -> Core.Platform.Linux.UnixSpawnRequest!
+Core.Platform.Linux.UnixSpawnRequest.Deconstruct(out string! Program, out System.Collections.Generic.IReadOnlyList<string!>! Arguments, out string! WorkingDirectory, out System.Collections.Generic.IReadOnlyDictionary<string!, string!>! Environment, out System.Collections.Generic.IReadOnlyList<Core.Platform.Linux.UnixDescriptorMapping>? Descriptors) -> void
+Core.Platform.Linux.UnixSpawnRequest.Descriptors.get -> System.Collections.Generic.IReadOnlyList<Core.Platform.Linux.UnixDescriptorMapping>?
+Core.Platform.Linux.UnixSpawnRequest.Descriptors.init -> void
+Core.Platform.Linux.UnixSpawnRequest.Environment.get -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>!
+Core.Platform.Linux.UnixSpawnRequest.Environment.init -> void
+Core.Platform.Linux.UnixSpawnRequest.Equals(Core.Platform.Linux.UnixSpawnRequest? other) -> bool
+Core.Platform.Linux.UnixSpawnRequest.Program.get -> string!
+Core.Platform.Linux.UnixSpawnRequest.Program.init -> void
+Core.Platform.Linux.UnixSpawnRequest.UnixSpawnRequest(string! Program, System.Collections.Generic.IReadOnlyList<string!>! Arguments, string! WorkingDirectory, System.Collections.Generic.IReadOnlyDictionary<string!, string!>! Environment, System.Collections.Generic.IReadOnlyList<Core.Platform.Linux.UnixDescriptorMapping>? Descriptors = null) -> void
+Core.Platform.Linux.UnixSpawnRequest.WorkingDirectory.get -> string!
+Core.Platform.Linux.UnixSpawnRequest.WorkingDirectory.init -> void
+~override Core.Platform.Linux.UnixDescriptorMapping.Equals(object obj) -> bool
+override Core.Platform.Linux.UnixDescriptorMapping.GetHashCode() -> int
+~override Core.Platform.Linux.UnixDescriptorMapping.ToString() -> string
+~override Core.Platform.Linux.UnixExitStatus.Equals(object obj) -> bool
+override Core.Platform.Linux.UnixExitStatus.GetHashCode() -> int
+~override Core.Platform.Linux.UnixExitStatus.ToString() -> string
+override Core.Platform.Linux.UnixSpawnRequest.Equals(object? obj) -> bool
+override Core.Platform.Linux.UnixSpawnRequest.GetHashCode() -> int
+override Core.Platform.Linux.UnixSpawnRequest.ToString() -> string!
+static Core.Platform.Linux.UnixDescriptorMapping.operator !=(Core.Platform.Linux.UnixDescriptorMapping left, Core.Platform.Linux.UnixDescriptorMapping right) -> bool
+static Core.Platform.Linux.UnixDescriptorMapping.operator ==(Core.Platform.Linux.UnixDescriptorMapping left, Core.Platform.Linux.UnixDescriptorMapping right) -> bool
+static Core.Platform.Linux.UnixExitStatus.operator !=(Core.Platform.Linux.UnixExitStatus left, Core.Platform.Linux.UnixExitStatus right) -> bool
+static Core.Platform.Linux.UnixExitStatus.operator ==(Core.Platform.Linux.UnixExitStatus left, Core.Platform.Linux.UnixExitStatus right) -> bool
+static Core.Platform.Linux.UnixProcessSpawn.Start(Core.Platform.Linux.UnixSpawnRequest! request) -> Core.Results.Result<Core.Platform.Linux.UnixChildProcess!>
+static Core.Platform.Linux.UnixSpawnRequest.operator !=(Core.Platform.Linux.UnixSpawnRequest? left, Core.Platform.Linux.UnixSpawnRequest? right) -> bool
+static Core.Platform.Linux.UnixSpawnRequest.operator ==(Core.Platform.Linux.UnixSpawnRequest? left, Core.Platform.Linux.UnixSpawnRequest? right) -> bool

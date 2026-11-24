@@ -2,12 +2,16 @@ using System.Globalization;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using Core.Platform.Linux;
+using Core.Results;
 using Microsoft.Win32.SafeHandles;
 
 namespace Core.Unix.Probe;
 
 internal static partial class SelfTest
 {
+    private const int SetDescriptorFlags = 2;
+    private const int DuplicateDescriptorFlags = 0;
+
     public static int Run()
     {
         var failures = 0;
@@ -24,6 +28,8 @@ internal static partial class SelfTest
         failures += Check("pipe round trip", PipeRoundTrip());
         failures += Check("per-message credentials", PerMessageCredentials());
         failures += Check("no new privileges", NoNewPrivileges());
+        failures += Check("spawn round trip", SpawnRoundTrip());
+        failures += Check("spawn refuses a descriptor above a lowered limit", RefusesADescriptorAboveALoweredLimit());
         failures += Check("descriptor zero", Program.DescriptorZero());
         Console.WriteLine(failures == 0 ? "SELF-TEST PASS" : $"SELF-TEST FAIL ({failures})");
         return failures == 0 ? 0 : 1;
@@ -387,6 +393,191 @@ internal static partial class SelfTest
 
     [LibraryImport("libc", EntryPoint = "close")]
     private static partial int Close(int descriptor);
+
+    private static bool SpawnRoundTrip()
+    {
+        var directory = Directory.CreateTempSubdirectory("core-spawn-probe-");
+        var above = -1;
+
+        try
+        {
+            var facts = Path.Combine(directory.FullName, "facts.txt");
+            using var parentFile = File.OpenHandle("/etc/hostname", FileMode.Open, FileAccess.Read);
+            var parent = (int)parentFile.DangerousGetHandle();
+
+            if (Program.Fcntl(parent, SetDescriptorFlags, 0) != 0)
+            {
+                return false;
+            }
+
+            above = Program.Fcntl(parent, DuplicateDescriptorFlags, 64);
+
+            if (above < 0)
+            {
+                return false;
+            }
+
+            var created = UnixPipe.Create();
+
+            if (!created.IsSuccess)
+            {
+                return false;
+            }
+
+            using var secret = created.Value;
+            var (program, spawnArguments) = SpawnCommand(["--spawn-child", facts, "40"]);
+            var request = new UnixSpawnRequest(
+                program,
+                spawnArguments,
+                directory.FullName,
+                new Dictionary<string, string> { ["PROBE_VALUE"] = "spawn" },
+                [new UnixDescriptorMapping(secret.ReadDescriptor, 40)]);
+            var started = UnixProcessSpawn.Start(request);
+
+            if (!started.IsSuccess)
+            {
+                return false;
+            }
+
+            using var child = started.Value;
+
+            if (!secret.TryWriteAll("spawn-secret"u8, out var written, out _) || written != 12)
+            {
+                return false;
+            }
+
+            secret.CloseWrite();
+
+            if (!WaitForSpawn(child, out var status) || !status.Exited || status.ExitCode != 0)
+            {
+                return false;
+            }
+
+            var lines = File.ReadAllLines(facts);
+            return lines.Contains("FD40=spawn-secret") &&
+                !lines.Any(line => line.StartsWith("TARGET_", StringComparison.Ordinal) &&
+                    line.EndsWith("=/etc/hostname", StringComparison.Ordinal)) &&
+                lines.Any(line => line.Contains("PROBE_VALUE=spawn", StringComparison.Ordinal));
+        }
+        finally
+        {
+            if (above >= 0)
+            {
+                _ = Program.Close(above);
+            }
+
+            Directory.Delete(directory.FullName, recursive: true);
+        }
+    }
+
+    private static bool RefusesADescriptorAboveALoweredLimit()
+    {
+        var directory = Directory.CreateTempSubdirectory("core-spawn-limit-");
+        var above = -1;
+        UnixResourceLimit? previous = null;
+
+        try
+        {
+            var facts = Path.Combine(directory.FullName, "facts.txt");
+            using var parentFile = File.OpenHandle("/etc/hostname", FileMode.Open, FileAccess.Read);
+            var parent = (int)parentFile.DangerousGetHandle();
+
+            if (Program.Fcntl(parent, SetDescriptorFlags, 0) != 0)
+            {
+                return false;
+            }
+
+            var loweredLimit = Directory.GetFiles("/proc/self/fd").Length + 32;
+            above = Program.Fcntl(parent, DuplicateDescriptorFlags, loweredLimit + 1);
+
+            if (above <= loweredLimit)
+            {
+                return false;
+            }
+
+            if (!UnixProcessLimits.TryGet(UnixResource.NoFile, out var limit, out _) ||
+                !UnixProcessLimits.TrySet(
+                    UnixResource.NoFile,
+                    new UnixResourceLimit((ulong)loweredLimit, limit.Hard),
+                    out _))
+            {
+                return false;
+            }
+
+            previous = limit;
+            var created = UnixPipe.Create();
+
+            if (!created.IsSuccess)
+            {
+                return false;
+            }
+
+            using var secret = created.Value;
+            var target = loweredLimit - 1;
+            var (program, spawnArguments) = SpawnCommand(
+                ["--spawn-child", facts, target.ToString(CultureInfo.InvariantCulture)]);
+            var started = UnixProcessSpawn.Start(new UnixSpawnRequest(
+                program,
+                spawnArguments,
+                directory.FullName,
+                new Dictionary<string, string>(),
+                [new UnixDescriptorMapping(secret.ReadDescriptor, target)]));
+
+            return started.IsFailure &&
+                started.TryGetError(out var error) &&
+                error!.Code == CoreErrorCodes.UnixSpawnFailed &&
+                error.Message.Contains("soft file descriptor limit", StringComparison.Ordinal);
+        }
+        finally
+        {
+            if (previous is not null)
+            {
+                _ = UnixProcessLimits.TrySet(UnixResource.NoFile, previous.Value, out _);
+            }
+
+            if (above >= 0)
+            {
+                _ = Program.Close(above);
+            }
+
+            Directory.Delete(directory.FullName, recursive: true);
+        }
+    }
+
+    private static (string Program, string[] Arguments) SpawnCommand(string[] childArguments)
+    {
+        var process = Environment.ProcessPath!;
+
+        if (Path.GetFileName(process) == "dotnet")
+        {
+            var assembly = Path.Combine(AppContext.BaseDirectory, "Core.Unix.Probe.dll");
+            return (process, [assembly, .. childArguments]);
+        }
+
+        return (process, childArguments);
+    }
+
+    private static bool WaitForSpawn(UnixChildProcess child, out UnixExitStatus status)
+    {
+        for (var attempt = 0; attempt < 500; attempt++)
+        {
+            if (child.TryWait(out status, out var error))
+            {
+                return true;
+            }
+
+            if (error != LinuxErrno.None)
+            {
+                return false;
+            }
+
+            Thread.Sleep(10);
+        }
+
+        child.TrySignal(9, true, out _);
+        status = default;
+        return false;
+    }
 
     private static (uint UserId, uint GroupId) ReadEffectiveIds()
     {
