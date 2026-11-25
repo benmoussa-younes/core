@@ -212,6 +212,16 @@ if not fs.write_text(headed_new_program(), "{fixture()}/src/Meter.cs") {
     success = check_lint("untracked SPDX header passes", 0, "VERDICT: PASS") and success
 }
 
+# --- case 1e: a UTF-8 BOM does not hide the SPDX header ---------------------
+
+success = reset_fixture() and success
+if not fs.write_text("\u{FEFF}{headed_new_program()}", "{fixture()}/src/Meter.cs") {
+    io.write_standard_error_line("FAIL BOM with SPDX header passes: fixture not written")
+    success = false
+} else {
+    success = check_lint("BOM with SPDX header passes", 0, "VERDICT: PASS") and success
+}
+
 # --- case 2: an added `//` paraphrase is refused ----------------------------
 
 success = reset_fixture() and success

@@ -18,11 +18,12 @@ import "../modules/verdict" as verdict
 # binary under tools/scripts/ refuses an inline `#` after code unless it carries
 # `# WHY:`; a full-line `#` comment is allowed.
 #
-# Every tracked code file (C#, the project and XAML files, a workflow, a scripts
-# program or module) opens with the two SPDX header lines, after a scripts
-# shebang; a file without them is refused even when the diff does not touch it,
-# so removing a header cannot pass silently. The `// SPDX-` lines are licensing
-# metadata, never narration.
+# Every code file (C#, a .csproj/.props/.targets/.slnx, a .axaml, a workflow,
+# a scripts program or module), tracked or not, opens with the two SPDX header
+# lines, after a scripts shebang and an optional UTF-8 BOM; a file without them
+# is refused even when the diff does not touch it, so removing a header cannot
+# pass silently, and an unreadable code file is refused rather than skipped. The
+# `// SPDX-` lines are licensing metadata, never narration.
 #
 # It writes nothing and needs no privilege.
 
@@ -146,9 +147,11 @@ function is_comment_line(text: string) -> boolean {
 }
 
 # The two SPDX lines are the licence notice the repository already declares in
-# REUSE.toml; requiring them per file is what makes a removal visible.
-function has_spdx_header(rel: string, content: string) -> boolean {
-    let lines = content.lines()
+# REUSE.toml; requiring them per file is what makes a removal visible. A UTF-8
+# BOM is stripped first: a Windows editor must not turn a valid header into a
+# false positive.
+function has_spdx_header(content: string) -> boolean {
+    let lines = content.strip_prefix("\u{FEFF}").lines()
     let mutable index = 0
     if lines.length() > 0 and lines[0].starts_with("#!") {
         index = 1
@@ -187,10 +190,16 @@ function header_defects(repository: path, rel: string) -> list<string> {
             content = text
         }
         error(_) => {
+            # A deleted file has no header to check; a file that exists but cannot
+            # be read must fail the gate instead of passing unverified.
+            if filesystem.path_exists(repository / rel) {
+                let mutable unreadable: list<string> = ["{rel}:1: UNREADABLE"]
+                return unreadable
+            }
             return empty
         }
     }
-    if has_spdx_header(rel, content) {
+    if has_spdx_header(content) {
         return empty
     }
     let mutable defects: list<string> = ["{rel}:1: MISSING-SPDX"]
@@ -317,7 +326,7 @@ function defects_of(repository: path, rel: string, numbers: list<integer>) -> li
         }
         error(_) => {}
     }
-    let lines = content.lines()
+    let lines = content.strip_prefix("\u{FEFF}").lines()
     for number in numbers {
         if number < 1 or number > lines.length() {
             continue
@@ -400,7 +409,7 @@ match process.run(process.request("git", git_arguments)) {
     }
 }
 
-match process.run(process.request("git", ["-C", location, "ls-files", "--others", "--exclude-standard", "--full-name"])) {
+match process.run(process.request("git", ["-C", repository_location, "ls-files", "--others", "--exclude-standard", "--full-name"])) {
     ok(completed) => {
         if completed.exit_code != 0 {
             io.write_standard_error_line(completed.standard_error)
@@ -431,7 +440,7 @@ match process.run(process.request("git", ["-C", location, "ls-files", "--others"
 
 # Every tracked code file carries its header, even when the diff does not touch
 # it: a removal is a deletion only, which an added-line rule cannot see.
-match process.run(process.request("git", ["-C", location, "ls-files", "--full-name"])) {
+match process.run(process.request("git", ["-C", repository_location, "ls-files", "--full-name"])) {
     ok(completed) => {
         if completed.exit_code != 0 {
             io.write_standard_error_line(completed.standard_error)
