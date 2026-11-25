@@ -1,4 +1,6 @@
 #!/usr/bin/env -S scripts run
+# SPDX-FileCopyrightText: 2026 Younes BENMOUSSA <younes.benmoussa@pm.me>
+# SPDX-License-Identifier: LGPL-3.0-or-later
 import "../modules/verdict" as verdict
 # lint-comments — refuse a comment added since the base that does not carry its form.
 #
@@ -15,6 +17,12 @@ import "../modules/verdict" as verdict
 # it documents is private (PRIVATE-DOC). A .scs file or an extensionless scripts
 # binary under tools/scripts/ refuses an inline `#` after code unless it carries
 # `# WHY:`; a full-line `#` comment is allowed.
+#
+# Every tracked code file (C#, the project and XAML files, a workflow, a scripts
+# program or module) opens with the two SPDX header lines, after a scripts
+# shebang; a file without them is refused even when the diff does not touch it,
+# so removing a header cannot pass silently. The `// SPDX-` lines are licensing
+# metadata, never narration.
 #
 # It writes nothing and needs no privilege.
 
@@ -122,6 +130,71 @@ function is_scripts_source(rel: string) -> boolean {
     }
     let name = rel.split("/")[rel.split("/").length() - 1]
     return not name.contains(".")
+}
+
+# A code file is one that carries source; documentation and the configuration
+# files that cannot hold a comment (JSON) are outside the header rule.
+function is_code_file(rel: string) -> boolean {
+    if is_scripts_source(rel) {
+        return true
+    }
+    return rel.ends_with(".cs") or rel.ends_with(".csproj") or rel.ends_with(".props") or rel.ends_with(".targets") or rel.ends_with(".slnx") or rel.ends_with(".axaml") or rel.ends_with(".yml") or rel.ends_with(".yaml")
+}
+
+function is_comment_line(text: string) -> boolean {
+    return text.starts_with("//") or text.starts_with("#") or text.starts_with("<!--")
+}
+
+# The two SPDX lines are the licence notice the repository already declares in
+# REUSE.toml; requiring them per file is what makes a removal visible.
+function has_spdx_header(rel: string, content: string) -> boolean {
+    let lines = content.lines()
+    let mutable index = 0
+    if lines.length() > 0 and lines[0].starts_with("#!") {
+        index = 1
+    }
+    let mutable copyright = false
+    let mutable licence = false
+    let mutable seen = 0
+    while index < lines.length() and seen < 4 {
+        let text = lines[index].trim_whitespace()
+        if text != "" {
+            if not is_comment_line(text) {
+                break
+            }
+            if text.contains("SPDX-FileCopyrightText:") {
+                copyright = true
+            } else if text.contains("SPDX-License-Identifier:") {
+                licence = true
+            } else if not text.contains("SPDX-") {
+                break
+            }
+        }
+        index = index + 1
+        seen = seen + 1
+    }
+    return copyright and licence
+}
+
+function header_defects(repository: path, rel: string) -> list<string> {
+    let mutable empty: list<string> = []
+    if not is_code_file(rel) {
+        return empty
+    }
+    let mutable content = ""
+    match filesystem.read_file(repository / rel) {
+        ok(text) => {
+            content = text
+        }
+        error(_) => {
+            return empty
+        }
+    }
+    if has_spdx_header(rel, content) {
+        return empty
+    }
+    let mutable defects: list<string> = ["{rel}:1: MISSING-SPDX"]
+    return defects
 }
 
 function leading_spaces(line: string) -> string {
@@ -264,7 +337,7 @@ function defects_of(repository: path, rel: string, numbers: list<integer>) -> li
             }
             continue
         }
-        if text.starts_with("//") and not line.contains("// WHY:") {
+        if text.starts_with("//") and not line.contains("// WHY:") and not text.starts_with("// SPDX-") {
             defects.append("{rel}:{number}: NARRATION")
         }
     }
@@ -339,7 +412,38 @@ match process.run(process.request("git", ["-C", location, "ls-files", "--others"
                 if rel == "" {
                     continue
                 }
+                for defect in header_defects(repository, rel) {
+                    io.write_standard_output_line("COMMENT {defect}")
+                    success = false
+                }
                 for defect in defects_of(repository, rel, all_lines(repository, rel)) {
+                    io.write_standard_output_line("COMMENT {defect}")
+                    success = false
+                }
+            }
+        }
+    }
+    error(_) => {
+        io.write_standard_output_line("FAIL git ls-files: cannot run git")
+        success = false
+    }
+}
+
+# Every tracked code file carries its header, even when the diff does not touch
+# it: a removal is a deletion only, which an added-line rule cannot see.
+match process.run(process.request("git", ["-C", location, "ls-files", "--full-name"])) {
+    ok(completed) => {
+        if completed.exit_code != 0 {
+            io.write_standard_error_line(completed.standard_error)
+            io.write_standard_output_line("FAIL git ls-files: exit {completed.exit_code}")
+            success = false
+        } else {
+            for line in completed.standard_output.lines() {
+                let rel = line.trim_whitespace()
+                if rel == "" {
+                    continue
+                }
+                for defect in header_defects(repository, rel) {
                     io.write_standard_output_line("COMMENT {defect}")
                     success = false
                 }

@@ -8,6 +8,15 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Changed
+
+- `lint-comments` refuses a code file that does not open with the two SPDX
+  header lines, and accepts those lines as licence metadata instead of refusing
+  them as narration. Every code file now carries its header: the C# files added
+  since 0.1.0 and the scripts programs had lost it, which `reuse lint` could not
+  report because `REUSE.toml` covers every path.
+- CI pins the Scripts interpreter 0.2.1 by version and SHA-256 instead of 0.1.2.
+
 ## [0.4.0] - 2026-11-24
 
 ### Added
