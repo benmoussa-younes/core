@@ -43,8 +43,8 @@ UI. `core-consumer` owns the composition and the pin.
 dotnet build -c Release
 dotnet test -c Release
 reuse lint
-tools/scripts/binaries/lint-comments   # comment form of the lines added since the base
-tools/scripts/binaries/gate.scs          # fast gate: build, tests, comment form, architecture
+tools/scripts/binaries/lint-comments   # comment form and the SPDX header of code files
+tools/scripts/binaries/gate.scs          # fast gate: build, tests, comments and SPDX, architecture
 tools/scripts/binaries/gate.scs --perf   # manual/nightly AOT budgets (hyperfine, jq)
 ```
 

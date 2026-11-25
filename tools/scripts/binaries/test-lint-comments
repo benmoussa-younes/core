@@ -1,10 +1,13 @@
 #!/usr/bin/env -S scripts run
+# SPDX-FileCopyrightText: 2026 Younes BENMOUSSA <younes.benmoussa@pm.me>
+# SPDX-License-Identifier: LGPL-3.0-or-later
 import "../modules/fs" as fs
 import "../modules/repo" as repo
 import "../modules/testkit" as testkit
 import "../modules/verdict" as verdict
 # test-lint-comments — prove that lint-comments judges the added lines of the
-# working tree and of the commits since the base, and nothing else.
+# working tree and of the commits since the base, that it refuses a code file
+# without its SPDX header, and nothing else.
 #
 #   tools/scripts/binaries/test-lint-comments
 #
@@ -12,7 +15,8 @@ import "../modules/verdict" as verdict
 # one extensionless scripts binary and one .scs module at the base commit, copies
 # the real linter and the verdict module it imports into it, then applies one
 # change per case. The base lines are paraphrases on purpose: they are
-# grandfathered, which the clean tree case proves. No network, no image, no model.
+# grandfathered, which the clean tree case proves; every fixture file carries the
+# SPDX header the real tree requires. No network, no image, no model.
 #
 # Check with `scripts check` (not --deny-warnings): the linter path is computed,
 # which raises SCRIPTS-LINT-0004 by design.
@@ -35,16 +39,32 @@ function linter() -> string {
     return "{fixture()}/tools/scripts/binaries/lint-comments"
 }
 
-function base_program() -> string {
+function spdx_lines() -> string {
+    return "// SPDX-FileCopyrightText: 2026 Younes BENMOUSSA <younes.benmoussa@pm.me>\n// SPDX-License-Identifier: LGPL-3.0-or-later\n\n"
+}
+
+function program_body() -> string {
     return "public class Counter \{\n    private int total;\n\n    /// <summary>Adds one.</summary>\n    public void Add() \{\n        // a paraphrase that shipped before the rule\n        total = total + 1;\n    \}\n\}\n"
 }
 
+function base_program() -> string {
+    return "{spdx_lines()}{program_body()}"
+}
+
 function base_binary() -> string {
-    return "#!/usr/bin/env -S scripts run\n# a paraphrase that shipped before the rule\nlet value = 1\nio.write_standard_output_line(\"probe\")\n"
+    return "#!/usr/bin/env -S scripts run\n# SPDX-FileCopyrightText: 2026 Younes BENMOUSSA <younes.benmoussa@pm.me>\n# SPDX-License-Identifier: LGPL-3.0-or-later\n# a paraphrase that shipped before the rule\nlet value = 1\nio.write_standard_output_line(\"probe\")\n"
 }
 
 function base_module() -> string {
-    return "# a paraphrase that shipped before the rule\npublic function probe_value() -> integer \{\n    return 1\n\}\n"
+    return "# SPDX-FileCopyrightText: 2026 Younes BENMOUSSA <younes.benmoussa@pm.me>\n# SPDX-License-Identifier: LGPL-3.0-or-later\n# a paraphrase that shipped before the rule\npublic function probe_value() -> integer \{\n    return 1\n\}\n"
+}
+
+function headed_new_program() -> string {
+    return "{spdx_lines()}public class Meter \{\n    public int Value;\n\}\n"
+}
+
+function headerless_new_program() -> string {
+    return "public class Meter \{\n    public int Value;\n\}\n"
 }
 
 function git(arguments: list<string>) -> boolean {
@@ -162,10 +182,50 @@ function check_lint_arguments(label: string, arguments: list<string>, expected_e
 success = reset_fixture() and success
 success = check_lint("clean tree passes", 0, "VERDICT: PASS") and success
 
+# --- case 1b: a tracked header removed is refused ---------------------------
+
+success = reset_fixture() and success
+if not fs.write_text(program_body(), "{fixture()}/src/Counter.cs") {
+    io.write_standard_error_line("FAIL SPDX removal refused: fixture not written")
+    success = false
+} else {
+    success = check_lint("SPDX removal refused", 1, "COMMENT src/Counter.cs:1: MISSING-SPDX") and success
+}
+
+# --- case 1c: an untracked code file without a header is refused -----------
+
+success = reset_fixture() and success
+if not fs.write_text(headerless_new_program(), "{fixture()}/src/Meter.cs") {
+    io.write_standard_error_line("FAIL untracked file without SPDX refused: fixture not written")
+    success = false
+} else {
+    success = check_lint("untracked file without SPDX refused", 1, "MISSING-SPDX") and success
+}
+
+# --- case 1d: an untracked code file with its SPDX header passes -----------
+
+success = reset_fixture() and success
+if not fs.write_text(headed_new_program(), "{fixture()}/src/Meter.cs") {
+    io.write_standard_error_line("FAIL untracked SPDX header passes: fixture not written")
+    success = false
+} else {
+    success = check_lint("untracked SPDX header passes", 0, "VERDICT: PASS") and success
+}
+
+# --- case 1e: a UTF-8 BOM does not hide the SPDX header ---------------------
+
+success = reset_fixture() and success
+if not fs.write_text("\u{FEFF}{headed_new_program()}", "{fixture()}/src/Meter.cs") {
+    io.write_standard_error_line("FAIL BOM with SPDX header passes: fixture not written")
+    success = false
+} else {
+    success = check_lint("BOM with SPDX header passes", 0, "VERDICT: PASS") and success
+}
+
 # --- case 2: an added `//` paraphrase is refused ----------------------------
 
 success = reset_fixture() and success
-success = case_append("cs paraphrase refused", "src/Counter.cs", "// increments the counter", 1, "COMMENT src/Counter.cs:10:") and success
+success = case_append("cs paraphrase refused", "src/Counter.cs", "// increments the counter", 1, "COMMENT src/Counter.cs:13:") and success
 
 # --- case 3: an added `// WHY:` line passes --------------------------------
 
@@ -175,7 +235,7 @@ success = case_append("cs WHY passes", "src/Counter.cs", "// WHY: the counter st
 # --- case 4: an inline `#` after code is refused ---------------------------
 
 success = reset_fixture() and success
-success = case_append("inline hash refused", "tools/scripts/binaries/probe", "let other = 2 # increments", 1, "COMMENT tools/scripts/binaries/probe:5:") and success
+success = case_append("inline hash refused", "tools/scripts/binaries/probe", "let other = 2 # increments", 1, "COMMENT tools/scripts/binaries/probe:7:") and success
 
 # --- case 5: an inline `# WHY:` passes ------------------------------------
 
@@ -189,7 +249,7 @@ success = case_append("hash inside a string passes", "tools/scripts/binaries/pro
 # --- case 5c: a `.scs` inline `#` after code is refused --------------------
 
 success = reset_fixture() and success
-success = case_append("scs inline hash refused", "tools/scripts/modules/probe.scs", "let other = 2 # increments", 1, "COMMENT tools/scripts/modules/probe.scs:5:") and success
+success = case_append("scs inline hash refused", "tools/scripts/modules/probe.scs", "let other = 2 # increments", 1, "COMMENT tools/scripts/modules/probe.scs:7:") and success
 
 # --- case 5d: a `.scs` inline `# WHY:` passes -----------------------------
 

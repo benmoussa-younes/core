@@ -11,15 +11,15 @@ products; it is not a NuGet package.
 dotnet build -c Release
 dotnet test -c Release
 reuse lint
-tools/scripts/binaries/lint-comments     # comment form of the added lines
+tools/scripts/binaries/lint-comments     # comment form and the SPDX header of every code file
 tools/scripts/binaries/gate.scs          # one VERDICT line, exit 0/1
 ```
 
 The gate needs Git, this file and the Scripts interpreter on `PATH` (`scripts
 run`); it does not change tracked files. It checks the comment form of the lines
-added since the base, builds before it tests, and fails the tests when the build
-fails. The `CI` workflow installs the interpreter from its pinned release and
-runs the same gate.
+added since the base and the SPDX header of every code file, builds before it
+tests, and fails the tests when the build fails. The `CI` workflow installs the
+interpreter from its pinned release and runs the same gate.
 
 ## Conventions
 
@@ -29,9 +29,10 @@ runs the same gate.
 - Only AOT-safe and trim-safe types; `IsAotCompatible` and the trim analyzer stay
   on.
 - Public API is declared in the `PublicAPI` pair and checked in the gate. Doc
-  comments only on public API; no file header; a comment states a reason and
-  carries `// WHY:` (or `# WHY:` in scripts). `lint-comments` checks the form of
-  the lines added since the base.
+  comments only on public API; a code file opens with the two SPDX header lines
+  and no other file header; a comment states a reason and carries `// WHY:` (or
+  `# WHY:` in scripts). `lint-comments` checks the form of the lines added since
+  the base and refuses a code file without its SPDX header.
 - A subfolder may carry a short `AGENTS.md` when it has rules of its own; the
   closest file wins.
 

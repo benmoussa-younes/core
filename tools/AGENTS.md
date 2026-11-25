@@ -7,8 +7,10 @@
   test TRX under the ignored `TestResults/` and nothing else.
 - `tools/scripts/binaries/lint-comments [--base <rev>] [<repository>]` judges the
   lines added since the base: `// WHY:` for a C# line comment, `# WHY:` for an
-  inline scripts comment, and a doc comment only on public API. It reads the diff
-  and the untracked files, and writes nothing.
+  inline scripts comment, and a doc comment only on public API. Every code file
+  opens with the two SPDX header lines; a file without them is refused, so a
+  removal is never silent. It reads the diff and the untracked files, and writes
+  nothing.
 - `tools/scripts/binaries/test-lint-comments` proves the linter on a git fixture
   under `/tmp/opencode/`; it writes nothing in the repository.
 - `tools/scripts/modules/` holds the blocks the binaries share (`verdict`,

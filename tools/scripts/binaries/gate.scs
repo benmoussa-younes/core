@@ -1,4 +1,6 @@
 #!/usr/bin/env -S scripts run
+# SPDX-FileCopyrightText: 2026 Younes BENMOUSSA <younes.benmoussa@pm.me>
+# SPDX-License-Identifier: LGPL-3.0-or-later
 import "../modules/verdict.scs" as verdict
 import "../modules/repo.scs" as repo
 # gate — read-only verification of the Core repository.
@@ -7,7 +9,8 @@ import "../modules/repo.scs" as repo
 # It checks the published tree (no docs, the markdown allowlist, one root
 # AGENTS.md, short nested AGENTS.md allowed, no agent or editor files, no
 # internal host or personal path, the
-# version, an empty PublicAPI.Shipped, the LGPL files, the comment form), runs the
+# version, an empty PublicAPI.Shipped, the LGPL files, the comment form and the
+# SPDX header), runs the
 # linter's own checks, then the build, the tests (a TRX under the ignored
 # TestResults/) and `reuse lint`. A failed build stops the test step, so no green
 # test result can come from stale binaries. It writes nothing tracked and needs
@@ -300,7 +303,7 @@ match process.run(process.request("grep", ["-rInE", "--exclude-dir=.git", "--exc
 match process.run(process.request("tools/scripts/binaries/lint-comments", []).with_working_directory(root)) {
     ok(completed) => {
         if completed.exit_code == 0 {
-            io.write_standard_output_line("PASS comment form")
+            io.write_standard_output_line("PASS comment form and SPDX header")
         } else {
             for line in completed.standard_output.lines() {
                 if line != "" {
@@ -312,12 +315,12 @@ match process.run(process.request("tools/scripts/binaries/lint-comments", []).wi
                     io.write_standard_error_line(line)
                 }
             }
-            io.write_standard_error_line("FAIL comment form")
+            io.write_standard_error_line("FAIL comment form and SPDX header")
             success = false
         }
     }
     error(failure) => {
-        io.write_standard_error_line("FAIL comment form: {failure.kind}")
+        io.write_standard_error_line("FAIL comment form and SPDX header: {failure.kind}")
         success = false
     }
 }
