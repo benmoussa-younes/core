@@ -5,7 +5,7 @@ import "../modules/verdict.scs" as verdict
 import "../modules/repo.scs" as repo
 # gate — read-only verification of the Core repository.
 #
-#   tools/scripts/binaries/gate
+#   tools/scripts/binaries/gate.scs [--perf]
 # It checks the published tree (no docs, the markdown allowlist, one root
 # AGENTS.md, short nested AGENTS.md allowed, no agent or editor files, no
 # internal host or personal path, the
@@ -92,10 +92,22 @@ let root: path = repo.root_path_from(process.script_path())
 let base: string = root.to_string()
 let mutable success = true
 let mutable perf_mode = false
+# WHY: an ignored argument let a typo or a mode that does not exist run the fast
+# gate under a green verdict, so an unknown argument stops before any check.
+let mutable unknown_arguments: list<string> = []
 for argument in process.arguments() {
     if argument == "--perf" {
         perf_mode = true
+    } else {
+        unknown_arguments.append(argument)
     }
+}
+if unknown_arguments.length() > 0 {
+    let unknown_detail = unknown_arguments.join(", ")
+    io.write_standard_error_line("FAIL arguments: {unknown_arguments.length()} unknown [{unknown_detail}]")
+    io.write_standard_error_line("usage: gate.scs [--perf]")
+    io.write_standard_output_line(verdict.line(false))
+    process.exit_with_code(verdict.code(false))
 }
 
 let mutable files: list<string> = []
