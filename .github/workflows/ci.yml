@@ -34,8 +34,8 @@ jobs:
       # the build, the tests and `reuse lint` itself.
       - name: Install the toolchain
         env:
-          SCRIPTS_VERSION: 0.2.1
-          SCRIPTS_SHA256: f7a56d1eb31b4c8c00d29b74ac9e4db5be8cb4a7d4df5e4ddeafbdb36a197bb1
+          SCRIPTS_VERSION: 0.3.0
+          SCRIPTS_SHA256: ceb83ff59e226644d0b12dbebbfe751145e36118175e055c5e1eead9adb0c7a8
         run: |
           pipx install --force reuse==5.0.2
           curl -fsSL -o "$RUNNER_TEMP/scripts.tar.gz" \
