@@ -18,3 +18,9 @@
   `CORE_DISABLE_WAYLAND=1` and an empty `WAYLAND_DISPLAY` keep the run on Xvfb
   when the session has a Wayland compositor; the `desktop` CI job runs the same
   suite.
+- The VSTest console summary can print an impossible `Duration:` for
+  `Core.Platform.Linux.Tests` (it equals the time of day); it appears once the
+  `AnInvalidRequestIsRefused` theory rows run. It is a runner accounting
+  artifact, not a measurement: the TRX `Times` and the per-test `duration`
+  attributes are correct, and the gate keeps one TRX per project as its
+  evidence. Never report a duration from that console line.
