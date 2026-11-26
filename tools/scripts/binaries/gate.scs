@@ -222,15 +222,40 @@ if not report("empty PublicAPI.Shipped", shipped_defects.length() == 0, shipped_
 }
 
 # F19: the portable layers must not call a platform API directly; the adapters
-# live in Core.Platform.Linux. A mutation that adds DllImport/UnixFileMode or an
-# OperatingSystem.Is* branch to one of these projects turns this check red.
+# live in Core.Platform.Linux. A mutation that adds LibraryImport/DllImport,
+# UnixFileMode or an OperatingSystem.Is* branch to one of these projects turns
+# this check red, except the one probe src/AGENTS.md names.
 let portable_projects: list<string> = ["Core", "Core.IO", "Core.Serialization", "Core.Mvp", "Core.Concurrency", "Core.Platform"]
+let topology_probe = "src/Core.Concurrency/Platform.Linux/ProcessorTopology.cs"
 let mutable portable_leaks: list<string> = []
 for project in portable_projects {
-    match process.run(process.request("grep", ["-rInE", "DllImport|UnixFileMode|OperatingSystem[.]Is", "src/{project}", "--include=*.cs"]).with_working_directory(root)) {
+    match process.run(process.request("grep", ["-rInE", "LibraryImport|DllImport|UnixFileMode|OperatingSystem[.]Is", "src/{project}", "--include=*.cs"]).with_working_directory(root)) {
         ok(completed) => {
             if completed.exit_code == 0 {
-                portable_leaks.append("{project}: {completed.standard_output.trim_whitespace()}")
+                let mutable leaks: list<string> = []
+                for line in completed.standard_output.lines() {
+                    # WHY: the grep line is path:line:content; the exemption holds
+                    # only when the path is the probe and the next field is a line
+                    # number, so a path that merely starts with the probe stays a leak.
+                    let parts = line.split(":")
+                    let mutable sanctioned = false
+                    if parts.length() >= 3 and parts[0] == topology_probe {
+                        let line_number = parts[1]
+                        match line_number.parse_integer() {
+                            ok(_) => {
+                                sanctioned = true
+                            }
+                            error(_) => {}
+                        }
+                    }
+                    if not sanctioned {
+                        leaks.append(line)
+                    }
+                }
+                if leaks.length() > 0 {
+                    let leak_detail = leaks.join(" | ")
+                    portable_leaks.append("{project}: {leak_detail}")
+                }
             } else if completed.exit_code != 1 {
                 io.write_standard_error_line("FAIL portable layers have no Linux API: grep exit {completed.exit_code} in {project}")
                 success = false
