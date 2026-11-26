@@ -5,7 +5,7 @@ import "../modules/verdict.scs" as verdict
 import "../modules/repo.scs" as repo
 # gate — read-only verification of the Core repository.
 #
-#   tools/scripts/binaries/gate.scs [--perf]
+#   tools/scripts/binaries/gate.scs [--aot]
 # It checks the published tree (no docs, the markdown allowlist, one root
 # AGENTS.md, short nested AGENTS.md allowed, no agent or editor files, no
 # internal host or personal path, the
@@ -36,68 +36,20 @@ function report(name: string, passed: boolean, detail: string) -> boolean {
     return passed
 }
 
-# F20: the manual/nightly performance gate publishes the AOT shell and runs one
-# bounded workload per hot path. The budget is a wall-clock ceiling, generous
-# enough for a loaded machine but tight enough to catch a catastrophic regression.
-# It needs hyperfine and jq; the fast gate does not.
-# The same mode publishes the AOT Unix probe first and runs its `--self-test`,
-# so a checkout without experiments/ still proves the native surface; the GUI
-# benchmarks print SKIP when that local experiment is absent.
-function run_perf(name: string, flag: string, count: string, budget_seconds: float) -> boolean {
-    let binary = "/tmp/core-gate-perf/Core.UI.Shell"
-    let timing = "/tmp/core-gate-perf-{name}.json"
-    let command = "{binary} {flag} {count}"
-    match process.run(process.request("hyperfine", ["--warmup", "1", "--runs", "3", "--export-json", timing, command])) {
-        ok(completed) => {
-            if completed.exit_code != 0 {
-                io.write_standard_error_line("FAIL perf {name}: hyperfine exit {completed.exit_code} {completed.standard_error.trim_whitespace()}")
-                return false
-            }
-        }
-        error(failure) => {
-            io.write_standard_error_line("FAIL perf {name}: hyperfine {failure.kind}")
-            return false
-        }
-    }
-
-    match process.run(process.request("jq", ["-r", ".results[0].mean", timing])) {
-        ok(completed) => {
-            if completed.exit_code != 0 {
-                io.write_standard_error_line("FAIL perf {name}: jq exit {completed.exit_code} {completed.standard_error.trim_whitespace()}")
-                return false
-            }
-            match completed.standard_output.trim_whitespace().parse_float() {
-                ok(seconds) => {
-                    if seconds <= budget_seconds {
-                        io.write_standard_output_line("PASS perf {name}: {seconds}s <= {budget_seconds}s")
-                        return true
-                    }
-                    io.write_standard_error_line("FAIL perf {name}: {seconds}s > {budget_seconds}s")
-                    return false
-                }
-                error(failure) => {
-                    io.write_standard_error_line("FAIL perf {name}: mean {failure.kind}")
-                    return false
-                }
-            }
-        }
-        error(failure) => {
-            io.write_standard_error_line("FAIL perf {name}: jq {failure.kind}")
-            return false
-        }
-    }
-}
+# F20: the manual/nightly AOT mode publishes the Unix probe for linux-x64 and
+# runs its `--self-test`, so a native publish proves the AOT and trim surface.
+# It needs only the SDK; the fast gate does not publish.
 
 let root: path = repo.root_path_from(process.script_path())
 let base: string = root.to_string()
 let mutable success = true
-let mutable perf_mode = false
+let mutable aot_mode = false
 # WHY: an ignored argument let a typo or a mode that does not exist run the fast
 # gate under a green verdict, so an unknown argument stops before any check.
 let mutable unknown_arguments: list<string> = []
 for argument in process.arguments() {
-    if argument == "--perf" {
-        perf_mode = true
+    if argument == "--aot" {
+        aot_mode = true
     } else {
         unknown_arguments.append(argument)
     }
@@ -105,7 +57,7 @@ for argument in process.arguments() {
 if unknown_arguments.length() > 0 {
     let unknown_detail = unknown_arguments.join(", ")
     io.write_standard_error_line("FAIL arguments: {unknown_arguments.length()} unknown [{unknown_detail}]")
-    io.write_standard_error_line("usage: gate.scs [--perf]")
+    io.write_standard_error_line("usage: gate.scs [--aot]")
     io.write_standard_output_line(verdict.line(false))
     process.exit_with_code(verdict.code(false))
 }
@@ -275,7 +227,7 @@ let third_party = read_text(base, "THIRD-PARTY")
 let mutable licence_gaps: list<string> = []
 for entry in files {
     let project = entry.trim_whitespace()
-    if not project.ends_with(".csproj") or project.starts_with("experiments/") or project.starts_with("benchmarks/") {
+    if not project.ends_with(".csproj") {
         continue
     }
     match process.run(process.request("dotnet", ["msbuild", project, "-getItem:PackageReference", "-nologo"]).with_working_directory(root)) {
@@ -494,9 +446,7 @@ match process.run(process.request("reuse", ["lint"]).with_working_directory(root
     }
 }
 
-if perf_mode {
-    # The probe runs first and needs no local experiment, so a checkout without
-    # experiments/ still proves the native surface.
+if aot_mode {
     let mutable unix_probe_ready = false
     match process.run(process.request("dotnet", ["publish", "tests/Core.Unix.Probe/Core.Unix.Probe.csproj", "-c", "Release", "-r", "linux-x64", "-o", "/tmp/core-gate-unix"]).with_working_directory(root)) {
         ok(completed) => {
@@ -544,55 +494,6 @@ if perf_mode {
                 success = false
             }
         }
-    }
-
-    if read_text(base, "experiments/Core.UI.Shell/Core.UI.Shell.csproj") != "" {
-        match process.run(process.request("dotnet", ["publish", "experiments/Core.UI.Shell/Core.UI.Shell.csproj", "-c", "Release", "-r", "linux-x64", "-p:PublishAot=true", "-p:StripSymbols=false", "-o", "/tmp/core-gate-perf"]).with_working_directory(root)) {
-            ok(completed) => {
-                # WHY: csharp-style requires the gate to count AOT diagnostics even though the publish fails them.
-                let mutable ilc_lines = 0
-                for line in completed.standard_output.lines() {
-                    if line.contains("ILC:") or line.contains("ILC :") or line.contains("warning IL") {
-                        ilc_lines = ilc_lines + 1
-                    }
-                }
-                for line in completed.standard_error.lines() {
-                    if line.contains("ILC:") or line.contains("ILC :") or line.contains("warning IL") {
-                        ilc_lines = ilc_lines + 1
-                    }
-                }
-                if completed.exit_code != 0 {
-                    io.write_standard_error_line("FAIL perf publish: exit {completed.exit_code} {completed.standard_error.trim_whitespace()}")
-                    success = false
-                } else if ilc_lines > 0 {
-                    io.write_standard_error_line("FAIL perf publish: {ilc_lines} ILC lines")
-                    success = false
-                } else {
-                    io.write_standard_output_line("PASS perf publish")
-                }
-            }
-            error(failure) => {
-                io.write_standard_error_line("FAIL perf publish: {failure.kind}")
-                success = false
-            }
-        }
-
-        if success {
-            if not run_perf("walk", "--walk", "20", 0.25) {
-                success = false
-            }
-            if not run_perf("csv", "--csv", "20", 0.10) {
-                success = false
-            }
-            if not run_perf("data-model", "--data-model", "20", 0.10) {
-                success = false
-            }
-            if not run_perf("records", "--records", "20", 0.20) {
-                success = false
-            }
-        }
-    } else {
-        io.write_standard_output_line("SKIP perf benchmarks: experiments/Core.UI.Shell is absent")
     }
 }
 
