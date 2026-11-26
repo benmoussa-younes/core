@@ -28,11 +28,15 @@ interpreter from its pinned release and runs the same gate.
   bug, not a control flow.
 - Only AOT-safe and trim-safe types; `IsAotCompatible` and the trim analyzer stay
   on.
-- Public API is declared in the `PublicAPI` pair and checked in the gate. Doc
-  comments only on public API; a code file opens with the two SPDX header lines
-  and no other file header; a comment states a reason and carries `// WHY:` (or
-  `# WHY:` in scripts). `lint-comments` checks the form of the lines added since
-  the base and refuses a code file without its SPDX header.
+- Public API is declared in the `PublicAPI` pair and checked in the gate. Every
+  public member is listed in `PublicAPI.Unshipped.txt`; `PublicAPI.Shipped.txt`
+  stays at its header because Core is source-only and publishes no package, so
+  there is no binary surface to freeze — a published package or a binary
+  compatibility contract would promote the pair at each tag. Doc comments only
+  on public API; a code file opens with the two SPDX header lines and no other
+  file header; a comment states a reason and carries `// WHY:` (or `# WHY:` in
+  scripts). `lint-comments` checks the form of the lines added since the base and
+  refuses a code file without its SPDX header.
 - A subfolder may carry a short `AGENTS.md` when it has rules of its own; the
   closest file wins.
 
