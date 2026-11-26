@@ -45,7 +45,7 @@ dotnet test -c Release
 reuse lint
 tools/scripts/binaries/lint-comments   # comment form and the SPDX header of code files
 tools/scripts/binaries/gate.scs          # fast gate: build, tests, comments and SPDX, architecture
-tools/scripts/binaries/gate.scs --perf   # manual/nightly AOT budgets (hyperfine, jq)
+tools/scripts/binaries/gate.scs --aot   # manual/nightly AOT probe publish and self-test
 ```
 
 The gate needs a Git checkout (it uses `git ls-files` and the diff against the
