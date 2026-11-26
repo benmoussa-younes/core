@@ -32,10 +32,8 @@ upstream projects and ship in each package's `LICENSE`; the MIT text itself is
 |---|---|
 | xUnit.net (xunit.v3, xunit.v3.mtp-off) | Apache-2.0 |
 | xunit.runner.visualstudio | Apache-2.0 |
-| BenchmarkDotNet | MIT |
 | coverlet.collector | MIT |
 | Microsoft.CodeAnalysis.PublicApiAnalyzers | MIT |
-| Microsoft.Extensions.FileSystemGlobbing | MIT |
 | Microsoft.NET.Test.Sdk | MIT |
 | Microsoft.CodeCoverage, Microsoft.TestPlatform.* | MIT |
 | Microsoft.Bcl.AsyncInterfaces, Microsoft.Win32.Registry, System.Security.AccessControl | MIT |

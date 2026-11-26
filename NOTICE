@@ -49,10 +49,8 @@ Build and test only (not linked into a product):
 
 - xUnit.net (xunit.v3) — Apache-2.0 (https://xunit.net)
 - xunit.runner.visualstudio — Apache-2.0 (https://xunit.net)
-- BenchmarkDotNet — MIT (https://benchmarkdotnet.org)
 - coverlet — MIT (https://github.com/coverlet-coverage/coverlet)
-- Microsoft.CodeAnalysis.PublicApiAnalyzers, Microsoft.Extensions.FileSystemGlobbing,
-  Microsoft.NET.Test.Sdk — MIT
+- Microsoft.CodeAnalysis.PublicApiAnalyzers, Microsoft.NET.Test.Sdk — MIT
 
 The full texts ship in `LICENSES/` (LGPL-3.0-or-later, MIT, OFL-1.1,
 Apache-2.0, BSD-3-Clause, CC-BY-SA-4.0); the component list is `THIRD-PARTY`.
