@@ -18,8 +18,9 @@
   under `/tmp/opencode/`; it writes nothing in the repository.
 - `tools/scripts/binaries/test-gate` proves the gate's argument guard: it runs the
   gate with an unknown argument, an empty one and one carrying a newline, and
-  requires exit 1, one verdict line and `VERDICT: FAIL`; the child carries a
-  deadline so a broken guard fails instead of letting the run nest. It writes
-  nothing.
+  with `--aot` before an unknown token, and requires exit 1, `FAIL arguments: 1
+  unknown`, the JSON-quoted token, exactly one verdict line and that line equal
+  to `VERDICT: FAIL`; the child carries a deadline so a broken guard fails
+  instead of letting the run nest. It writes nothing.
 - `tools/scripts/modules/` holds the blocks the binaries share (`verdict`,
   `repo`, `fs`, `testkit`); a new block descends here before it is copied.
