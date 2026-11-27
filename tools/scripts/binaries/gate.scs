@@ -227,6 +227,7 @@ if not report("portable layers have no Linux API", portable_leaks.length() == 0,
 
 let third_party = read_text(base, "THIRD-PARTY")
 let mutable licence_gaps: list<string> = []
+let mutable referenced_packages: list<string> = []
 for entry in files {
     let project = entry.trim_whitespace()
     if not project.ends_with(".csproj") {
@@ -241,8 +242,13 @@ for entry in files {
                 for line in completed.standard_output.lines() {
                     if line.contains("\"Identity\"") {
                         let parts = line.split("\"")
-                        if parts.length() >= 4 and not third_party.contains(parts[3]) {
-                            licence_gaps.append("{parts[3]} ({project})")
+                        if parts.length() >= 4 {
+                            if not referenced_packages.contains(parts[3]) {
+                                referenced_packages.append(parts[3])
+                            }
+                            if not third_party.contains(parts[3]) {
+                                licence_gaps.append("{parts[3]} ({project})")
+                            }
                         }
                     }
                 }
@@ -255,6 +261,23 @@ for entry in files {
     }
 }
 if not report("THIRD-PARTY mentions every evaluated package", licence_gaps.length() == 0, licence_gaps.join(", ")) {
+    success = false
+}
+
+# F22: a central PackageVersion that no csproj references is dead metadata; the
+# forward check above cannot see it, which is how CORE-7's two entries survived.
+let packages_props = read_text(base, "Directory.Packages.props")
+let mutable orphan_versions: list<string> = []
+for line in packages_props.lines() {
+    let trimmed = line.trim_whitespace()
+    if trimmed.starts_with("<PackageVersion ") {
+        let parts = trimmed.split("\"")
+        if parts.length() >= 2 and not referenced_packages.contains(parts[1]) {
+            orphan_versions.append(parts[1])
+        }
+    }
+}
+if not report("no orphan PackageVersion", orphan_versions.length() == 0, orphan_versions.join(", ")) {
     success = false
 }
 
@@ -508,52 +531,87 @@ match process.run(process.request("reuse", ["lint"]).with_working_directory(root
 }
 
 if aot_mode {
-    let mutable unix_probe_ready = false
-    match process.run(process.request("dotnet", ["publish", "tests/Core.Unix.Probe/Core.Unix.Probe.csproj", "-c", "Release", "-r", "linux-x64", "-o", "/tmp/core-gate-unix"]).with_working_directory(root)) {
-        ok(completed) => {
-            # WHY: csharp-style requires the gate to count AOT diagnostics even though the publish fails them.
-            let mutable ilc_lines = 0
-            for line in completed.standard_output.lines() {
-                if line.contains("ILC:") or line.contains("ILC :") or line.contains("warning IL") {
-                    ilc_lines = ilc_lines + 1
-                }
-            }
-            for line in completed.standard_error.lines() {
-                if line.contains("ILC:") or line.contains("ILC :") or line.contains("warning IL") {
-                    ilc_lines = ilc_lines + 1
-                }
-            }
-            if completed.exit_code != 0 {
-                io.write_standard_error_line("FAIL unix probe publish: exit {completed.exit_code} {completed.standard_error.trim_whitespace()}")
-                success = false
-            } else if ilc_lines > 0 {
-                io.write_standard_error_line("FAIL unix probe publish: {ilc_lines} ILC lines")
-                success = false
-            } else {
-                io.write_standard_output_line("PASS unix probe publish")
-                unix_probe_ready = true
-            }
-        }
-        error(failure) => {
-            io.write_standard_error_line("FAIL unix probe publish: {failure.kind}")
-            success = false
-        }
-    }
+    # WHY: a fixed /tmp path lets another user pre-create the directory and swap
+    # the published binary before the self-test; the probe lives in a private
+    # directory and is removed after its run.
+    match filesystem.make_temporary_directory("core-gate-unix-") {
+        ok(probe_directory) => {
+            # WHY: a relative $TMPDIR is created against the process cwd while the
+            # publish resolves against the repository root, so canonicalise once
+            # and name the same absolute directory everywhere.
+            match filesystem.get_real_path(probe_directory) {
+                ok(canonical) => {
+                    let probe_root = canonical.to_string()
+                    let mutable unix_probe_ready = false
+                    match process.run(process.request("dotnet", ["publish", "tests/Core.Unix.Probe/Core.Unix.Probe.csproj", "-c", "Release", "-r", "linux-x64", "-o", probe_root]).with_working_directory(root)) {
+                        ok(completed) => {
+                            # WHY: csharp-style requires the gate to count AOT diagnostics even though the publish fails them.
+                            let mutable ilc_lines = 0
+                            for line in completed.standard_output.lines() {
+                                if line.contains("ILC:") or line.contains("ILC :") or line.contains("warning IL") {
+                                    ilc_lines = ilc_lines + 1
+                                }
+                            }
+                            for line in completed.standard_error.lines() {
+                                if line.contains("ILC:") or line.contains("ILC :") or line.contains("warning IL") {
+                                    ilc_lines = ilc_lines + 1
+                                }
+                            }
+                            if completed.exit_code != 0 {
+                                io.write_standard_error_line("FAIL unix probe publish: exit {completed.exit_code} {completed.standard_error.trim_whitespace()}")
+                                success = false
+                            } else if ilc_lines > 0 {
+                                io.write_standard_error_line("FAIL unix probe publish: {ilc_lines} ILC lines")
+                                success = false
+                            } else {
+                                io.write_standard_output_line("PASS unix probe publish")
+                                unix_probe_ready = true
+                            }
+                        }
+                        error(failure) => {
+                            io.write_standard_error_line("FAIL unix probe publish: {failure.kind}")
+                            success = false
+                        }
+                    }
 
-    if unix_probe_ready {
-        match process.run(process.request("/tmp/core-gate-unix/Core.Unix.Probe", ["--self-test"])) {
-            ok(completed) => {
-                if completed.exit_code == 0 {
-                    io.write_standard_output_line("PASS unix probe self-test")
-                } else {
-                    io.write_standard_error_line("FAIL unix probe self-test: exit {completed.exit_code} {completed.standard_output.trim_whitespace()} {completed.standard_error.trim_whitespace()}")
+                    if unix_probe_ready {
+                        match process.run(process.request("{probe_root}/Core.Unix.Probe", ["--self-test"]).with_working_directory(root)) {
+                            ok(completed) => {
+                                if completed.exit_code == 0 {
+                                    io.write_standard_output_line("PASS unix probe self-test")
+                                } else {
+                                    io.write_standard_error_line("FAIL unix probe self-test: exit {completed.exit_code} {completed.standard_output.trim_whitespace()} {completed.standard_error.trim_whitespace()}")
+                                    success = false
+                                }
+                            }
+                            error(failure) => {
+                                io.write_standard_error_line("FAIL unix probe self-test: {failure.kind}")
+                                success = false
+                            }
+                        }
+                    }
+
+                    match filesystem.remove_directory_tree(canonical) {
+                        ok(_) => {}
+                        error(failure) => {
+                            io.write_standard_error_line("FAIL unix probe cleanup: {failure.kind}")
+                            success = false
+                        }
+                    }
+                }
+                error(failure) => {
+                    match filesystem.remove_directory_tree(probe_directory) {
+                        ok(_) => {}
+                        error(_) => {}
+                    }
+                    io.write_standard_error_line("FAIL unix probe publish: cannot resolve the private directory: {failure.kind}")
                     success = false
                 }
             }
-            error(failure) => {
-                io.write_standard_error_line("FAIL unix probe self-test: {failure.kind}")
-                success = false
-            }
+        }
+        error(failure) => {
+            io.write_standard_error_line("FAIL unix probe publish: cannot create a private directory: {failure.kind}")
+            success = false
         }
     }
 }
