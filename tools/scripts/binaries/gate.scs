@@ -239,7 +239,7 @@ for entry in files {
     if not project.ends_with(".csproj") {
         continue
     }
-    match process.run(process.request("dotnet", ["msbuild", project, "-getItem:PackageReference", "-nologo"]).with_working_directory(root)) {
+    match process.run(process.request("dotnet", ["msbuild", project, "-getItem:PackageReference", "-nologo", "-property:Configuration=Release"]).with_working_directory(root)) {
         ok(completed) => {
             if completed.exit_code != 0 {
                 io.write_standard_error_line("FAIL THIRD-PARTY names every evaluated package: msbuild exit {completed.exit_code} on {project}")
@@ -272,19 +272,49 @@ if not report("THIRD-PARTY mentions every evaluated package", licence_gaps.lengt
 
 # F22: a central PackageVersion that no csproj references is dead metadata; the
 # forward check above cannot see it, which is how CORE-7's two entries survived.
-let packages_props = read_text(base, "Directory.Packages.props")
-let mutable orphan_versions: list<string> = []
-for line in packages_props.lines() {
-    let trimmed = line.trim_whitespace()
-    if trimmed.starts_with("<PackageVersion ") {
-        let parts = trimmed.split("\"")
-        if parts.length() >= 2 and not referenced_packages.contains(parts[1]) {
-            orphan_versions.append(parts[1])
+# MSBuild evaluates every declaration form in the Release configuration the gate
+# builds, so the check never parses the props text; an Update without a matching
+# Include is not a PackageVersion item, and an empty evaluation fails closed.
+let mutable declared_versions: list<string> = []
+let mutable versions_evaluated = false
+match process.run(process.request("dotnet", ["msbuild", "src/Core/Core.csproj", "-getItem:PackageVersion", "-nologo", "-property:Configuration=Release"]).with_working_directory(root)) {
+    ok(completed) => {
+        if completed.exit_code != 0 {
+            io.write_standard_error_line("FAIL no orphan PackageVersion: msbuild exit {completed.exit_code} {completed.standard_error.trim_whitespace()}")
+            success = false
+        } else {
+            versions_evaluated = true
+            for line in completed.standard_output.lines() {
+                if line.contains("\"Identity\"") {
+                    let parts = line.split("\"")
+                    if parts.length() >= 4 {
+                        declared_versions.append(parts[3])
+                    }
+                }
+            }
         }
     }
+    error(failure) => {
+        io.write_standard_error_line("FAIL no orphan PackageVersion: {failure.kind}")
+        success = false
+    }
 }
-if not report("no orphan PackageVersion", orphan_versions.length() == 0, orphan_versions.join(", ")) {
-    success = false
+if versions_evaluated {
+    let mutable referenced_lower: list<string> = []
+    for package in referenced_packages {
+        referenced_lower.append(package.lowercased())
+    }
+    let mutable orphan_versions: list<string> = []
+    for package in declared_versions {
+        if not referenced_lower.contains(package.lowercased()) {
+            orphan_versions.append(package)
+        }
+    }
+    let declared_count = declared_versions.length()
+    let orphan_detail = orphan_versions.join(", ")
+    if not report("no orphan PackageVersion ({declared_count} declared)", declared_count > 0 and orphan_versions.length() == 0, "unreferenced: {orphan_detail}") {
+        success = false
+    }
 }
 
 let licence = read_text(base, "LICENSE")
