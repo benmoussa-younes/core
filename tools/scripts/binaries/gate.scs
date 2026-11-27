@@ -57,7 +57,13 @@ for argument in process.arguments() {
     }
 }
 if unknown_arguments.length() > 0 {
-    let unknown_detail = unknown_arguments.join(", ")
+    # WHY: a raw token can carry a newline and forge a line in the log, so each
+    # one is quoted as JSON text before it is printed.
+    let mutable quoted_arguments: list<string> = []
+    for argument in unknown_arguments {
+        quoted_arguments.append(json.encode(json.from_string(argument)).value_or("\"?\""))
+    }
+    let unknown_detail = quoted_arguments.join(", ")
     io.write_standard_error_line("FAIL arguments: {unknown_arguments.length()} unknown [{unknown_detail}]")
     io.write_standard_error_line("usage: gate.scs [--aot]")
     io.write_standard_output_line(verdict.line(false))
@@ -360,6 +366,33 @@ match process.run(process.request("tools/scripts/binaries/test-lint-comments", [
     }
     error(failure) => {
         io.write_standard_error_line("FAIL comment checks: {failure.kind}")
+        success = false
+    }
+}
+
+# F23: the argument guard must refuse what it does not know; test-gate runs the
+# gate with a bad argument and checks the exit code and the verdict.
+match process.run(process.request("tools/scripts/binaries/test-gate", []).with_working_directory(root)) {
+    ok(completed) => {
+        if completed.exit_code == 0 {
+            io.write_standard_output_line("PASS argument guard")
+        } else {
+            for line in completed.standard_output.lines() {
+                if line != "" {
+                    io.write_standard_error_line(line)
+                }
+            }
+            for line in completed.standard_error.lines() {
+                if line != "" {
+                    io.write_standard_error_line(line)
+                }
+            }
+            io.write_standard_error_line("FAIL argument guard")
+            success = false
+        }
+    }
+    error(failure) => {
+        io.write_standard_error_line("FAIL argument guard: {failure.kind}")
         success = false
     }
 }

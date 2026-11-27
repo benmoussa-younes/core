@@ -16,6 +16,9 @@ and this project adheres to
   since 0.1.0 and the scripts programs had lost it, which `reuse lint` could not
   report because `REUSE.toml` covers every path.
 - CI pins the Scripts interpreter 0.3.0 by version and SHA-256 instead of 0.1.2.
+- `gate.scs` rejects an argument it does not know with one `VERDICT: FAIL` and
+  exit 1 instead of running the fast gate under a green verdict, and quotes that
+  argument as JSON text so a newline cannot forge a log line.
 
 ## [0.4.0] - 2026-11-24
 

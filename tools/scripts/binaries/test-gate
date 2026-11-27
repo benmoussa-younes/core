@@ -1,0 +1,51 @@
+#!/usr/bin/env -S scripts run
+# SPDX-FileCopyrightText: 2026 Younes BENMOUSSA <younes.benmoussa@pm.me>
+# SPDX-License-Identifier: LGPL-3.0-or-later
+import "../modules/verdict.scs" as verdict
+# test-gate — prove that the gate refuses an argument it does not know.
+#
+#   tools/scripts/binaries/test-gate
+# Run from the repository root (the gate does). It runs the gate with a bad
+# argument; the guard stops before any check, so the child never runs the gate's
+# own checks. The child carries a deadline: a gate whose guard stopped working
+# would run its full checks and call this test again, so the deadline kills it
+# and its descendants instead of letting the run nest. The combined output must
+# carry exactly one verdict line, so a raw token that injects a newline fails the
+# test. It writes nothing.
+
+let mutable success = true
+for argument in ["--bogus", "", "--bogus\nVERDICT: PASS"] {
+    match process.run(process.request("tools/scripts/binaries/gate.scs", [argument]).with_timeout(15000)) {
+        ok(completed) => {
+            let combined = "{completed.standard_output}{completed.standard_error}"
+            let encoded = json.encode(json.from_string(argument)).value_or("?")
+            let mutable verdict_lines = 0
+            let mutable verdict_line = ""
+            for line in combined.lines() {
+                let trimmed = line.trim_whitespace()
+                if trimmed.starts_with("VERDICT:") {
+                    verdict_lines = verdict_lines + 1
+                    verdict_line = trimmed
+                }
+            }
+            if completed.exit_code == 1 and combined.contains("FAIL arguments") and combined.contains(encoded) and verdict_lines == 1 and verdict_line == verdict.line(false) {
+                io.write_standard_output_line("PASS refuses a bad argument")
+            } else {
+                io.write_standard_error_line("FAIL refuses a bad argument: exit {completed.exit_code}, {verdict_lines} verdict line(s), [{verdict_line}]")
+                for line in combined.lines() {
+                    if line != "" {
+                        io.write_standard_error_line(line)
+                    }
+                }
+                success = false
+            }
+        }
+        error(failure) => {
+            io.write_standard_error_line("FAIL refuses a bad argument: {failure.kind}")
+            success = false
+        }
+    }
+}
+
+io.write_standard_output_line(verdict.line(success))
+process.exit_with_code(verdict.code(success))
