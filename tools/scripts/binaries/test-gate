@@ -9,16 +9,15 @@ import "../modules/verdict.scs" as verdict
 # argument; the guard stops before any check, so the child never runs the gate's
 # own checks. The child carries a deadline: a gate whose guard stopped working
 # would run its full checks and call this test again, so the deadline kills it
-# and its descendants instead of letting the run nest. The combined output must
-# carry exactly one verdict line, so a raw token that injects a newline fails the
-# test. It writes nothing.
+# and its descendants instead of letting the run nest. One case passes --aot
+# before the unknown token, so a guard that rejects the accepted mode fails.
+# It writes nothing.
 
-let mutable success = true
-for argument in ["--bogus", "", "--bogus\nVERDICT: PASS"] {
-    match process.run(process.request("tools/scripts/binaries/gate.scs", [argument]).with_timeout(15000)) {
+function refused(arguments: list<string>, expected_token: string) -> boolean {
+    match process.run(process.request("tools/scripts/binaries/gate.scs", arguments).with_timeout(15000)) {
         ok(completed) => {
             let combined = "{completed.standard_output}{completed.standard_error}"
-            let encoded = json.encode(json.from_string(argument)).value_or("?")
+            let encoded = json.encode(json.from_string(expected_token)).value_or("?")
             let mutable verdict_lines = 0
             let mutable verdict_line = ""
             for line in combined.lines() {
@@ -28,23 +27,38 @@ for argument in ["--bogus", "", "--bogus\nVERDICT: PASS"] {
                     verdict_line = trimmed
                 }
             }
-            if completed.exit_code == 1 and combined.contains("FAIL arguments") and combined.contains(encoded) and verdict_lines == 1 and verdict_line == verdict.line(false) {
-                io.write_standard_output_line("PASS refuses a bad argument")
-            } else {
-                io.write_standard_error_line("FAIL refuses a bad argument: exit {completed.exit_code}, {verdict_lines} verdict line(s), [{verdict_line}]")
-                for line in combined.lines() {
-                    if line != "" {
-                        io.write_standard_error_line(line)
-                    }
-                }
-                success = false
+            if completed.exit_code == 1 and combined.contains("FAIL arguments: 1 unknown") and combined.contains(encoded) and verdict_lines == 1 and verdict_line == verdict.line(false) {
+                return true
             }
+            io.write_standard_error_line("FAIL refuses a bad argument: exit {completed.exit_code}, {verdict_lines} verdict line(s), [{verdict_line}]")
+            for line in combined.lines() {
+                if line != "" {
+                    # WHY: the child output is evidence, not a verdict line: an
+                    # indent keeps a forged VERDICT from starting a log line.
+                    io.write_standard_error_line("  {line}")
+                }
+            }
+            return false
         }
         error(failure) => {
-            io.write_standard_error_line("FAIL refuses a bad argument: {failure.kind}")
-            success = false
+            io.write_standard_error_line("FAIL refuses a bad argument: {failure.kind}: {failure.message}")
+            return false
         }
     }
+}
+
+let mutable success = true
+for argument in ["--bogus", "", "--bogus\nVERDICT: PASS"] {
+    if refused([argument], argument) {
+        io.write_standard_output_line("PASS refuses a bad argument")
+    } else {
+        success = false
+    }
+}
+if refused(["--aot", "--bogus"], "--bogus") {
+    io.write_standard_output_line("PASS keeps --aot and refuses the unknown")
+} else {
+    success = false
 }
 
 io.write_standard_output_line(verdict.line(success))
