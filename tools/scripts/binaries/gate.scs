@@ -225,6 +225,7 @@ if not report("portable layers have no Linux API", portable_leaks.length() == 0,
 
 let third_party = read_text(base, "THIRD-PARTY")
 let mutable licence_gaps: list<string> = []
+let mutable referenced_packages: list<string> = []
 for entry in files {
     let project = entry.trim_whitespace()
     if not project.ends_with(".csproj") {
@@ -239,8 +240,13 @@ for entry in files {
                 for line in completed.standard_output.lines() {
                     if line.contains("\"Identity\"") {
                         let parts = line.split("\"")
-                        if parts.length() >= 4 and not third_party.contains(parts[3]) {
-                            licence_gaps.append("{parts[3]} ({project})")
+                        if parts.length() >= 4 {
+                            if not referenced_packages.contains(parts[3]) {
+                                referenced_packages.append(parts[3])
+                            }
+                            if not third_party.contains(parts[3]) {
+                                licence_gaps.append("{parts[3]} ({project})")
+                            }
                         }
                     }
                 }
@@ -253,6 +259,23 @@ for entry in files {
     }
 }
 if not report("THIRD-PARTY mentions every evaluated package", licence_gaps.length() == 0, licence_gaps.join(", ")) {
+    success = false
+}
+
+# F22: a central PackageVersion that no csproj references is dead metadata; the
+# forward check above cannot see it, which is how CORE-7's two entries survived.
+let packages_props = read_text(base, "Directory.Packages.props")
+let mutable orphan_versions: list<string> = []
+for line in packages_props.lines() {
+    let trimmed = line.trim_whitespace()
+    if trimmed.starts_with("<PackageVersion ") {
+        let parts = trimmed.split("\"")
+        if parts.length() >= 2 and not referenced_packages.contains(parts[1]) {
+            orphan_versions.append(parts[1])
+        }
+    }
+}
+if not report("no orphan PackageVersion", orphan_versions.length() == 0, orphan_versions.join(", ")) {
     success = false
 }
 
