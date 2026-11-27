@@ -12,9 +12,11 @@ import "../modules/repo.scs" as repo
 # version, an empty PublicAPI.Shipped, the LGPL files, the comment form and the
 # SPDX header), runs the
 # linter's own checks, then the build, the tests (one TRX per test project under
-# the ignored TestResults/) and `reuse lint`. A failed build stops the test step,
-# so no green test result can come from stale binaries. It writes nothing tracked
-# and needs the Scripts interpreter on PATH.
+# the ignored TestResults/, a check that the list covers every test project, that
+# each TRX holds at least one result, and that TestResults was cleared) and
+# `reuse lint`. A failed build stops the test step, so no green test result can
+# come from stale binaries. It writes nothing tracked and needs the Scripts
+# interpreter on PATH.
 
 function read_text(base: string, relative: string) -> string {
     match filesystem.read_file("{base}/{relative}".to_path()) {
@@ -231,6 +233,7 @@ if not report("portable layers have no Linux API", portable_leaks.length() == 0,
 
 let third_party = read_text(base, "THIRD-PARTY")
 let mutable licence_gaps: list<string> = []
+let mutable referenced_packages: list<string> = []
 for entry in files {
     let project = entry.trim_whitespace()
     if not project.ends_with(".csproj") {
@@ -245,8 +248,13 @@ for entry in files {
                 for line in completed.standard_output.lines() {
                     if line.contains("\"Identity\"") {
                         let parts = line.split("\"")
-                        if parts.length() >= 4 and not third_party.contains(parts[3]) {
-                            licence_gaps.append("{parts[3]} ({project})")
+                        if parts.length() >= 4 {
+                            if not referenced_packages.contains(parts[3]) {
+                                referenced_packages.append(parts[3])
+                            }
+                            if not third_party.contains(parts[3]) {
+                                licence_gaps.append("{parts[3]} ({project})")
+                            }
                         }
                     }
                 }
@@ -259,6 +267,23 @@ for entry in files {
     }
 }
 if not report("THIRD-PARTY mentions every evaluated package", licence_gaps.length() == 0, licence_gaps.join(", ")) {
+    success = false
+}
+
+# F22: a central PackageVersion that no csproj references is dead metadata; the
+# forward check above cannot see it, which is how CORE-7's two entries survived.
+let packages_props = read_text(base, "Directory.Packages.props")
+let mutable orphan_versions: list<string> = []
+for line in packages_props.lines() {
+    let trimmed = line.trim_whitespace()
+    if trimmed.starts_with("<PackageVersion ") {
+        let parts = trimmed.split("\"")
+        if parts.length() >= 2 and not referenced_packages.contains(parts[1]) {
+            orphan_versions.append(parts[1])
+        }
+    }
+}
+if not report("no orphan PackageVersion", orphan_versions.length() == 0, orphan_versions.join(", ")) {
     success = false
 }
 
@@ -401,15 +426,42 @@ match process.run(process.request("dotnet", ["build", "-c", "Release"]).with_wor
 # (its cases are skipped unless CORE_GUI_TESTS=1).
 let test_projects: list<string> = ["Core.Tests", "Core.Concurrency.Tests", "Core.IO.Tests", "Core.Mvp.Tests", "Core.Pipeline.Tests", "Core.Platform.Linux.Tests", "Core.Records.Tests", "Core.Serialization.Tests", "Core.UI.Tests"]
 
+# WHY: a test project in tests/ that carries the test SDK but is absent from the
+# list is built and never run, so the list is checked against the tree; the GUI
+# integration suite is the one named exception (its own Xvfb run owns it).
+let mutable unlisted_tests: list<string> = []
+for entry in files {
+    let candidate = entry.trim_whitespace()
+    if not candidate.starts_with("tests/") or not candidate.ends_with(".csproj") {
+        continue
+    }
+    if not read_text(base, candidate).contains("Microsoft.NET.Test.Sdk") {
+        continue
+    }
+    let parts = candidate.split("/")
+    if parts.length() >= 3 {
+        let name = parts[1]
+        if name != "Core.UI.IntegrationTests" and not test_projects.contains(name) {
+            unlisted_tests.append(name)
+        }
+    }
+}
+let unlisted_detail = unlisted_tests.join(", ")
+if not report("test project list is complete", test_projects.length() > 0 and unlisted_tests.length() == 0, "unlisted test projects: {unlisted_detail}") {
+    success = false
+}
+
 # WHY: a TRX left by a previous run would satisfy the evidence check after a
 # project stopped running, so every gate run starts from an empty TestResults,
 # whether or not the build passes.
+let mutable results_ready = true
 if filesystem.path_exists(root / "TestResults") {
     match filesystem.remove_directory_tree(root / "TestResults") {
         ok(_) => {}
         error(_) => {
             io.write_standard_error_line("FAIL test evidence: cannot clear TestResults")
             success = false
+            results_ready = false
         }
     }
 }
@@ -451,17 +503,49 @@ if not build_ok {
     }
 }
 
-# WHY: a single shared TRX name let the last test project overwrite the others,
-# so the evidence held one project's count and the survivor was arbitrary.
-let mutable missing_trx: list<string> = []
-for project in test_projects {
-    if read_text(base, "TestResults/{project}/{project}.trx") == "" {
-        missing_trx.append(project)
+if not results_ready {
+    io.write_standard_error_line("FAIL test evidence: the results were not cleared, so they are not trusted")
+} else {
+    # WHY: a single shared TRX name let the last test project overwrite the
+    # others, so the evidence held one project's count and the survivor was
+    # arbitrary.
+    let mutable missing_trx: list<string> = []
+    for project in test_projects {
+        if read_text(base, "TestResults/{project}/{project}.trx") == "" {
+            missing_trx.append(project)
+        }
     }
-}
-let trx_detail = missing_trx.join(", ")
-if not report("test evidence", missing_trx.length() == 0, "no TRX for {trx_detail}") {
-    success = false
+    let trx_detail = missing_trx.join(", ")
+    if not report("test evidence", missing_trx.length() == 0, "no TRX for {trx_detail}") {
+        success = false
+    }
+
+    # WHY: a well-formed TRX with zero results proves a file, not a test run, so
+    # each project must also carry at least one result line.
+    let mutable empty_trx: list<string> = []
+    for project in test_projects {
+        let trx = "TestResults/{project}/{project}.trx"
+        let mutable results = 0
+        match process.run(process.request("grep", ["-c", "<UnitTestResult ", trx]).with_working_directory(root)) {
+            ok(completed) => {
+                let count_text = completed.standard_output.trim_whitespace()
+                match count_text.parse_integer() {
+                    ok(value) => {
+                        results = value
+                    }
+                    error(_) => {}
+                }
+            }
+            error(_) => {}
+        }
+        if results <= 0 {
+            empty_trx.append(project)
+        }
+    }
+    let empty_detail = empty_trx.join(", ")
+    if not report("test evidence has results", empty_trx.length() == 0, "no result in {empty_detail}") {
+        success = false
+    }
 }
 
 match process.run(process.request("reuse", ["lint"]).with_working_directory(root)) {
@@ -480,52 +564,87 @@ match process.run(process.request("reuse", ["lint"]).with_working_directory(root
 }
 
 if aot_mode {
-    let mutable unix_probe_ready = false
-    match process.run(process.request("dotnet", ["publish", "tests/Core.Unix.Probe/Core.Unix.Probe.csproj", "-c", "Release", "-r", "linux-x64", "-o", "/tmp/core-gate-unix"]).with_working_directory(root)) {
-        ok(completed) => {
-            # WHY: csharp-style requires the gate to count AOT diagnostics even though the publish fails them.
-            let mutable ilc_lines = 0
-            for line in completed.standard_output.lines() {
-                if line.contains("ILC:") or line.contains("ILC :") or line.contains("warning IL") {
-                    ilc_lines = ilc_lines + 1
-                }
-            }
-            for line in completed.standard_error.lines() {
-                if line.contains("ILC:") or line.contains("ILC :") or line.contains("warning IL") {
-                    ilc_lines = ilc_lines + 1
-                }
-            }
-            if completed.exit_code != 0 {
-                io.write_standard_error_line("FAIL unix probe publish: exit {completed.exit_code} {completed.standard_error.trim_whitespace()}")
-                success = false
-            } else if ilc_lines > 0 {
-                io.write_standard_error_line("FAIL unix probe publish: {ilc_lines} ILC lines")
-                success = false
-            } else {
-                io.write_standard_output_line("PASS unix probe publish")
-                unix_probe_ready = true
-            }
-        }
-        error(failure) => {
-            io.write_standard_error_line("FAIL unix probe publish: {failure.kind}")
-            success = false
-        }
-    }
+    # WHY: a fixed /tmp path lets another user pre-create the directory and swap
+    # the published binary before the self-test; the probe lives in a private
+    # directory and is removed after its run.
+    match filesystem.make_temporary_directory("core-gate-unix-") {
+        ok(probe_directory) => {
+            # WHY: a relative $TMPDIR is created against the process cwd while the
+            # publish resolves against the repository root, so canonicalise once
+            # and name the same absolute directory everywhere.
+            match filesystem.get_real_path(probe_directory) {
+                ok(canonical) => {
+                    let probe_root = canonical.to_string()
+                    let mutable unix_probe_ready = false
+                    match process.run(process.request("dotnet", ["publish", "tests/Core.Unix.Probe/Core.Unix.Probe.csproj", "-c", "Release", "-r", "linux-x64", "-o", probe_root]).with_working_directory(root)) {
+                        ok(completed) => {
+                            # WHY: csharp-style requires the gate to count AOT diagnostics even though the publish fails them.
+                            let mutable ilc_lines = 0
+                            for line in completed.standard_output.lines() {
+                                if line.contains("ILC:") or line.contains("ILC :") or line.contains("warning IL") {
+                                    ilc_lines = ilc_lines + 1
+                                }
+                            }
+                            for line in completed.standard_error.lines() {
+                                if line.contains("ILC:") or line.contains("ILC :") or line.contains("warning IL") {
+                                    ilc_lines = ilc_lines + 1
+                                }
+                            }
+                            if completed.exit_code != 0 {
+                                io.write_standard_error_line("FAIL unix probe publish: exit {completed.exit_code} {completed.standard_error.trim_whitespace()}")
+                                success = false
+                            } else if ilc_lines > 0 {
+                                io.write_standard_error_line("FAIL unix probe publish: {ilc_lines} ILC lines")
+                                success = false
+                            } else {
+                                io.write_standard_output_line("PASS unix probe publish")
+                                unix_probe_ready = true
+                            }
+                        }
+                        error(failure) => {
+                            io.write_standard_error_line("FAIL unix probe publish: {failure.kind}")
+                            success = false
+                        }
+                    }
 
-    if unix_probe_ready {
-        match process.run(process.request("/tmp/core-gate-unix/Core.Unix.Probe", ["--self-test"])) {
-            ok(completed) => {
-                if completed.exit_code == 0 {
-                    io.write_standard_output_line("PASS unix probe self-test")
-                } else {
-                    io.write_standard_error_line("FAIL unix probe self-test: exit {completed.exit_code} {completed.standard_output.trim_whitespace()} {completed.standard_error.trim_whitespace()}")
+                    if unix_probe_ready {
+                        match process.run(process.request("{probe_root}/Core.Unix.Probe", ["--self-test"]).with_working_directory(root)) {
+                            ok(completed) => {
+                                if completed.exit_code == 0 {
+                                    io.write_standard_output_line("PASS unix probe self-test")
+                                } else {
+                                    io.write_standard_error_line("FAIL unix probe self-test: exit {completed.exit_code} {completed.standard_output.trim_whitespace()} {completed.standard_error.trim_whitespace()}")
+                                    success = false
+                                }
+                            }
+                            error(failure) => {
+                                io.write_standard_error_line("FAIL unix probe self-test: {failure.kind}")
+                                success = false
+                            }
+                        }
+                    }
+
+                    match filesystem.remove_directory_tree(canonical) {
+                        ok(_) => {}
+                        error(failure) => {
+                            io.write_standard_error_line("FAIL unix probe cleanup: {failure.kind}")
+                            success = false
+                        }
+                    }
+                }
+                error(failure) => {
+                    match filesystem.remove_directory_tree(probe_directory) {
+                        ok(_) => {}
+                        error(_) => {}
+                    }
+                    io.write_standard_error_line("FAIL unix probe publish: cannot resolve the private directory: {failure.kind}")
                     success = false
                 }
             }
-            error(failure) => {
-                io.write_standard_error_line("FAIL unix probe self-test: {failure.kind}")
-                success = false
-            }
+        }
+        error(failure) => {
+            io.write_standard_error_line("FAIL unix probe publish: cannot create a private directory: {failure.kind}")
+            success = false
         }
     }
 }
