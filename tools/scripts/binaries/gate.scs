@@ -12,9 +12,11 @@ import "../modules/repo.scs" as repo
 # version, an empty PublicAPI.Shipped, the LGPL files, the comment form and the
 # SPDX header), runs the
 # linter's own checks, then the build, the tests (one TRX per test project under
-# the ignored TestResults/) and `reuse lint`. A failed build stops the test step,
-# so no green test result can come from stale binaries. It writes nothing tracked
-# and needs the Scripts interpreter on PATH.
+# the ignored TestResults/, a check that the list covers every test project, that
+# each TRX holds at least one result, and that TestResults was cleared) and
+# `reuse lint`. A failed build stops the test step, so no green test result can
+# come from stale binaries. It writes nothing tracked and needs the Scripts
+# interpreter on PATH.
 
 function read_text(base: string, relative: string) -> string {
     match filesystem.read_file("{base}/{relative}".to_path()) {
@@ -391,15 +393,42 @@ match process.run(process.request("dotnet", ["build", "-c", "Release"]).with_wor
 # (its cases are skipped unless CORE_GUI_TESTS=1).
 let test_projects: list<string> = ["Core.Tests", "Core.Concurrency.Tests", "Core.IO.Tests", "Core.Mvp.Tests", "Core.Pipeline.Tests", "Core.Platform.Linux.Tests", "Core.Records.Tests", "Core.Serialization.Tests", "Core.UI.Tests"]
 
+# WHY: a test project in tests/ that carries the test SDK but is absent from the
+# list is built and never run, so the list is checked against the tree; the GUI
+# integration suite is the one named exception (its own Xvfb run owns it).
+let mutable unlisted_tests: list<string> = []
+for entry in files {
+    let candidate = entry.trim_whitespace()
+    if not candidate.starts_with("tests/") or not candidate.ends_with(".csproj") {
+        continue
+    }
+    if not read_text(base, candidate).contains("Microsoft.NET.Test.Sdk") {
+        continue
+    }
+    let parts = candidate.split("/")
+    if parts.length() >= 3 {
+        let name = parts[1]
+        if name != "Core.UI.IntegrationTests" and not test_projects.contains(name) {
+            unlisted_tests.append(name)
+        }
+    }
+}
+let unlisted_detail = unlisted_tests.join(", ")
+if not report("test project list is complete", test_projects.length() > 0 and unlisted_tests.length() == 0, "unlisted test projects: {unlisted_detail}") {
+    success = false
+}
+
 # WHY: a TRX left by a previous run would satisfy the evidence check after a
 # project stopped running, so every gate run starts from an empty TestResults,
 # whether or not the build passes.
+let mutable results_ready = true
 if filesystem.path_exists(root / "TestResults") {
     match filesystem.remove_directory_tree(root / "TestResults") {
         ok(_) => {}
         error(_) => {
             io.write_standard_error_line("FAIL test evidence: cannot clear TestResults")
             success = false
+            results_ready = false
         }
     }
 }
@@ -441,17 +470,49 @@ if not build_ok {
     }
 }
 
-# WHY: a single shared TRX name let the last test project overwrite the others,
-# so the evidence held one project's count and the survivor was arbitrary.
-let mutable missing_trx: list<string> = []
-for project in test_projects {
-    if read_text(base, "TestResults/{project}/{project}.trx") == "" {
-        missing_trx.append(project)
+if not results_ready {
+    io.write_standard_error_line("FAIL test evidence: the results were not cleared, so they are not trusted")
+} else {
+    # WHY: a single shared TRX name let the last test project overwrite the
+    # others, so the evidence held one project's count and the survivor was
+    # arbitrary.
+    let mutable missing_trx: list<string> = []
+    for project in test_projects {
+        if read_text(base, "TestResults/{project}/{project}.trx") == "" {
+            missing_trx.append(project)
+        }
     }
-}
-let trx_detail = missing_trx.join(", ")
-if not report("test evidence", missing_trx.length() == 0, "no TRX for {trx_detail}") {
-    success = false
+    let trx_detail = missing_trx.join(", ")
+    if not report("test evidence", missing_trx.length() == 0, "no TRX for {trx_detail}") {
+        success = false
+    }
+
+    # WHY: a well-formed TRX with zero results proves a file, not a test run, so
+    # each project must also carry at least one result line.
+    let mutable empty_trx: list<string> = []
+    for project in test_projects {
+        let trx = "TestResults/{project}/{project}.trx"
+        let mutable results = 0
+        match process.run(process.request("grep", ["-c", "<UnitTestResult ", trx]).with_working_directory(root)) {
+            ok(completed) => {
+                let count_text = completed.standard_output.trim_whitespace()
+                match count_text.parse_integer() {
+                    ok(value) => {
+                        results = value
+                    }
+                    error(_) => {}
+                }
+            }
+            error(_) => {}
+        }
+        if results <= 0 {
+            empty_trx.append(project)
+        }
+    }
+    let empty_detail = empty_trx.join(", ")
+    if not report("test evidence has results", empty_trx.length() == 0, "no result in {empty_detail}") {
+        success = false
+    }
 }
 
 match process.run(process.request("reuse", ["lint"]).with_working_directory(root)) {
