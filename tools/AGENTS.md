@@ -4,8 +4,10 @@
 # tools
 
 - `tools/scripts/binaries/gate.scs` is read-only for tracked files: it clears the
-  ignored `TestResults/` and writes one TRX per test project there, nothing else;
-  it fails when a test project is missing from the list or a TRX holds no result.
+  ignored `TestResults/` and writes one TRX per listed test project there (the
+  GUI integration suite excepted), nothing else; it fails when a test project is
+  missing from the list or a TRX holds no result, and when `TestResults` cannot
+  be cleared.
 - `tools/scripts/binaries/lint-comments [--base <rev>] [<repository>]` judges the
   lines added since the base: `// WHY:` for a C# line comment, `# WHY:` for an
   inline scripts comment, and a doc comment only on public API. Every code file

@@ -11,12 +11,12 @@ import "../modules/repo.scs" as repo
 # internal host or personal path, the
 # version, an empty PublicAPI.Shipped, the LGPL files, the comment form and the
 # SPDX header), runs the
-# linter's own checks, then the build, the tests (one TRX per test project under
-# the ignored TestResults/, a check that the list covers every test project, that
-# each TRX holds at least one result, and that TestResults was cleared) and
-# `reuse lint`. A failed build stops the test step, so no green test result can
-# come from stale binaries. It writes nothing tracked and needs the Scripts
-# interpreter on PATH.
+# linter's own checks, then the build, the tests (one TRX per listed test project
+# under the ignored TestResults/, a check that the list covers every test project
+# except the GUI integration suite, that each TRX holds at least one result, and
+# that TestResults was cleared) and `reuse lint`. A failed build stops the test
+# step, so no green test result can come from stale binaries. It writes nothing
+# tracked and needs the Scripts interpreter on PATH.
 
 function read_text(base: string, relative: string) -> string {
     match filesystem.read_file("{base}/{relative}".to_path()) {
@@ -456,23 +456,29 @@ match process.run(process.request("dotnet", ["build", "-c", "Release"]).with_wor
 # (its cases are skipped unless CORE_GUI_TESTS=1).
 let test_projects: list<string> = ["Core.Tests", "Core.Concurrency.Tests", "Core.IO.Tests", "Core.Mvp.Tests", "Core.Pipeline.Tests", "Core.Platform.Linux.Tests", "Core.Records.Tests", "Core.Serialization.Tests", "Core.UI.Tests"]
 
-# WHY: a test project in tests/ that carries the test SDK but is absent from the
-# list is built and never run, so the list is checked against the tree; the GUI
-# integration suite is the one named exception (its own Xvfb run owns it).
+# WHY: a test project that carries the test SDK but is absent from the list is
+# built and never run, so the list is checked against every csproj the git file
+# list holds; the GUI integration suite is the one named exception (its own Xvfb
+# run owns it).
 let mutable unlisted_tests: list<string> = []
 for entry in files {
     let candidate = entry.trim_whitespace()
-    if not candidate.starts_with("tests/") or not candidate.ends_with(".csproj") {
+    if not candidate.ends_with(".csproj") {
         continue
     }
     if not read_text(base, candidate).contains("Microsoft.NET.Test.Sdk") {
         continue
     }
     let parts = candidate.split("/")
-    if parts.length() >= 3 {
+    let standard_layout = parts.length() == 3 and parts[0] == "tests" and parts[2] == "{parts[1]}.csproj"
+    if not standard_layout {
+        # WHY: the run derives tests/<name>/<name>.csproj from the list, so any
+        # other layout cannot be represented and must be seen as unlisted.
+        unlisted_tests.append(candidate)
+    } else {
         let name = parts[1]
         if name != "Core.UI.IntegrationTests" and not test_projects.contains(name) {
-            unlisted_tests.append(name)
+            unlisted_tests.append(candidate)
         }
     }
 }
@@ -528,13 +534,14 @@ if not build_ok {
             }
         }
     }
-    if tests_ok {
+    if tests_ok and test_projects.length() > 0 {
         io.write_standard_output_line("PASS tests")
     }
 }
 
-if not results_ready {
-    io.write_standard_error_line("FAIL test evidence: the results were not cleared, so they are not trusted")
+if not results_ready or test_projects.length() == 0 {
+    io.write_standard_error_line("FAIL test evidence: the results were not cleared or the list is empty, so they are not trusted")
+    success = false
 } else {
     # WHY: a single shared TRX name let the last test project overwrite the
     # others, so the evidence held one project's count and the survivor was
